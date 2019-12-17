@@ -1,0 +1,22 @@
+name: 'Sysdig Secure Inline Scan'
+description: 'Perform image analysis on locally built container image and post the result of the analysis to Sysdig Secure.'
+inputs:
+  image-tag:
+    description: 'Tag of the image to analyse'
+    required: true
+  sysdig-secure-token:
+    description: 'API token for Sysdig Scanning auth'
+    required: true
+  sysdig-secure-url:
+    description: 'URL to Sysdig Secure URL (ex: "https://secure-sysdig.com")'
+    required: false
+    default: https://secure.sysdig.com
+  dockerfile-path:
+    description: 'Path to Dockerfile (ex: "./Dockerfile")'
+    required: false
+  pull-from-registry:
+    description: 'Pull docker image from registry'
+    required: false
+runs:
+  using: 'node12'
+  main: 'index.js'

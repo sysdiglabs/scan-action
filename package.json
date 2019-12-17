@@ -1,0 +1,31 @@
+{
+  "name": "secure-inline-scan-action",
+  "version": "1.0.0",
+  "description": "This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sysdiglabs/secure-inline-scan-action.git"
+  },
+  "keywords": [
+    "sysdig",
+    "secure",
+    "container",
+    "image",
+    "scanning",
+    "docker"
+  ],
+  "author": "airadier",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/sysdiglabs/secure-inline-scan-action/issues"
+  },
+  "homepage": "https://github.com/sysdiglabs/secure-inline-scan-action#readme",
+  "dependencies": {
+    "@actions/core": "^1.2.0",
+    "@actions/exec": "^1.0.1"
+  }
+}
