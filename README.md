@@ -14,6 +14,20 @@ This action performs image analysis on locally built container image and posts t
 
 It is not recommended to hardcode the API token in the action. but [store it in Github secrets](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets) instead and use `${{ secrets.MY_SECRET_NAME }}` instead.
 
+### `sysdig-secure-url`
+
+URL to Sysdig Secure URL (ex: "https://secure-sysdig.com").
+
+If not specified, it will default to Sysdig Secure SaaS URL (https://secure.sysdig.com)
+
+### `dockerfile-path`
+
+Path to Dockerfile (ex: "./Dockerfile")
+
+### `pull-from-registry`
+
+Pull docker image from registry instead of using locally built image.
+
 ## Example usage
 
 ```yaml

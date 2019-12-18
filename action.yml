@@ -17,6 +17,9 @@ inputs:
   pull-from-registry:
     description: 'Pull docker image from registry'
     required: false
+branding:
+  icon: 'shield'
+  color: 'green'
 runs:
   using: 'node12'
   main: 'index.js'
