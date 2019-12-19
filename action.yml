@@ -19,7 +19,7 @@ inputs:
     required: false
 branding:
   icon: 'shield'
-  color: 'green'
+  color: 'orange'
 runs:
   using: 'node12'
   main: 'index.js'

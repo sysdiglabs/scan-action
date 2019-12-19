@@ -12,7 +12,7 @@ This action performs image analysis on locally built container image and posts t
 
 **Required** API token for Sysdig Scanning auth. Example: `"924c7ddc-4c09-4d22-bd52-2f7db22f3066"`
 
-It is not recommended to hardcode the API token in the action. but [store it in Github secrets](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets) instead and use `${{ secrets.MY_SECRET_NAME }}` instead.
+It is not recommended to hardcode the API token in the action, but [store it in Github secrets](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets) instead and use `${{ secrets.MY_SECRET_NAME }}` instead.
 
 ### `sysdig-secure-url`
 
