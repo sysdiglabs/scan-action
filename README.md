@@ -1,32 +1,32 @@
 # Sysdig Secure Inline Scan Action
 
-This action performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure. For more information about Secure Inline Scan, see https://github.com/sysdiglabs/secure-inline-scan and read [Sysdig Secure documentation](https://docs.sysdig.com/en/image-scanning.html)
+This action performs analysis on locally built container image and posts the result to Sysdig Secure. For more information about Secure Inline Scan, see https://github.com/sysdiglabs/secure-inline-scan and read [Sysdig Secure documentation](https://docs.sysdig.com/en/image-scanning.html).
 
 ## Inputs
 
 ### `image-tag`
 
-**Required** The tag of the image to scan. The image needs to be build on a previous step, as the scan is done locally. Example: `"sysdiglabs/dummy-vuln-app:latest"`
+**Required** The tag of the local image to scan. Example: `"sysdiglabs/dummy-vuln-app:latest"`.
 
 ### `sysdig-secure-token`
 
-**Required** API token for Sysdig Scanning auth. Example: `"924c7ddc-4c09-4d22-bd52-2f7db22f3066"`
+**Required** API token for Sysdig Scanning auth. Example: `"924c7ddc-4c09-4d22-bd52-2f7db22f3066"`.
 
-It is not recommended to hardcode the API token in the action, but [store it in Github secrets](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets) instead and use `${{ secrets.MY_SECRET_NAME }}` instead.
+Directly specifying the API token in the action configuration is not recommended. A better approach is to [store it in GitHub secrets](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets), and reference `${{ secrets.MY_SECRET_NAME }}` instead.
 
 ### `sysdig-secure-url`
 
-URL to Sysdig Secure URL (ex: "https://secure-sysdig.com").
+Sysdig Secure URL. Example: "https://secure-sysdig.svc.cluster.local".
 
-If not specified, it will default to Sysdig Secure SaaS URL (https://secure.sysdig.com)
+If not specified, it will default to Sysdig Secure SaaS URL (https://secure.sysdig.com/).
 
 ### `dockerfile-path`
 
-Path to Dockerfile (ex: "./Dockerfile")
+Path to Dockerfile. Example: `"./Dockerfile"`.
 
 ### `pull-from-registry`
 
-Pull docker image from registry instead of using locally built image.
+Pull container image from registry instead of using the locally built image.
 
 ## Example usage
 

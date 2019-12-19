@@ -8,7 +8,7 @@ inputs:
     description: 'API token for Sysdig Scanning auth'
     required: true
   sysdig-secure-url:
-    description: 'URL to Sysdig Secure URL (ex: "https://secure-sysdig.com")'
+    description: 'Sysdig Secure URL (ex: "https://secure-sysdig.com")'
     required: false
     default: https://secure.sysdig.com
   dockerfile-path:
