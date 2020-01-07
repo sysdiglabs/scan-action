@@ -10,7 +10,7 @@ This action performs analysis on locally built container image and posts the res
 
 ### `sysdig-secure-token`
 
-**Required** API token for Sysdig Scanning auth. Example: `"924c7ddc-4c09-4d22-bd52-2f7db22f3066"`.
+**Required** API token for Sysdig Scanning auth. Example: `"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"`.
 
 Directly specifying the API token in the action configuration is not recommended. A better approach is to [store it in GitHub secrets](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets), and reference `${{ secrets.MY_SECRET_NAME }}` instead.
 
