@@ -284,7 +284,7 @@ start_analysis() {
         get_repo_digest_id
     fi
 
-    FULLTAG="${SCAN_IMAGES[0]}"
+    FULLTAG="localbuild/${SCAN_IMAGES[0]}"
 
     printf '%s\n\n' "Image id: ${SYSDIG_IMAGE_ID}"
     get_scan_result_code_by_id
