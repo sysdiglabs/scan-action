@@ -8,7 +8,7 @@ set -eou pipefail
 
 # If using a locally built stateless CI container, export SYSDIG_CI_IMAGE=<image_name>.
 # This will override the image name from Dockerhub.
-INLINE_SCAN_IMAGE="${SYSDIG_CI_IMAGE:-docker.io/anchore/inline-scan:v0.5.0}"
+INLINE_SCAN_IMAGE="${SYSDIG_CI_IMAGE:-docker.io/anchore/inline-scan:v0.6.1}"
 DOCKER_NAME="${RANDOM:-temp}-inline-anchore-engine"
 DOCKER_ID=""
 ANALYZE=false
@@ -33,9 +33,24 @@ SYSDIG_ANCHORE_URL="http://localhost:9040/api/scanning/v1/anchore"
 SYSDIG_ANNOTATIONS="foo=bar"
 SYSDIG_IMAGE_DIGEST="sha256:123456890abcdefg"
 SYSDIG_IMAGE_ID="123456890abcdefg"
+SYSDIG_API_TOKEN="test-token"
 MANIFEST_FILE="./manifest.json"
+PDF_DIRECTORY=$(echo $PWD)
 GET_CALL_STATUS=''
 GET_CALL_RETRIES=300
+DETAIL=false
+
+if command -v sha256sum >/dev/null 2>&1; then
+  SHASUM_COMMAND="sha256sum"
+else
+  if command -v shasum >/dev/null 2>&1; then
+    SHASUM_COMMAND="shasum -a 256"
+  else
+    printf "ERROR: sha256sum or shasum command is required but missing\n"
+    exit 1
+  fi
+fi
+
 
 display_usage() {
 cat << EOF
@@ -63,8 +78,8 @@ Sysdig Inline Analyzer --
 
     Usage: ${0##*/} analyze -k <API Token> [ OPTIONS ] <FULL_IMAGE_TAG>
 
-      -k <TEXT>  [required] API token for Sysdig Scanning auth (ex: -k '924c7ddc-4c09-4d22-bd52-2f7db22f3066')
-      -s <TEXT>  [optional] Sysdig Secure URL (ex: -s 'https://secure-sysdig.svc.cluster.local'). 
+      -k <TEXT>  [required] API token for Sysdig Scanning auth (ex: -k 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx')
+      -s <TEXT>  [optional] Sysdig Secure URL (ex: -s 'https://secure-sysdig.svc.cluster.local').
                  If not specified, it will default to Sysdig Secure SaaS URL (https://secure.sysdig.com/).
       -a <TEXT>  [optional] Add annotations (ex: -a 'key=value,key=value')
       -f <PATH>  [optional] Path to Dockerfile (ex: -f ./Dockerfile)
@@ -73,6 +88,7 @@ Sysdig Inline Analyzer --
       -m <PATH>  [optional] Path to Docker image manifest (ex: -m ./manifest.json)
       -P  [optional] Pull container image from registry
       -V  [optional] Increase verbosity
+      -R <PATH>  [optional] Download scan result pdf in a specified local directory (ex: -R /staging/reports)
 
 EOF
 }
@@ -103,7 +119,7 @@ main() {
 
 get_and_validate_analyzer_options() {
     #Parse options
-    while getopts ':k:s:r:u:p:a:d:f:i:m:t:PgVh' option; do
+    while getopts ':k:s:a:d:f:i:m:R:PVh' option; do
         case "${option}" in
             k  ) k_flag=true; SYSDIG_API_TOKEN="${OPTARG}";;
             s  ) s_flag=true; SYSDIG_BASE_SCANNING_URL="${OPTARG%%}";;
@@ -114,6 +130,7 @@ get_and_validate_analyzer_options() {
             m  ) m_flag=true; MANIFEST_FILE="${OPTARG}";;
             P  ) P_flag=true;;
             V  ) V_flag=true;;
+            R  ) R_flag=true; PDF_DIRECTORY="${OPTARG}";;
             h  ) display_usage_analyzer; exit;;
             \? ) printf "\n\t%s\n\n" "Invalid option: -${OPTARG}" >&2; display_usage_analyzer >&2; exit 1;;
             :  ) printf "\n\t%s\n\n%s\n\n" "Option -${OPTARG} requires an argument." >&2; display_usage_analyzer >&2; exit 1;;
@@ -148,7 +165,7 @@ get_and_validate_analyzer_options() {
         printf '\n\t%s\n\n' "ERROR - must specify a valid sha256:<digestID>: ${SYSDIG_IMAGE_DIGEST}" >&2
         display_usage_analyzer >&2
         exit 1
-    elif ! curl -k -s --fail -H "Authorization: Bearer ${SYSDIG_API_TOKEN}" "${SYSDIG_SCANNING_URL}/policies" > /dev/null; then
+    elif ! curl -k -s --fail -H "Authorization: Bearer ${SYSDIG_API_TOKEN}" "${SYSDIG_ANCHORE_URL}/images" > /dev/null; then
         printf '\n\t%s\n\n' "ERROR - invalid combination of Sysdig secure endpoint : token provided - ${SYSDIG_SCANNING_URL} : ${SYSDIG_API_TOKEN}" >&2
         display_usage_analyzer >&2
         exit 1
@@ -171,9 +188,18 @@ get_and_validate_analyzer_options() {
         printf '\n\t%s\n\n' "ERROR - Manifest: ${MANIFEST_FILE} does not exist" >&2
         display_usage_analyzer >&2
         exit 1
+    elif [[ "${R_flag:-}" ]] && [[ ! -d "${PDF_DIRECTORY}" ]];then
+        printf '\n\t%s\n\n' "ERROR - Directory: ${PDF_DIRECTORY} does not exist" >&2
+        display_usage_analyzer >&2
+        exit 1
+    elif [[ "${R_flag:-}" ]] && [[ "${PDF_DIRECTORY: -1}" == '/' ]]; then
+        printf '\n\t%s\n\n' "ERROR - must specify file path - ${PDF_DIRECTORY} without trailing slash" >&2
+        display_usage_analyzer >&2
+        exit 1
     fi
 
     if [[ "${V_flag:-}" ]]; then
+        DETAIL=true
         set -x
     fi
 
@@ -220,7 +246,7 @@ get_and_validate_images() {
 
 prepare_inline_container() {
     # Check if env var is overriding which inline-scan image to utilize.
-    if [[ -z "${SYSDIG_CI_IMAGE-docker.io/anchore/inline-scan:v0.5.0}" ]]; then
+    if [[ -z "${SYSDIG_CI_IMAGE-docker.io/anchore/inline-scan:v0.6.1}" ]]; then
         printf '\n%s\n' "Pulling ${INLINE_SCAN_IMAGE}"
         docker pull "${INLINE_SCAN_IMAGE}"
     else
@@ -258,8 +284,9 @@ start_analysis() {
         get_repo_digest_id
     fi
 
-    FULLTAG="${SCAN_IMAGES[0]}"
+    FULLTAG="localbuild/${SCAN_IMAGES[0]}"
 
+    printf '%s\n\n' "Image id: ${SYSDIG_IMAGE_ID}"
     get_scan_result_code_by_id
     if [[ "${GET_CALL_STATUS}" != 200 ]]; then
         post_analysis
@@ -287,7 +314,7 @@ post_analysis() {
 
     # finally, get the account from Sysdig for the input username
     mkdir -p /tmp/sysdig
-    HCODE=$(curl -sSk --output /tmp/sysdig/sysdig_output.log --write-out "%{http_code}" -H "Authorization: Bearer ${SYSDIG_API_TOKEN}" "${SYSDIG_ANCHORE_URL%%/}/account")
+    HCODE=$(curl -sSk --output /tmp/sysdig/sysdig_output.log --write-out "%{http_code}" -H "Authorization: Bearer ${SYSDIG_API_TOKEN}" "${SYSDIG_SCANNING_URL%%/}/account")
     if [[ "${HCODE}" == 200 ]] && [[ -f "/tmp/sysdig/sysdig_output.log" ]]; then
 	ANCHORE_ACCOUNT=$(cat /tmp/sysdig/sysdig_output.log | grep '"name"' | awk -F'"' '{print $4}')
 	CREATE_CMD+=('-u "${ANCHORE_ACCOUNT}"')
@@ -322,7 +349,7 @@ post_analysis() {
     fi
 
     # Posting the archive to the secure backend
-    HCODE=$(curl -sSk --output /tmp/sysdig/sysdig_output.log --write-out "%{http_code}" -H "Content-Type: multipart/form-data" -H "Authorization: Bearer ${SYSDIG_API_TOKEN}" -F "archive_file=@/tmp/sysdig/${analysis_archive_name}" "${SYSDIG_SCANNING_URL}/import/images")
+    HCODE=$(curl -sSk --output /tmp/sysdig/sysdig_output.log --write-out "%{http_code}" -H "Content-Type: multipart/form-data" -H "Authorization: Bearer ${SYSDIG_API_TOKEN}" -H "imageId: ${SYSDIG_IMAGE_ID}" -H "digestId: ${SYSDIG_IMAGE_DIGEST}" -H "imageName: ${FULLTAG}" -F "archive_file=@/tmp/sysdig/${analysis_archive_name}" "${SYSDIG_SCANNING_URL}/import/images")
 
 	if [[ "${HCODE}" != 200 ]]; then
 	    printf '\n\t%s\n\n' "ERROR - unable to POST ${analysis_archive_name} to ${SYSDIG_SCANNING_URL%%/}/import/images" >&2
@@ -341,22 +368,39 @@ get_repo_digest_id() {
     # Check to see if repo digest exists
     DIGESTS=$(docker inspect --format="{{.RepoDigests}}" "${SCAN_IMAGES[0]}")
 
-    BASE_IMAGE=$(echo ${IMAGE_NAMES[0]} | cut -d / -f 2 | cut -d : -f 1)
+    REPO=$(echo ${IMAGE_NAMES[0]} | rev |  cut -d / -f 2 | rev)
+    BASE_IMAGE=$(echo ${IMAGE_NAMES[0]} | rev | cut -d / -f 1 | rev | cut -d : -f 1)
+    TAG=$(echo ${IMAGE_NAMES[0]} | rev | cut -d / -f 1 | rev | cut -d : -f 2)
 
-     if [[ ${DIGESTS} == *"${BASE_IMAGE}"* ]]; then
-        DIGEST=$(echo ${DIGESTS} | tr -d '[' | tr -d ']' | cut -d : -f 2 | cut -d ' ' -f 1)
-        SYSDIG_IMAGE_DIGEST=$(echo "sha256:${DIGEST}")
-     fi
-
+    if [[ -z "${TAG// }" ]]; then
+        TAG='latest'
+    fi
+    
+    FINAL_DIGEST="sha256@12345"    
+    for DIGEST in "${DIGESTS[@]}"
+    do
+        if [[ ${DIGEST} == *"${REPO}/${BASE_IMAGE}:${TAG}"* || ${DIGEST} == *"${REPO}/${BASE_IMAGE}"* || ${DIGEST} == *"${BASE_IMAGE}"* ]]; then
+            FINAL_DIGEST=$(echo ${DIGEST} | rev | cut -d : -f 1 | rev | tr -d ']' | cut -d ' ' -f 1)
+        else
+            printf '%s\n' " Unable to compute the digest from docker inspect ${SCAN_IMAGES[0]}!"
+            printf '%s\n' " Consider running with -d option with a valid sha256:<digestID>."
+        fi    
+    done
+     
     # Generate Image digest ID for given image, if repo digest is not present
     if [[ "${SYSDIG_IMAGE_DIGEST}" == 'sha256:123456890abcdefg' ]]; then
-        SYSDIG_IMAGE_DIGEST=$(docker inspect "${SCAN_IMAGES[0]}" | sha256sum | awk '{ print $1 }' | tr -d "\n")
+        SYSDIG_IMAGE_DIGEST=$(docker inspect "${SCAN_IMAGES[0]}" | ${SHASUM_COMMAND} | awk '{ print $1 }' | tr -d "\n")
         SYSDIG_IMAGE_DIGEST=$(echo "sha256:${SYSDIG_IMAGE_DIGEST}")
+    else # Use parsed digest from array of digests based on docker inspect result
+        SYSDIG_IMAGE_DIGEST=$(echo "sha256:${FINAL_DIGEST}")
     fi
+    printf '\n%s\n' "Repo name: ${REPO}"
+    printf '%s\n' "Base image name: ${BASE_IMAGE}"
+    printf '%s\n\n' "Tag name: ${TAG}"
 }
 
 get_scan_result_code_by_id() {
-    GET_CALL_STATUS=$(curl -sk -o /dev/null --write-out "%{http_code}" --header "Content-Type: application/json" -H "Authorization: Bearer ${SYSDIG_API_TOKEN}" "${SYSDIG_ANCHORE_URL}/images/by_id/${SYSDIG_IMAGE_ID}/check?tag=$FULLTAG&detail=false")
+    GET_CALL_STATUS=$(curl -sk -o /dev/null --write-out "%{http_code}" --header "Content-Type: application/json" -H "Authorization: Bearer ${SYSDIG_API_TOKEN}" "${SYSDIG_ANCHORE_URL}/images/by_id/${SYSDIG_IMAGE_ID}/check?tag=$FULLTAG&detail=${DETAIL}")
 }
 
 get_scan_result_by_id_with_retries() {
@@ -364,22 +408,58 @@ get_scan_result_by_id_with_retries() {
     for ((i=0;  i<${GET_CALL_RETRIES}; i++)); do
         get_scan_result_code_by_id
         if [[ "${GET_CALL_STATUS}" == 200 ]]; then
-            status=$(curl -sk --header "Content-Type: application/json" -H "Authorization: Bearer ${SYSDIG_API_TOKEN}" "${SYSDIG_ANCHORE_URL}/images/by_id/${SYSDIG_IMAGE_ID}/check?tag=$FULLTAG&detail=false" | grep "status" | cut -d : -f 2 | awk -F\" '{ print $2 }')
+            status=$(curl -sk --header "Content-Type: application/json" -H "Authorization: Bearer ${SYSDIG_API_TOKEN}" "${SYSDIG_ANCHORE_URL}/images/by_id/${SYSDIG_IMAGE_ID}/check?tag=$FULLTAG&detail=${DETAIL}" | grep "status" | cut -d : -f 2 | awk -F\" '{ print $2 }')
             break
         fi
         echo -n "." && sleep 1
     done
- 
+
     printf "Scan Report - \n"
-    curl -s -k --header "Content-Type: application/json" -H "Authorization: Bearer ${SYSDIG_API_TOKEN}" "${SYSDIG_ANCHORE_URL}/images/by_id/${SYSDIG_IMAGE_ID}/check?tag=$FULLTAG&detail=false"
+    curl -s -k --header "Content-Type: application/json" -H "Authorization: Bearer ${SYSDIG_API_TOKEN}" "${SYSDIG_ANCHORE_URL}/images/by_id/${SYSDIG_IMAGE_ID}/check?tag=$FULLTAG&detail=${DETAIL}"
+
+    if [[ "${R_flag-""}" ]]; then
+        printf "\nDownloading PDF Scan result for image id: ${SYSDIG_IMAGE_ID} / digest: ${SYSDIG_IMAGE_DIGEST}"
+        get_scan_result_pdf_by_digest
+    fi
 
     if [[ "${status}" = "pass" ]]; then
         printf "\nStatus is pass\n"
+        print_scan_result_summary_message
         exit 0
     else
         printf "\nStatus is fail\n"
+        print_scan_result_summary_message
         exit 1
     fi
+}
+
+urlencode() {
+    # urlencode <string>
+    local length="${#1}"
+    for (( i = 0; i < length; i++ )); do
+        local c="${1:i:1}"
+        case $c in
+            [a-zA-Z0-9.~_-]) printf "$c" ;;
+            *) printf '%%%02X' "'$c"
+        esac
+    done
+}
+
+print_scan_result_summary_message() {
+    if [[ ! "${V_flag-""}"  && ! "${R_flag-""}" ]]; then
+        if [[ ! "${status}" = "pass" ]]; then
+            echo "Result Details: "
+            curl -s -k --header "Content-Type: application/json" -H "Authorization: Bearer ${SYSDIG_API_TOKEN}" "${SYSDIG_ANCHORE_URL}/images/by_id/${SYSDIG_IMAGE_ID}/check?tag=$FULLTAG&detail=true"
+        fi
+        ENCODED_TAG=$(urlencode localbuild/${FULLTAG})
+        echo "View the full result @ ${SYSDIG_BASE_SCANNING_URL}/#/scanning/scan-results/${ENCODED_TAG}/${SYSDIG_IMAGE_DIGEST}/summaries"
+        printf "PDF report of the scan results can be generated with -R option.\n"
+    fi
+}
+
+get_scan_result_pdf_by_digest() {
+    date_format=$(date +'%Y-%m-%d')
+    curl -sk --header "Content-Type: application/json" -H "Authorization: Bearer ${SYSDIG_API_TOKEN}" -o "${PDF_DIRECTORY}/${date_format}-${FULLTAG##*/}-scan-result.pdf" "${SYSDIG_SCANNING_URL}/images/${SYSDIG_IMAGE_DIGEST}/report?tag=$FULLTAG"
 }
 
 save_and_copy_images() {
