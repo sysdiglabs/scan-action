@@ -50,9 +50,9 @@ const querystring = require("querystring");
 
     try {
       await exec.exec(cmd);
-      core.info(`Scan was SUCCESS. Check scan results at ${sysdig_secure_url}/#/scanning/scan-results/localbuild%2F${querystring.escape(image_tag)}/${image_id}`);
+      core.info(`Scan was SUCCESS.`);
     } catch (error) {
-      core.setFailed(`Scan FAILED. Check scan results at ${sysdig_secure_url}/#/scanning/scan-results/localbuild%2F${querystring.escape(image_tag)}/${image_id}`);
+      core.setFailed(`Scan FAILED.`);
     }
 
   } catch (error) {
