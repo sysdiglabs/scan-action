@@ -36,7 +36,7 @@ Pull container image from registry instead of using the locally built image.
       run: docker build . --file Dockerfile --tag sysdiglabs/dummy-vuln-app:latest
 
     - name: Scan image
-      uses: sysdiglabs/secure-inline-scan-action@v1
+      uses: sysdiglabs/scan-action@v2
       with:
         image-tag: "sysdiglabs/dummy-vuln-app:latest"
         sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
