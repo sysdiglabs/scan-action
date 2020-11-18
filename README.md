@@ -20,15 +20,60 @@ Sysdig Secure URL. Example: "https://secure-sysdig.svc.cluster.local".
 
 If not specified, it will default to Sysdig Secure SaaS URL (https://secure.sysdig.com/).
 
+### `sysdig-skip-tls`
+
+Skip TLS verification when calling secure endpoints.
+
 ### `dockerfile-path`
 
 Path to Dockerfile. Example: `"./Dockerfile"`.
 
 ### `pull-from-registry`
 
-Pull container image from registry instead of using the locally built image.
+Pull container image from registry instead of using a locally built image. It takes precedence over any 'input-type'.
 
-## Example usage
+### `ignore-failed-scan`
+
+Don't fail the execution of this action even if the scan result is FAILED.
+
+### `input-type`
+
+Source of the image. Possible values:
+
+* docker-daemon   Get the image from the Docker daemon.
+                  The docker socket must be available at /var/run/docker.sock
+* cri-o           Get the image from containers-storage (CRI-O and others).
+                  Images must be stored in /var/lib/containers
+* docker-archive  Image is provided as a Docker .tar file (from docker save).
+                  Specify path to the tar file with 'input-path'
+* oci-archive     Image is provided as a OCI image tar file.
+                  Specify path to the tar file with 'input-path'
+* oci-dir         Image is provided as a OCI image, untared.
+                  Specify path to the directory file with 'input-path'
+  
+If not specified, it defaults to docker-daemon, unless 'pull-from-registry' is enabled.
+
+### `input-path`
+
+Path to the tar file or OCI layout directory.
+
+### `run-as-user`
+
+Run the scan container with this username or UID.
+It might required if scanning from docker-daemon or cri-o to provide a user with permissions on the socket or storage.
+
+### `extra-parameters`
+
+Additional parameters added to the secure-inline-scan container execution.
+
+### `extra-docker-parameters`
+
+Additional parameters added to the docker command when executing the secure-inline-scan container execution.
+
+## Example usages
+
+### Build and scan image locally using Docker
+
 
 ```yaml
     ...
@@ -36,9 +81,37 @@ Pull container image from registry instead of using the locally built image.
       run: docker build . --file Dockerfile --tag sysdiglabs/dummy-vuln-app:latest
 
     - name: Scan image
-      uses: sysdiglabs/scan-action@v2
+      uses: sysdiglabs/scan-action@v3
       with:
         image-tag: "sysdiglabs/dummy-vuln-app:latest"
         sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+        run-as-user: root
+```
 
+### Pull and scan an image from a registry
+
+```yaml
+    ...
+
+    - name: Scan image
+      uses: sysdiglabs/scan-action@v3
+      with:
+        image-tag: "sysdiglabs/dummy-vuln-app:latest"
+        sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+        pull-from-registry: true
+```
+
+### Scan a docker archive image
+
+
+```yaml
+    ...
+
+    - name: Scan image
+      uses: sysdiglabs/scan-action@v3
+      with:
+        image-tag: "sysdiglabs/dummy-vuln-app:latest"
+        sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+        input-type: docker-archive
+        input-path: artifacts/my-image.tar
 ```
