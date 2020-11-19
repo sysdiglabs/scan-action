@@ -2,6 +2,8 @@ const core = require('@actions/core');
 const exec = require('@actions/exec');
 const fs = require('fs')
 const path = require('path');
+const process = require('process');
+const Tail = require('tail').Tail;
 
 const tool_version = "3.0.0"
 const dotted_quad_tool_version = "3.0.0.0"
@@ -24,7 +26,7 @@ async function run() {
     const extra_parameters = core.getInput('extra-parameters')
     const extra_docker_parameters = core.getInput('extra-docker-parameters')
     
-    let docker_flags = "--rm"
+    let docker_flags = `--rm -v ${process.cwd()}/scan-output:/tmp/sysdig-inline-scan`
     let run_flags = `--sysdig-token ${sysdig_secure_token} --format=JSON`
     let docker_socket_path = input_path || "/var/run/docker.sock"
     
@@ -95,7 +97,16 @@ async function run() {
         }
       };
 
+      let tail = new Tail("./scan-output/info.log");
+      tail.on("line", function(data) {
+        console.log(data);
+      });
+      tail.on("error", function(error) {
+        console.log('ERROR: ', error);
+      });
+
       let retCode = await exec.exec(cmd, null, options);
+      tail.unwatch()
       if (retCode == 0) {
         core.info(`Scan was SUCCESS.`);
       } else if (retCode == 1) {

@@ -28,7 +28,8 @@
   "homepage": "https://github.com/sysdiglabs/secure-inline-scan-action#readme",
   "dependencies": {
     "@actions/core": "^1.2.6",
-    "@actions/exec": "^1.0.3"
+    "@actions/exec": "^1.0.3",
+    "tail": "^2.0.4"
   },
   "devDependencies": {
     "@vercel/ncc": "^0.25.1",
