@@ -95,7 +95,7 @@ async function run() {
       let execOutput = '';
 
       const options = {
-        silent: true,
+        silent: false,
         ignoreReturnCode: true,
         listeners:  {
           stdout: (data) => {
