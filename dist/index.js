@@ -38,7 +38,7 @@ async function run() {
     
     if (sysdig_secure_url) {
       core.info('Sysdig Secure URL: ' + sysdig_secure_url);
-      run_flags += `--sysdig-url ${sysdig_secure_url}`
+      run_flags += ` --sysdig-url ${sysdig_secure_url}`
     }
 
     if (pull_from_registry) {
