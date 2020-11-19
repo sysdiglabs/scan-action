@@ -95,7 +95,7 @@ async function run() {
       let execOutput = '';
 
       const options = {
-        silent: false,
+        silent: true,
         ignoreReturnCode: true,
         listeners:  {
           stdout: (data) => {
@@ -103,7 +103,6 @@ async function run() {
           }
         }
       };
-
 
       fs.mkdirSync("./scan-output", {recursive: true})
       fs.chmodSync("./scan-output", 0o777)
