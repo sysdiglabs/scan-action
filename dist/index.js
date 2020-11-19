@@ -271,7 +271,10 @@ function renderResults(vulnerabilities) {
 function generateSARIFReport(){
   let reportData = fs.readFileSync("./report.json");
   let report = JSON.parse(reportData);
-  let vulnerabilities = report.vulnsReport.vulnerabilities
+  let vulnerabilities = []
+  if (report.vulnsReport) {
+    vulnerabilities = report.vulnsReport.vulnerabilities
+  }
 
   let sarifOutput = vulnerabilities2SARIF(vulnerabilities);
   fs.writeFileSync("./sarif.json", JSON.stringify(sarifOutput, null, 2));
