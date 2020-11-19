@@ -99,7 +99,9 @@ async function run() {
 
 
       fs.mkdirSync("./scan-output", {recursive: true})
+      fs.chmodSync("./scan-output", 0o777)
       fs.closeSync(fs.openSync("./scan-output/info.log", 'w'));
+      fs.chmodSync("./scan-output/info.log", 0o666)
       let tail = new Tail("./scan-output/info.log", {fromBeginning: true, follow: true});
       tail.on("line", function(data) {
         console.log(data);
