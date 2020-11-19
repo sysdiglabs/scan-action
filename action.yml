@@ -58,12 +58,7 @@ outputs:
     description: Path to a JSON file containing the report results, failed evaluation gates, and found vulnerabilities.
   sarifReport:
     description: |
-      Path to a SARIF report, that can be uploaded using the codeql-action/upload-sarif action.
-      Example:
-
-      - uses: github/codeql-action/upload-sarif@v1
-      with:
-        sarif_file: ${{ steps.scan.outputs.sarifReport }}
+      Path to a SARIF report, that can be uploaded using the codeql-action/upload-sarif action. See the README for more information.
 
 branding:
   icon: 'shield'
