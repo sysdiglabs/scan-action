@@ -10,8 +10,9 @@ const exec = __webpack_require__(514);
 const fs = __webpack_require__(747)
 const path = __webpack_require__(622);
 
-const toolVersion = "3.0.0"
-const dottedQuadToolVersion = "3.0.0.0"
+const tool_version = "3.0.0"
+const dotted_quad_tool_version = "3.0.0.0"
+const secure_inline_scan_image = "airadier/secure-inline-scan:ci"
 
 async function run() {
   
@@ -86,7 +87,7 @@ async function run() {
 
     run_flags += ` ${image_tag}`;
 
-    let cmd = `docker run ${docker_flags} sysdiglabs/secure-inline-scan:2 ${run_flags}`;
+    let cmd = `docker run ${docker_flags} ${secure_inline_scan_image} ${run_flags}`;
 
     try {
       let execOutput = '';
@@ -142,9 +143,9 @@ function vulnerabilities2SARIF(vulnerabilities) {
           "driver": {
           "name": "Sysdig Inline Scanner V2",
           "fullName": "Sysdig Inline Scanner V2",
-          "version": toolVersion,
-          "semanticVersion": toolVersion,
-          "dottedQuadFileVersion": dottedQuadToolVersion,
+          "version": tool_version,
+          "semanticVersion": tool_version,
+          "dottedQuadFileVersion": dotted_quad_tool_version,
           "rules": renderRules(vulnerabilities)
           }
       },
