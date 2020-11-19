@@ -97,16 +97,17 @@ async function run() {
         }
       };
 
-      let tail = new Tail("./scan-output/info.log");
+
+      fs.mkdirSync("./scan-output", {recursive: true})
+      fs.closeSync(fs.openSync("./scan-output/info.log", 'w'));
+      let tail = new Tail("./scan-output/info.log", {fromBeginning: true, follow: true});
       tail.on("line", function(data) {
         console.log(data);
-      });
-      tail.on("error", function(error) {
-        console.log('ERROR: ', error);
       });
 
       let retCode = await exec.exec(cmd, null, options);
       tail.unwatch()
+      
       if (retCode == 0) {
         core.info(`Scan was SUCCESS.`);
       } else if (retCode == 1) {
