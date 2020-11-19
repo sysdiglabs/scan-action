@@ -4,6 +4,7 @@
   "description": "This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.",
   "main": "index.js",
   "scripts": {
+    "lint": "eslint index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -27,5 +28,8 @@
   "dependencies": {
     "@actions/core": "^1.2.6",
     "@actions/exec": "^1.0.3"
+  },
+  "devDependencies": {
+    "eslint": "^7.13.0"
   }
 }

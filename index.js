@@ -1,9 +1,12 @@
 const core = require('@actions/core');
 const exec = require('@actions/exec');
-const path = require('path')
-const querystring = require("querystring");
+const fs = require('fs')
+const path = require('path');
 
-(async () => {
+const toolVersion = "3.0.0"
+const dottedQuadToolVersion = "3.0.0.0"
+
+async function run() {
   
   try {
 
@@ -21,7 +24,7 @@ const querystring = require("querystring");
     const extra_docker_parameters = core.getInput('extra-docker-parameters')
     
     let docker_flags = "--rm"
-    let run_flags = `--sysdig-token ${sysdig_secure_token}`
+    let run_flags = `--sysdig-token ${sysdig_secure_token} --format=JSON`
     let docker_socket_path = input_path || "/var/run/docker.sock"
     
     core.info('Analyzing image: ' + image_tag);
@@ -79,7 +82,19 @@ const querystring = require("querystring");
     let cmd = `docker run ${docker_flags} sysdiglabs/secure-inline-scan:2 ${run_flags}`;
 
     try {
-      let retCode = await exec.exec(cmd, null, {ignoreReturnCode: true});
+      let execOutput = '';
+
+      const options = {
+        silent: true,
+        ignoreReturnCode: true,
+        listeners:  {
+          stdout: (data) => {
+            execOutput += data.toString();
+          }
+        }
+      };
+
+      let retCode = await exec.exec(cmd, null, options);
       if (retCode == 0) {
         core.info(`Scan was SUCCESS.`);
       } else if (retCode == 1) {
@@ -91,6 +106,10 @@ const querystring = require("querystring");
       } else {
         core.setFailed(`Execution error`)
       }
+
+      fs.writeFileSync("./report.json", execOutput);
+      core.setOutput("scanReport", "./report.json")
+      generateSARIFReport()
     } catch (error) {
       core.setFailed(error.message);
     }
@@ -99,5 +118,155 @@ const querystring = require("querystring");
     core.setFailed(error.message);
   }
   
-})();
+}
 
+if (require.main === module) {
+  run();
+}
+
+function vulnerabilities2SARIF(vulnerabilities) {
+
+  const sarifOutput = {
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+          {
+      "tool": {
+          "driver": {
+          "name": "Sysdig Inline Scanner V2",
+          "fullName": "Sysdig Inline Scanner V2",
+          "version": toolVersion,
+          "semanticVersion": toolVersion,
+          "dottedQuadFileVersion": dottedQuadToolVersion,
+          "rules": renderRules(vulnerabilities)
+          }
+      },
+      "logicalLocations": [
+                  {
+          "name": "container-image",
+          "fullyQualifiedName": "container-image",
+          "kind": "namespace"
+                  }
+      ],
+      "results": renderResults(vulnerabilities),
+      "columnKind": "utf16CodeUnits"
+          }
+  ]
+  }
+
+  return(sarifOutput)
+}
+
+function renderRules(vulnerabilities) {
+  var ret = {}
+  if (vulnerabilities) {
+  ret = vulnerabilities.map(v =>
+                {
+                    return {
+                    "id": "ANCHOREVULN_"+v.vuln+"_"+v.package_type+"_"+v.package,
+                    "shortDescription": {
+                        "text": v.vuln + " Severity=" + v.severity + " Package=" + v.package + " Type=" + v.package_type + " Fix=" + v.fix + " Url=" + v.url,
+                    },
+                    "fullDescription": {
+                        "text": v.vuln + " Severity=" + v.severity + " Package=" + v.package + " Type=" + v.package_type + " Fix=" + v.fix + " Url=" + v.url,
+                    },
+                    "help": {
+                        "text": "Vulnerability "+v.vuln+"\n"+
+                        "Severity: "+v.severity+"\n"+
+                        "Package: "+v.package_name+"\n"+
+                        "Version: "+v.package_version+"\n"+
+                        "Fix Version: "+v.fix+"\n"+
+                        "Type: "+v.package_type+"\n"+
+                        "Location: "+v.package_path+"\n"+
+                        "Data Namespace: "+v.feed + ", "+v.feed_group+"\n"+
+                        "Link: ["+v.vuln+"]("+v.url+")",
+                        "markdown": "**Vulnerability "+v.vuln+"**\n"+
+                        "| Severity | Package | Version | Fix Version | Type | Location | Data Namespace | Link |\n"+
+                        "| --- | --- | --- | --- | --- | --- | --- | --- |\n"+
+                        "|"+v.severity+"|"+v.package_name+"|"+v.package_version+"|"+v.fix+"|"+v.package_type+"|"+v.package_path+"|"+v.feed_group+"|["+v.vuln+"]("+v.url+")|\n"
+                    }
+
+                    }
+                }
+               );
+  }
+  return(ret);
+}
+
+function convertSeverityToSARIF(input_severity) {
+  var ret = "error";
+  // const severityLevels = {
+  //   Unknown: 0,
+  //   Negligible: 1,
+  //   Low: 2,
+  //   Medium: 3,
+  //   High: 4,
+  //   Critical: 5,
+  // };
+
+  return ret;
+}
+
+
+
+function renderResults(vulnerabilities) {
+  var ret = {};
+
+  if (vulnerabilities) {
+    ret = vulnerabilities.map((v) => {
+      return {
+        ruleId:
+          "ANCHOREVULN_" + v.vuln + "_" + v.package_type + "_" + v.package,
+        ruleIndex: 0,
+        level: convertSeverityToSARIF(v.severity),
+        message: {
+          text: v.vuln + " Severity=" + v.severity + "Package=" + v.package + " Type=" + v.package_type + " Fix=" + v.fix + " Url=" + v.url,
+          id: "default",
+        },
+        analysisTarget: {
+          uri: "Container image",
+          index: 0,
+        },
+        locations: [
+          {
+            physicalLocation: {
+              artifactLocation: {
+                uri: "Container image",
+              },
+              region: {
+                startLine: 1,
+                startColumn: 1,
+                endLine: 1,
+                endColumn: 1,
+                byteOffset: 1,
+                byteLength: 1,
+              },
+            },
+            logicalLocations: [
+              {
+                fullyQualifiedName: "container-image",
+              },
+            ],
+          },
+        ],
+        suppressions: [
+          {
+            kind: "external",
+          },
+        ],
+        baselineState: "unchanged",
+      };
+    });
+  }
+  return ret;
+}
+
+function generateSARIFReport(){
+  let reportData = fs.readFileSync("./report.json");
+  let report = JSON.parse(reportData);
+  let vulnerabilities = report.vulnsReport.vulnerabilities
+
+  let sarifOutput = vulnerabilities2SARIF(vulnerabilities);
+  fs.writeFileSync("./sarif.json", JSON.stringify(sarifOutput, null, 2));
+  core.setOutput("sarifReport", "./sarif.json")
+}

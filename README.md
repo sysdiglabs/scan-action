@@ -70,10 +70,34 @@ Additional parameters added to the secure-inline-scan container execution.
 
 Additional parameters added to the docker command when executing the secure-inline-scan container execution.
 
+## SARIF Report
+
+The action generates a SARIF report that can be uploaded using the `codeql-action/upload-sarif` action.
+
+You need to assign an ID to the Sysdig Scan Action step, like:
+
+```yaml
+    ...
+
+    - name: Scan image
+      id: scan
+      uses: sysdiglabs/scan-action@v3
+      with:
+        ...
+```
+
+and then add another step for uploading the SARIF report, providing the path in the `sarifReport` output:
+
+```yaml
+    ...
+      - uses: github/codeql-action/upload-sarif@v1
+      with:
+        sarif_file: ${{ steps.scan.outputs.sarifReport }}
+```
+
 ## Example usages
 
-### Build and scan image locally using Docker
-
+### Build and scan image locally using Docker, and upload SARIF report
 
 ```yaml
     ...
@@ -81,11 +105,16 @@ Additional parameters added to the docker command when executing the secure-inli
       run: docker build . --file Dockerfile --tag sysdiglabs/dummy-vuln-app:latest
 
     - name: Scan image
+      id: scan
       uses: sysdiglabs/scan-action@v3
       with:
         image-tag: "sysdiglabs/dummy-vuln-app:latest"
         sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
         run-as-user: root
+
+      - uses: github/codeql-action/upload-sarif@v1
+      with:
+        sarif_file: ${{ steps.scan.outputs.sarifReport }}
 ```
 
 ### Pull and scan an image from a registry
