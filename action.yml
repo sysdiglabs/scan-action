@@ -8,7 +8,7 @@ inputs:
     description: API token for Sysdig Scanning auth.
     required: true
   github-token:
-    description: Github App token to publish the checks. You can use secrets.GITHUB_TOKEN. See https://docs.github.com/en/free-pro-team@latest/actions/reference/authentication-in-a-workflow#about-the-github_token-secret
+    description: Github App token to publish the checks. By default it will use "github.token value". See https://docs.github.com/en/free-pro-team@latest/actions/reference/authentication-in-a-workflow#about-the-github_token-secret
     default: ${{ github.token }}
     required: true
   sysdig-secure-url:

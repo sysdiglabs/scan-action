@@ -14,21 +14,6 @@ This action performs analysis on locally built container image and posts the res
 
 Directly specifying the API token in the action configuration is not recommended. A better approach is to [store it in GitHub secrets](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets), and reference `${{ secrets.MY_SECRET_NAME }}` instead.
 
-### `github-token`
-
-**Required** Github App token to publish the checks. You can use secrets.GITHUB_TOKEN:
-
-```yaml
-    - name: Scan image
-      uses: sysdiglabs/scan-action@v3
-      ...
-      with:
-        ...
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-```
-
-See https://docs.github.com/en/free-pro-team@latest/actions/reference/authentication-in-a-workflow#about-the-github_token-secret
-
 ### `sysdig-secure-url`
 
 Sysdig Secure URL. Example: "https://secure-sysdig.svc.cluster.local".
@@ -126,7 +111,6 @@ and then add another step for uploading the SARIF report, providing the path in 
         image-tag: "sysdiglabs/dummy-vuln-app:latest"
         sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
         run-as-user: root
-        github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: github/codeql-action/upload-sarif@v1
       with:
@@ -145,7 +129,6 @@ and then add another step for uploading the SARIF report, providing the path in 
         image-tag: "sysdiglabs/dummy-vuln-app:latest"
         sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
         pull-from-registry: true
-        github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ### Scan a docker archive image
@@ -161,5 +144,4 @@ and then add another step for uploading the SARIF report, providing the path in 
         sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
         input-type: docker-archive
         input-path: artifacts/my-image.tar
-        github-token: ${{ secrets.GITHUB_TOKEN }}
 ```

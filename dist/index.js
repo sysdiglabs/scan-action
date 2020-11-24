@@ -338,7 +338,6 @@ async function generateChecks(scanResult, vulnerabilities) {
       }
     });
   } catch (error) {
-    console.log(error);
     core.warning("Error creating check run: " + error);
   }
 }
