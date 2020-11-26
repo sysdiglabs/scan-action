@@ -1,0 +1,23 @@
+name: Scan
+
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      image:
+        description: Image to scan
+        required: true
+        default: alpine:3.7
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Scan image
+        id: scan
+        uses: sysdiglabs/scan-action@use-inline-scan-v2 
+        with:
+          image-tag: "alpine:3.7"
+          sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+          pull-from-registry: true
