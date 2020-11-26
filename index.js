@@ -247,7 +247,7 @@ function vulnerabilities2SARIFRules(vulnerabilities) {
           fullDescription: {
               text: getSARIFVulnFullDescription(v),
           },
-          help: getSARIFVulnHelp()
+          help: getSARIFVulnHelp(v)
         }
       }
     );
