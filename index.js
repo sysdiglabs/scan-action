@@ -34,7 +34,7 @@ function printOptions(opts) {
     core.info('Sysdig Secure URL: ' + opts.sysdigSecureURL);
   }
 
-  if (!opts.inputType) {
+  if (opts.inputType == "pull") {
     core.info('Input type: pull from registry');
   } else {
     core.info(`Input type: ${opts.inputType}`);
@@ -65,7 +65,7 @@ function composeFlags(opts) {
     runFlags += ` --sysdig-url ${opts.sysdigSecureURL}`;
   }
 
-  if (opts.inputType) {
+  if (opts.inputType != "pull") {
     runFlags += ` --storage-type=${opts.inputType}`;
 
     if (opts.inputType == "docker-daemon") {
@@ -140,7 +140,8 @@ async function run() {
           core.setFailed(`Scan was FAILED.`);
         }
       } else {
-        core.setFailed(`Execution error`);
+        core.setFailed(`
+        or:\n${result.Output}`);
       }
 
       let report = JSON.parse(result.Output);
@@ -185,7 +186,7 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
   });
 
   const options = {
-    silent: false,
+    silent: true,
     ignoreReturnCode: true,
     listeners:  {
       stdout: (data) => {
@@ -196,7 +197,6 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
   
   let start = performance.now();
   let cmd = `docker run ${dockerFlags} ${scanImage} ${runFlags}`;
-  core.info("Cmd: " + cmd);
   let retCode = await exec.exec(cmd, null, options);
   core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
   tail.unwatch();
