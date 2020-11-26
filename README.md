@@ -28,18 +28,15 @@ Skip TLS verification when calling secure endpoints.
 
 Path to Dockerfile. Example: `"./Dockerfile"`.
 
-### `pull-from-registry`
-
-Pull container image from registry instead of using a locally built image. It takes precedence over any 'input-type'.
-
 ### `ignore-failed-scan`
 
 Don't fail the execution of this action even if the scan result is FAILED.
 
 ### `input-type`
 
-Source of the image. Possible values:
-
+If specified, where should we scan the image from. Possible values:
+* pull            Pull the image from the registry.
+                  Default if not specified.
 * docker-daemon   Get the image from the Docker daemon.
                   The docker socket must be available at /var/run/docker.sock
 * cri-o           Get the image from containers-storage (CRI-O and others).
@@ -50,8 +47,6 @@ Source of the image. Possible values:
                   Specify path to the tar file with 'input-path'
 * oci-dir         Image is provided as a OCI image, untared.
                   Specify path to the directory file with 'input-path'
-  
-If not specified, it defaults to docker-daemon, unless 'pull-from-registry' is enabled.
 
 ### `input-path`
 
@@ -128,7 +123,6 @@ and then add another step for uploading the SARIF report, providing the path in 
       with:
         image-tag: "sysdiglabs/dummy-vuln-app:latest"
         sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
-        pull-from-registry: true
 ```
 
 ### Scan a docker archive image

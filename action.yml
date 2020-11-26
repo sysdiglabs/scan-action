@@ -21,15 +21,14 @@ inputs:
   dockerfile-path:
     description: 'Path to Dockerfile (ex: "./Dockerfile").'
     required: false
-  pull-from-registry:
-    description: Pull docker image from registry. It takes precedence over any 'input-type'.
-    required: false
   ignore-failed-scan:
     description: Don't fail the execution of this action even if the scan result is FAILED.
     required: false
   input-type:
     description: |
-      Where should we scan the image from. Possible values:
+      If specified, where should we scan the image from. Possible values:
+        pull            Pull the image from the registry.
+                        Default if not specified.
         docker-daemon   Get the image from the Docker daemon.
                         The docker socket must be available at /var/run/docker.sock
         cri-o           Get the image from containers-storage (CRI-O and others).
@@ -40,9 +39,8 @@ inputs:
                         Specify path to the tar file with 'input-path'
         oci-dir         Image is provided as a OCI image, untared.
                         Specify path to the directory file with 'input-path'
-        
-      If not specified, it defaults to docker-daemon, unless 'pull-from-registry' is enabled.
-    required: false
+    default: pull
+    required: true
   input-path:
     description: Path to the tar file or OCI layout directory.
     required: false  

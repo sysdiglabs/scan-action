@@ -11,82 +11,122 @@ const toolVersion = "3.0.0";
 const dottedQuadToolVersion = "3.0.0.0";
 const secureInlineScanImage = "airadier/secure-inline-scan:ci";
 
+
+function parseActionInputs() {
+  return {
+    imageTag: core.getInput('image-tag', {required: true}),
+    sysdigSecureToken: core.getInput('sysdig-secure-token', {required: true}),
+    sysdigSecureURL: core.getInput('sysdig-secure-url'),
+    sysdigSkipTLS: core.getInput('sysdig-skip-tls') == 'true',
+    dockerfilePath: core.getInput('dockerfile-path'),
+    ignoreFailedScan: core.getInput('ignore-failed-scan') == 'true',
+    inputType: core.getInput('input-type'),
+    inputPath: core.getInput('input-path'),
+    runAsUser: core.getInput('run-as-user'),
+    extraParameters: core.getInput('extra-parameters'),
+    extraDockerParameters: core.getInput('extra-docker-parameters')
+    }
+}
+
+
+function printOptions(opts) {
+  if (opts.sysdigSecureURL) {
+    core.info('Sysdig Secure URL: ' + opts.sysdigSecureURL);
+  }
+
+  if (!opts.inputType) {
+    core.info('Input type: pull from registry');
+  } else {
+    core.info(`Input type: ${opts.inputType}`);
+  }
+
+  if (opts.inputPath) {
+    core.info(`Input path: ${opts.inputPath}`);
+  }
+
+  if (opts.dockerfilePath) {
+    core.info(`Dockerfile Path: ${opts.dockerfilePath}`);
+  }
+
+  if (opts.runAsUser) {
+    core.info(`Running as user: ${opts.runAsUser}`);
+  }
+
+  if (opts.sysdigSkipTLS) {
+    core.info(`Sysdig skip TLS: true`);
+  }
+}
+
+function composeFlags(opts) {
+  let dockerFlags = `--rm -v ${process.cwd()}/scan-output:/tmp/sysdig-inline-scan`;
+  let runFlags = `--sysdig-token=${opts.sysdigSecureToken || ""} --format=JSON`;
+
+  if (opts.sysdigSecureURL) {
+    runFlags += ` --sysdig-url ${opts.sysdigSecureURL}`;
+  }
+
+  if (opts.inputType) {
+    runFlags += ` --storage-type=${opts.inputType}`;
+
+    if (opts.inputType == "docker-daemon") {
+      let dockerSocketPath = opts.inputPath || "/var/run/docker.sock";
+      dockerFlags += ` -v ${dockerSocketPath}:/var/run/docker.sock`;
+    } else if (opts.inputPath) {
+        let filename = path.basename(opts.inputPath);
+        dockerFlags += ` -v ${path.resolve(opts.inputPath)}:/tmp/${filename}`;
+        runFlags += ` --storage-path=/tmp/${filename}`;
+    }  
+  }
+
+  if (opts.dockerfilePath) {
+    dockerFlags += ` -v ${path.resolve(opts.dockerfilePath)}:/tmp/Dockerfile`;
+    runFlags += ` --dockerfile=/tmp/Dockerfile`;
+  }
+
+  if (opts.runAsUser) {
+    dockerFlags += ` -u ${opts.runAsUser}`;
+  }
+
+  if (opts.sysdigSkipTLS) {
+    runFlags += ` --sysdig-skip-tls`;
+  }
+
+  if (opts.extraParameters) {
+    runFlags += ` ${opts.extraParameters}`;
+  }
+
+  if (opts.extraDockerParameters) {
+    dockerFlags += ` ${opts.extraDockerParameters}`;
+  }
+
+  runFlags += ` ${opts.imageTag || ""}`;
+
+  return {
+    dockerFlags: dockerFlags,
+    runFlags: runFlags
+  }
+}
+
+function writeReport(reportData) {
+  fs.writeFileSync("./report.json", reportData);
+  core.setOutput("scanReport", "./report.json");
+}
+
 async function run() {
   
   try {
 
-    const imageTag = core.getInput('image-tag', {required: true});
-    const sysdigSecureToken = core.getInput('sysdig-secure-token', {required: true});
-    const sysdigSecureURL = core.getInput('sysdig-secure-url');
-    const sysdigSkipTLS = core.getInput('sysdig-skip-tls') == 'true';
-    const dockerfilePath = core.getInput('dockerfile-path');
-    const pullFromRegistry = core.getInput('pull-from-registry') == 'true';
-    const ignoreFailedScan = core.getInput('ignore-failed-scan') == 'true';
-    const inputType = core.getInput('input-type');
-    const inputPath = core.getInput('input-path');
-    const runAsUser = core.getInput('run-as-user');
-    const extraParameters = core.getInput('extra-parameters');
-    const extraDockerParameters = core.getInput('extra-docker-parameters');
-    
-    let dockerFlags = `--rm -v ${process.cwd()}/scan-output:/tmp/sysdig-inline-scan`;
-    let runFlags = `--sysdig-token ${sysdigSecureToken} --format=JSON`;
-
-    if (sysdigSecureURL) {
-      core.info('Sysdig Secure URL: ' + sysdigSecureURL);
-      runFlags += ` --sysdig-url ${sysdigSecureURL}`;
-    }
-
-    let storageType = inputType
-    if (pullFromRegistry) {
-      core.info('Input type: pull from registry');
-    } else {
-      core.info(`Input type: ${inputType}`);
-      storageType = storageType || "docker-daemon";
-      runFlags += ` --storage-type=${storageType}`;
-    }
-
-    if (inputPath) {
-      core.info(`Input path: ${inputPath}`);
-      let filename = path.basename(inputPath);
-      dockerFlags += ` -v ${path.resolve(inputPath)}:/tmp/${filename}`;
-      runFlags += ` --storage-path=/tmp/${filename}`;
-    }
-
-    if (storageType == "docker-daemon") {
-      let dockerSocketPath = inputPath || "/var/run/docker.sock";
-      dockerFlags += ` -v ${dockerSocketPath}:/var/run/docker.sock`;
-    }
-
-    if (dockerfilePath) {
-      core.info(`Dockerfile Path: ${dockerfilePath}`);
-      dockerFlags += ` -v ${path.resolve(dockerfilePath)}:/tmp/Dockerfile`;
-      runFlags += ` --dockerfile /tmp/Dockerfile`;
-    }
-
-    if (runAsUser) {
-      core.info(`Running as user: ${runAsUser}`);
-      dockerFlags += ` -u ${runAsUser}`;
-    }
-
-    if (sysdigSkipTLS) {
-      core.info(`Sysdig skip TLS: true`);
-      runFlags += `--sysdig-skip-tls`;
-    }
-
-    if (extraParameters) {
-      runFlags += ` ${extraParameters}`;
-    }
-
-    if (extraDockerParameters) {
-      dockerFlags += ` ${extraDockerParameters}`;
-    }
-
-    runFlags += ` ${imageTag}`;
+    let opts = parseActionInputs();
+    printOptions(opts);
+    let flags = composeFlags(opts);
 
     try {
-      await pullScanImage();
+      await pullScanImage(secureInlineScanImage);
 
-      let result = await executeInlineScan(imageTag, dockerFlags, runFlags);
+      core.info('Analyzing image: ' + opts.imageTag);
+      let result = await executeInlineScan(secureInlineScanImage, flags.dockerFlags, flags.runFlags);
+
+      writeReport(result.Output);
       
       let scanResult = "unknown";
       if (result.ReturnCode == 0) {
@@ -94,7 +134,7 @@ async function run() {
         core.info(`Scan was SUCCESS.`);
       } else if (result.ReturnCode == 1) {
         scanResult = "Failed";
-        if (ignoreFailedScan) {
+        if (opts.ignoreFailedScan) {
           core.info(`Scan was FAILED.`);
         } else {
           core.setFailed(`Scan was FAILED.`);
@@ -103,21 +143,17 @@ async function run() {
         core.setFailed(`Execution error`);
       }
 
-      fs.writeFileSync("./report.json", result.Output);
-      core.setOutput("scanReport", "./report.json");
-
-      let reportData = fs.readFileSync("./report.json");
-      let report = JSON.parse(reportData);
+      let report = JSON.parse(result.Output);
 
       let vulnerabilities = [];
       if (report.vulnsReport) {
         vulnerabilities = report.vulnsReport.vulnerabilities;
       }
 
-      let checkGens = generateChecks(scanResult, vulnerabilities);
+      let checkGensPromise = generateChecks(scanResult, vulnerabilities);
       generateSARIFReport(vulnerabilities);
 
-      await checkGens
+      await checkGensPromise
 
     } catch (error) {
       core.setFailed(error.message);
@@ -127,16 +163,15 @@ async function run() {
   }
 }
 
-async function pullScanImage() {
+async function pullScanImage(scanImage) {
   let start = performance.now();
-  core.info('Pulling inline-scanner image: ' + secureInlineScanImage);
-  let cmd = `docker pull ${secureInlineScanImage}`;
+  core.info('Pulling inline-scanner image: ' + scanImage);
+  let cmd = `docker pull ${scanImage}`;
   await exec.exec(cmd, null);
   core.info("Image pull took " + Math.round(performance.now() - start) + " milliseconds.");
 }
 
-async function executeInlineScan(image_tag, docker_flags, run_flags) {
-  core.info('Analyzing image: ' + image_tag);
+async function executeInlineScan(scanImage, dockerFlags, runFlags) {
 
   let execOutput = '';
 
@@ -160,7 +195,7 @@ async function executeInlineScan(image_tag, docker_flags, run_flags) {
   };
   
   let start = performance.now();
-  let cmd = `docker run ${docker_flags} ${secureInlineScanImage} ${run_flags}`;
+  let cmd = `docker run ${dockerFlags} ${scanImage} ${runFlags}`;
   let retCode = await exec.exec(cmd, null, options);
   core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
   tail.unwatch();
@@ -172,64 +207,46 @@ function vulnerabilities2SARIF(vulnerabilities) {
 
   const sarifOutput = {
   "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
-  "version": "2.1.0",
-  "runs": [
-          {
-      "tool": {
-          "driver": {
-          "name": "Sysdig Inline Scanner V2",
-          "fullName": "Sysdig Inline Scanner V2",
-          "version": toolVersion,
-          "semanticVersion": toolVersion,
-          "dottedQuadFileVersion": dottedQuadToolVersion,
-          "rules": renderRules(vulnerabilities)
-          }
-      },
-      "logicalLocations": [
-                  {
-          "name": "container-image",
-          "fullyQualifiedName": "container-image",
-          "kind": "namespace"
-                  }
-      ],
-      "results": renderResults(vulnerabilities),
-      "columnKind": "utf16CodeUnits"
-          }
-  ]
+  version: "2.1.0",
+  runs: [{
+          tool: {
+              driver: {
+                name: "Sysdig Inline Scanner V2",
+                fullName: "Sysdig Inline Scanner V2",
+                version: toolVersion,
+                semanticVersion: toolVersion,
+                dottedQuadFileVersion: dottedQuadToolVersion,
+                rules: vulnerabilities2SARIFRules(vulnerabilities)
+              }
+          },
+          logicalLocations: [
+              {
+                name: "container-image",
+                fullyQualifiedName: "container-image",
+                kind: "namespace"
+              }
+          ],
+          results: vulnerabilities2SARIFResults(vulnerabilities),
+          columnKind: "utf16CodeUnits"
+      }]
   };
 
   return(sarifOutput);
 }
 
-function renderRules(vulnerabilities) {
+function vulnerabilities2SARIFRules(vulnerabilities) {
   var ret = {};
   if (vulnerabilities) {
-    ret = vulnerabilities.map(v =>
-      {
+    ret = vulnerabilities.map(v => {
         return {
-        "id": "ANCHOREVULN_"+v.vuln+"_"+v.package_type+"_"+v.package,
-        "shortDescription": {
-            "text": v.vuln + " Severity=" + v.severity + " Package=" + v.package + " Type=" + v.package_type + " Fix=" + v.fix + " Url=" + v.url,
-        },
-        "fullDescription": {
-            "text": v.vuln + " Severity=" + v.severity + " Package=" + v.package + " Type=" + v.package_type + " Fix=" + v.fix + " Url=" + v.url,
-        },
-        "help": {
-            "text": "Vulnerability "+v.vuln+"\n"+
-            "Severity: "+v.severity+"\n"+
-            "Package: "+v.package_name+"\n"+
-            "Version: "+v.package_version+"\n"+
-            "Fix Version: "+v.fix+"\n"+
-            "Type: "+v.package_type+"\n"+
-            "Location: "+v.package_path+"\n"+
-            "Data Namespace: "+v.feed + ", "+v.feed_group+"\n"+
-            "Link: ["+v.vuln+"]("+v.url+")",
-            "markdown": "**Vulnerability "+v.vuln+"**\n"+
-            "| Severity | Package | Version | Fix Version | Type | Location | Data Namespace | Link |\n"+
-            "| --- | --- | --- | --- | --- | --- | --- | --- |\n"+
-            "|"+v.severity+"|"+v.package_name+"|"+v.package_version+"|"+v.fix+"|"+v.package_type+"|"+v.package_path+"|"+v.feed_group+"|["+v.vuln+"]("+v.url+")|\n"
-        }
-
+          id: getRuleId(v),
+          shortDescription: {
+              text: getSARIFVulnShortDescription(v),
+          },
+          fullDescription: {
+              text: getSARIFVulnFullDescription(v),
+          },
+          help: getSARIFVulnHelp()
         }
       }
     );
@@ -237,32 +254,17 @@ function renderRules(vulnerabilities) {
   return(ret);
 }
 
-// function convertSeverityToSARIF(input_severity) {
-//   var ret = "error";
-//   const severityLevels = {
-//     Unknown: 0,
-//     Negligible: 1,
-//     Low: 2,
-//     Medium: 3,
-//     High: 4,
-//     Critical: 5,
-//   };
-
-//   return ret;
-// }
-
-function renderResults(vulnerabilities) {
+function vulnerabilities2SARIFResults(vulnerabilities) {
   var ret = {};
 
   if (vulnerabilities) {
     ret = vulnerabilities.map((v) => {
       return {
-        ruleId:
-          "ANCHOREVULN_" + v.vuln + "_" + v.package_type + "_" + v.package,
+        ruleId: getRuleId(v),
         ruleIndex: 0,
         level: "error",
         message: {
-          text: v.vuln + " Severity=" + v.severity + "Package=" + v.package + " Type=" + v.package_type + " Fix=" + v.fix + " Url=" + v.url,
+          text: getSARIFVulnShortDescription(v),
           id: "default",
         },
         analysisTarget: {
@@ -301,6 +303,43 @@ function renderResults(vulnerabilities) {
     });
   }
   return ret;
+}
+
+
+function getSARIFVulnShortDescription(v) {
+  return `${v.vuln} Severity: ${v.severity} Package: ${v.package}`;
+}
+
+function getSARIFVulnFullDescription(v) {
+  return `${v.vuln}
+Severity: ${v.severity}
+Package: ${v.package}
+Type: ${v.package_type}
+Fix: ${v.fix}
+URL: ${v.url}`;
+}
+
+function getSARIFVulnHelp(v) {
+  return {
+    text: `Vulnerability ${v.vuln}
+Severity: ${v.severity}
+Package: ${v.package_name}
+Version: ${v.package_version}
+Fix Version: ${v.fix}
+Type: ${v.package_type}
+Location: ${v.package_path}
+Data Namespace: ${v.feed}, ${v.feed_group}
+URL: ${v.url}`,
+    markdown: `
+**Vulnerability [${v.vuln}](${v.url})**
+| Severity | Package | Version | Fix Version | Type | Location | Data Namespace |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+|${v.severity}|${v.package_name}|${v.package_version$}|${v.fix}|${v.package_type}|${v.package_path}|${v.feed_group}|`
+  }
+}
+
+function getRuleId(v) {
+  return "VULN_" + v.vuln + "_" + v.package_type + "_" + v.package;
 }
 
 function generateSARIFReport(vulnerabilities) {
@@ -349,6 +388,8 @@ function getReportAnnotations(vulnerabilities) {
     }
   );
 }
+
+module.exports = {parseActionInputs, composeFlags, pullScanImage, executeInlineScan};
 
 if (require.main === module) {
   run();
