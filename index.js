@@ -334,8 +334,8 @@ URL: ${v.url}`,
     markdown: `
 **Vulnerability [${v.vuln}](${v.url})**
 | Severity | Package | Version | Fix Version | Type | Location | Data Namespace |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-|${v.severity}|${v.package_name}|${v.package_version$}|${v.fix}|${v.package_type}|${v.package_path}|${v.feed_group}|`
+| --- | --- | --- | --- | --- | --- | --- |
+| ${v.severity} | ${v.package_name} | ${v.package_version} | ${v.fix} | ${v.package_type} | ${v.package_path} | ${v.feed}, ${v.feed_group} |`
   }
 }
 
