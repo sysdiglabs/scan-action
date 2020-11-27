@@ -8,11 +8,11 @@ function prepareTemporaryDir() {
     let tmpDir = tmp.dirSync().name;
     let cwd = process.cwd();
     process.chdir(tmpDir);
-    return {tmpDir: tmpDir, cwd: cwd}
+    return { tmpDir: tmpDir, cwd: cwd }
 }
 
 function cleanupTemporaryDir(tmpDir) {
-    fs.rmdirSync(tmpDir.tmpDir, {recursive: true});
+    fs.rmdirSync(tmpDir.tmpDir, { recursive: true });
     process.chdir(tmpDir.cwd);
 }
 
@@ -32,7 +32,7 @@ describe("input parsing", () => {
 
     afterEach(() => {
         process.env = oldEnv; // restore old env
-      });
+    });
 
     it("raises error if no token provided", () => {
         process.env['INPUT_IMAGE-TAG'] = "image:tag";
@@ -144,7 +144,7 @@ describe("docker flags", () => {
 describe("execution flags", () => {
 
     it("uses default flags", () => {
-        let flags = index.composeFlags({sysdigSecureToken: "foo-token", imageTag: "image:tag"});
+        let flags = index.composeFlags({ sysdigSecureToken: "foo-token", imageTag: "image:tag" });
         expect(flags.runFlags).toMatch(/(^| )--sysdig-token[ =]foo-token($| )/)
         expect(flags.runFlags).toMatch(/(^| )--format[ =]JSON($| )/);
         expect(flags.runFlags).toMatch(/(^| )image:tag($| )/);
@@ -269,7 +269,7 @@ describe("process scan results", () => {
         index = require("..");
     })
 
-    afterEach(()=> {
+    afterEach(() => {
         jest.resetModules() // most important - it clears the cache
         index = require("..");
     })
@@ -336,7 +336,7 @@ describe("process scan results", () => {
 
     it("generates a check run with vulnerability annotations", async () => {
         let data;
-        github.context = {repo: { repo: "foo-repo", owner: "foo-owner" }};
+        github.context = { repo: { repo: "foo-repo", owner: "foo-owner" } };
 
         core.getInput = jest.fn();
         core.getInput.mockReturnValueOnce("foo");
@@ -361,11 +361,38 @@ describe("process scan results", () => {
         expect(github.getOctokit).toBeCalledWith("foo");
         expect(data).not.toBeUndefined();
         expect(data.name).toBe("Scan results");
-        expect(data.output.annotations).toContainEqual({"annotation_level": "warning", "end_line": 1, "message": "CVE-2019-14697 Severity=High Package=musl-1.1.18-r3 Type=APKG Fix=1.1.18-r4 Url=https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-14697", "path": "Dockerfile", "start_line": 1, "title": "CVE-2019-14697"});
+        expect(data.output.annotations).toContainEqual({ "annotation_level": "warning", "end_line": 1, "message": "CVE-2019-14697 Severity=High Package=musl-1.1.18-r3 Type=APKG Fix=1.1.18-r4 Url=https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-14697", "path": "Dockerfile", "start_line": 1, "title": "Vulnerability found: CVE-2019-14697" });
     })
 
-    xit("generates a check run with gate annotations", async () => {
+    it("generates a check run with gate annotations", async () => {
+        let data;
+        github.context = { repo: { repo: "foo-repo", owner: "foo-owner" } };
 
+        core.getInput = jest.fn();
+        core.getInput.mockReturnValueOnce("foo");
+
+        github.getOctokit = jest.fn(() => {
+            return {
+                checks: {
+                    create: async function (receivedData) {
+                        data = receivedData;
+                    }
+                }
+            }
+        });
+
+        let scanResult = {
+            ReturnCode: 0,
+            Output: exampleReport,
+            Error: ""
+        };
+
+        await index.processScanResult(scanResult);
+        expect(github.getOctokit).toBeCalledWith("foo");
+        expect(data).not.toBeUndefined();
+        expect(data.name).toBe("Scan results");
+        expect(data.output.annotations).toContainEqual({ "annotation_level": "warning", "end_line": 1, "message": "warn dockerfile:instruction\nDockerfile directive 'HEALTHCHECK' not found, matching condition 'not_exists' check", "path": "Dockerfile", "start_line": 1, "title": "warn dockerfile" });
+        expect(data.output.annotations).toContainEqual({ "annotation_level": "failure", "end_line": 1, "message": "stop dockerfile:instruction\nDockerfile directive 'USER' not found, matching condition 'not_exists' check", "path": "Dockerfile", "start_line": 1, "title": "stop dockerfile" });
     })
 
     it("generates SARIF report with vulnerabilities", async () => {

@@ -28,8 +28,8 @@ class ExecutionError extends Error {
 
 function parseActionInputs() {
   return {
-    imageTag: core.getInput('image-tag', {required: true}),
-    sysdigSecureToken: core.getInput('sysdig-secure-token', {required: true}),
+    imageTag: core.getInput('image-tag', { required: true }),
+    sysdigSecureToken: core.getInput('sysdig-secure-token', { required: true }),
     sysdigSecureURL: core.getInput('sysdig-secure-url'),
     sysdigSkipTLS: core.getInput('sysdig-skip-tls') == 'true',
     dockerfilePath: core.getInput('dockerfile-path'),
@@ -39,7 +39,7 @@ function parseActionInputs() {
     runAsUser: core.getInput('run-as-user'),
     extraParameters: core.getInput('extra-parameters'),
     extraDockerParameters: core.getInput('extra-docker-parameters')
-    }
+  }
 }
 
 
@@ -88,10 +88,10 @@ function composeFlags(opts) {
       let dockerSocketPath = opts.inputPath || "/var/run/docker.sock";
       dockerFlags += ` -v ${dockerSocketPath}:/var/run/docker.sock`;
     } else if (opts.inputPath) {
-        let filename = path.basename(opts.inputPath);
-        dockerFlags += ` -v ${path.resolve(opts.inputPath)}:/tmp/${filename}`;
-        runFlags += ` --storage-path=/tmp/${filename}`;
-    }  
+      let filename = path.basename(opts.inputPath);
+      dockerFlags += ` -v ${path.resolve(opts.inputPath)}:/tmp/${filename}`;
+      runFlags += ` --storage-path=/tmp/${filename}`;
+    }
   }
 
   if (opts.dockerfilePath) {
@@ -129,7 +129,7 @@ function writeReport(reportData) {
 }
 
 async function run() {
-  
+
   try {
 
     let opts = parseActionInputs();
@@ -163,7 +163,7 @@ async function processScanResult(result) {
   }
 
   writeReport(result.Output);
-  
+
   let report;
   try {
     report = JSON.parse(result.Output);
@@ -177,17 +177,23 @@ async function processScanResult(result) {
       vulnerabilities = report.vulnsReport.vulnerabilities;
     }
 
+    let evaluationResults;
+    if (report.scanReport) {
+      try {
+        let digest = Object.keys(report.scanReport[0])[0];
+        let tag = Object.keys(report.scanReport[0][digest])[0];
+        let imageId = report.scanReport[0][digest][tag][0].detail.result.image_id;
+        evaluationResults = report.scanReport[0][digest][tag][0].detail.result.result[imageId].result;
+      } catch (error) {
+        core.error("Error parsing results report: " + error);
+      }
+    }
+
     generateSARIFReport(vulnerabilities);
-    await generateChecks(scanResult, vulnerabilities);
+    await generateChecks(scanResult, evaluationResults, vulnerabilities);
   }
 
-  if (result.ReturnCode == 0) {
-    core.info(`Scan was SUCCESS.`);
-    return true;
-  } else if (result.ReturnCode == 1) {
-    core.info(`Scan was FAILED.`);
-    return false;
-  }
+  return result.ReturnCode == 0;
 }
 
 async function pullScanImage(scanImage) {
@@ -203,19 +209,19 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
   let execOutput = '';
   let errOutput = '';
 
-  fs.mkdirSync("./scan-output", {recursive: true});
+  fs.mkdirSync("./scan-output", { recursive: true });
   fs.chmodSync("./scan-output", 0o777);
   fs.closeSync(fs.openSync("./scan-output/info.log", 'w'));
   fs.chmodSync("./scan-output/info.log", 0o666);
-  let tail = new Tail("./scan-output/info.log", {fromBeginning: true, follow: true});
-  tail.on("line", function(data) {
+  let tail = new Tail("./scan-output/info.log", { fromBeginning: true, follow: true });
+  tail.on("line", function (data) {
     console.log(data);
   });
 
   const options = {
     silent: true,
     ignoreReturnCode: true,
-    listeners:  {
+    listeners: {
       stdout: (data) => {
         execOutput += data.toString();
       },
@@ -224,7 +230,7 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
       }
     }
   };
-  
+
   let start = performance.now();
   let cmd = `docker run ${dockerFlags} ${scanImage} ${runFlags}`;
   let retCode = await exec.exec(cmd, null, options);
@@ -237,52 +243,52 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
 function vulnerabilities2SARIF(vulnerabilities) {
 
   const sarifOutput = {
-  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
-  version: "2.1.0",
-  runs: [{
-          tool: {
-              driver: {
-                name: "Sysdig Inline Scanner V2",
-                fullName: "Sysdig Inline Scanner V2",
-                version: toolVersion,
-                semanticVersion: toolVersion,
-                dottedQuadFileVersion: dottedQuadToolVersion,
-                rules: vulnerabilities2SARIFRules(vulnerabilities)
-              }
-          },
-          logicalLocations: [
-              {
-                name: "container-image",
-                fullyQualifiedName: "container-image",
-                kind: "namespace"
-              }
-          ],
-          results: vulnerabilities2SARIFResults(vulnerabilities),
-          columnKind: "utf16CodeUnits"
-      }]
+    "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+    version: "2.1.0",
+    runs: [{
+      tool: {
+        driver: {
+          name: "Sysdig Inline Scanner V2",
+          fullName: "Sysdig Inline Scanner V2",
+          version: toolVersion,
+          semanticVersion: toolVersion,
+          dottedQuadFileVersion: dottedQuadToolVersion,
+          rules: vulnerabilities2SARIFRules(vulnerabilities)
+        }
+      },
+      logicalLocations: [
+        {
+          name: "container-image",
+          fullyQualifiedName: "container-image",
+          kind: "namespace"
+        }
+      ],
+      results: vulnerabilities2SARIFResults(vulnerabilities),
+      columnKind: "utf16CodeUnits"
+    }]
   };
 
-  return(sarifOutput);
+  return (sarifOutput);
 }
 
 function vulnerabilities2SARIFRules(vulnerabilities) {
   var ret = {};
   if (vulnerabilities) {
     ret = vulnerabilities.map(v => {
-        return {
-          id: getRuleId(v),
-          shortDescription: {
-              text: getSARIFVulnShortDescription(v),
-          },
-          fullDescription: {
-              text: getSARIFVulnFullDescription(v),
-          },
-          help: getSARIFVulnHelp(v)
-        }
+      return {
+        id: getRuleId(v),
+        shortDescription: {
+          text: getSARIFVulnShortDescription(v),
+        },
+        fullDescription: {
+          text: getSARIFVulnFullDescription(v),
+        },
+        help: getSARIFVulnHelp(v)
       }
+    }
     );
   }
-  return(ret);
+  return (ret);
 }
 
 function vulnerabilities2SARIFResults(vulnerabilities) {
@@ -379,7 +385,7 @@ function generateSARIFReport(vulnerabilities) {
   fs.writeFileSync("./sarif.json", JSON.stringify(sarifOutput, null, 2));
 }
 
-async function generateChecks(scanResult, vulnerabilities) {
+async function generateChecks(scanResult, evaluationResults, vulnerabilities) {
   const githubToken = core.getInput('github-token');
   if (!githubToken) {
     core.warning("No github-token provided. Skipping creation of check run");
@@ -397,7 +403,7 @@ async function generateChecks(scanResult, vulnerabilities) {
       output: {
         title: "Inline scan results",
         summary: "Scan result is " + scanResult,
-        annotations: getReportAnnotations(vulnerabilities)
+        annotations: getReportAnnotations(evaluationResults, vulnerabilities)
       }
     });
   } catch (error) {
@@ -405,19 +411,39 @@ async function generateChecks(scanResult, vulnerabilities) {
   }
 }
 
-function getReportAnnotations(vulnerabilities) {
-  return vulnerabilities.map(v =>
-    {
-      return {
-        path: "Dockerfile",
-        start_line: 1,
-        end_line: 1,
-        annotation_level: "warning", //Convert v.severity to notice, warning, or failure?
-        message: v.vuln + " Severity=" + v.severity + " Package=" + v.package + " Type=" + v.package_type + " Fix=" + v.fix + " Url=" + v.url,
-        title: v.vuln
-      }
+function getReportAnnotations(evaluationResults, vulnerabilities) {
+  let actionCol = evaluationResults.header.indexOf("Gate_Action");
+  let gateCol = evaluationResults.header.indexOf("Gate");
+  let triggerCol = evaluationResults.header.indexOf("Trigger");
+  let outputCol = evaluationResults.header.indexOf("Check_Output");
+  let gates = evaluationResults.rows.map(g => {
+    let action = g[actionCol];
+    let level = "notice" 
+    if (action == "warn") {
+      level = "warning";
+    } else if (action == "stop") {
+      level = "failure";
     }
-  );
+    return {
+      path: "Dockerfile",
+      start_line: 1,
+      end_line: 1,
+      annotation_level: level,
+      message: `${g[actionCol]} ${g[gateCol]}:${g[triggerCol]}\n${g[outputCol]}`,
+      title: `${g[actionCol]} ${g[gateCol]}`
+    }
+  });
+  let vulns = vulnerabilities.map(v => {
+    return {
+      path: "Dockerfile",
+      start_line: 1,
+      end_line: 1,
+      annotation_level: "warning", //Convert v.severity to notice, warning, or failure?
+      message: `${v.vuln} Severity=${v.severity} Package=${v.package} Type=${v.package_type} Fix=${v.fix} Url=${v.url}`,
+      title: `Vulnerability found: ${v.vuln}`
+    }
+  });
+  return gates.concat(vulns);
 }
 
 module.exports = {
