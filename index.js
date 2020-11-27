@@ -5,12 +5,11 @@ const github = require('@actions/github')
 const path = require('path');
 const performance = require('perf_hooks').performance;
 const process = require('process');
-const { openStdin } = require('process');
 const Tail = require('tail').Tail;
 
 const toolVersion = "3.0.0";
 const dottedQuadToolVersion = "3.0.0.0";
-const secureInlineScanImage = "airadier/secure-inline-scan:ci";
+const secureInlineScanImage = "quay.io/sysdig/secure-inline-scan:2";
 
 class ExecutionError extends Error {
   constructor(stdout, stderr) {
@@ -132,9 +131,9 @@ async function run() {
 
     await pullScanImage(secureInlineScanImage);
     let scanResult = await executeInlineScan(secureInlineScanImage, flags.dockerFlags, flags.runFlags);
-    let success = await processScanResult(scanResult)
-    if (!(success || openStdin.ignoreFailedScan)) {
-      console.setFailed(`Scan was FAILED.`)
+    let success = await processScanResult(scanResult);
+    if (!(success || opts.ignoreFailedScan)) {
+      core.setFailed(`Scan was FAILED.`)
     }
 
   } catch (error) {

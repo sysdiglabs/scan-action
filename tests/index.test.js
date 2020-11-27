@@ -1,21 +1,37 @@
-let core = require("@actions/core");
-let exec = require("@actions/exec");
-let github = require('@actions/github')
-let fs = require('fs');
+const fs = require('fs');
 const process = require('process');
 const tmp = require('tmp');
 let index = require("..");
 
+
+function prepareTemporaryDir() {
+    let tmpDir = tmp.dirSync().name;
+    let cwd = process.cwd();
+    process.chdir(tmpDir);
+    return {tmpDir: tmpDir, cwd: cwd}
+}
+
+function cleanupTemporaryDir(tmpDir) {
+    fs.rmdirSync(tmpDir.tmpDir, {recursive: true});
+    process.chdir(tmpDir.cwd);
+}
+
+const exampleReport = JSON.stringify(require("./fixtures/report.json"));
+
 describe("input parsing", () => {
-    const OLD_ENV = process.env;
+    let oldEnv;
+
+    beforeAll(() => {
+        oldEnv = process.env;
+    })
 
     beforeEach(() => {
-      jest.resetModules() // most important - it clears the cache
-      process.env = { ...OLD_ENV }; // make a copy
+        jest.resetModules() // most important - it clears the cache
+        process.env = { ...oldEnv }; // make a copy
     });
 
     afterEach(() => {
-        process.env = OLD_ENV; // restore old env
+        process.env = oldEnv; // restore old env
       });
 
     it("raises error if no token provided", () => {
@@ -75,11 +91,12 @@ describe("input parsing", () => {
             "sysdigSecureURL": "https://foo",
             "sysdigSkipTLS": true,
         })
-    })    
+    })
 
 })
 
 describe("docker flags", () => {
+
     it("uses default docker flags", () => {
         let flags = index.composeFlags({});
         expect(flags.dockerFlags).toMatch(/(^| )--rm($| )/)
@@ -125,6 +142,7 @@ describe("docker flags", () => {
 })
 
 describe("execution flags", () => {
+
     it("uses default flags", () => {
         let flags = index.composeFlags({sysdigSecureToken: "foo-token", imageTag: "image:tag"});
         expect(flags.runFlags).toMatch(/(^| )--sysdig-token[ =]foo-token($| )/)
@@ -173,18 +191,21 @@ describe("execution flags", () => {
 })
 
 describe("image pulling", () => {
+    let exec;
 
-    beforeAll(() => {
-        jest.mock("@actions/exec");
+    beforeEach(() => {
+        jest.resetAllMocks()
         exec = require("@actions/exec");
         index = require("..");
     })
 
-    afterAll(()=> {
-        jest.resetModules() // most important - it clears the cache
+    afterEach(() => {
+        jest.resetModules();
+        index = require("..");
     })
 
     it("pulls the configured scan image", async () => {
+        exec.exec = jest.fn();
         await index.pullScanImage("dummy-image:tag");
         expect(exec.exec).toBeCalledTimes(1);
         expect(exec.exec).toBeCalledWith("docker pull dummy-image:tag", null);
@@ -193,28 +214,23 @@ describe("image pulling", () => {
 
 describe("inline-scan execution", () => {
     let tmpDir;
-    let cwd;
-
-    beforeAll(() => {
-        jest.mock("@actions/exec");
-        exec = require("@actions/exec");
-        index = require("..");
-    })
-
-    afterAll(()=> {
-        jest.resetModules() // most important - it clears the cache
-    })
+    let exec;
 
     beforeEach(() => {
         jest.resetAllMocks()
-        tmpDir = tmp.dirSync().name;
-        cwd = process.cwd();
-        process.chdir(tmpDir);
+
+        tmpDir = prepareTemporaryDir();
+
+        exec = require("@actions/exec");
+        exec.exec = jest.fn();
+        index = require("..");
     })
 
     afterEach(() => {
-        fs.rmdirSync(tmpDir, {recursive: true});
-        process.chdir(cwd);
+        cleanupTemporaryDir(tmpDir);
+
+        jest.resetModules() // most important - it clears the cache
+        index = require("..");
     })
 
     it("invokes the container with the corresponding flags", async () => {
@@ -240,25 +256,22 @@ describe("inline-scan execution", () => {
 })
 
 describe("process scan results", () => {
-
-    const exampleReport = JSON.stringify(require("./fixtures/report.json"));
-
-    beforeAll(() => {
-        jest.mock("@actions/core");
-        jest.mock("@actions/github");
-        jest.mock("fs");
-        fs = require("fs")
-        core = require("@actions/core");
-        github = require('@actions/github')
-        index = require("..");
-    })
-
-    afterAll(()=> {
-        jest.resetModules() // most important - it clears the cache
-    })
+    let fs;
+    let core;
+    let github;
 
     beforeEach(() => {
         jest.resetAllMocks()
+
+        core = require("@actions/core");
+        fs = require("fs");
+        github = require("@actions/github");
+        index = require("..");
+    })
+
+    afterEach(()=> {
+        jest.resetModules() // most important - it clears the cache
+        index = require("..");
     })
 
     it("returns true if success", async () => {
@@ -291,7 +304,8 @@ describe("process scan results", () => {
     })
 
     it("handles error on invalid JSON", async () => {
-        core.error.mockReturnValueOnce(123);
+        core.error = jest.fn();
+
         let scanResult = {
             ReturnCode: 0,
             Output: 'invalid JSON',
@@ -304,7 +318,10 @@ describe("process scan results", () => {
         expect(core.error.mock.calls[0][0]).toMatch(/Error parsing analysis JSON report/)
     })
 
-   it("generates a report JSON", async () => {
+    it("generates a report JSON", async () => {
+        let realWriteFileSync = fs.writeFileSync;
+        fs.writeFileSync = jest.fn();
+
         let reportData = '{"foo": "bar"}';
         let scanResult = {
             ReturnCode: 0,
@@ -313,17 +330,23 @@ describe("process scan results", () => {
         };
 
         await index.processScanResult(scanResult);
-        expect(fs.writeFileSync).toBeCalledWith("./report.json", reportData)
+        expect(fs.writeFileSync).toBeCalledWith("./report.json", reportData);
+        fs.writeFileSync = realWriteFileSync;
     })
-    
+
     it("generates a check run with vulnerability annotations", async () => {
-        var data;
+        let data;
+        github.context = {repo: { repo: "foo-repo", owner: "foo-owner" }};
+
+        core.getInput = jest.fn();
         core.getInput.mockReturnValueOnce("foo");
-        github.context.repo = { repo: "foo-repo", owner: "foo-owner"};
-        github.getOctokit.mockReturnValueOnce({
-            checks: {
-                create: async function (receivedData) {
-                    data = receivedData;
+
+        github.getOctokit = jest.fn(() => {
+            return {
+                checks: {
+                    create: async function (receivedData) {
+                        data = receivedData;
+                    }
                 }
             }
         });
@@ -336,15 +359,19 @@ describe("process scan results", () => {
 
         await index.processScanResult(scanResult);
         expect(github.getOctokit).toBeCalledWith("foo");
+        expect(data).not.toBeUndefined();
         expect(data.name).toBe("Scan results");
         expect(data.output.annotations).toContainEqual({"annotation_level": "warning", "end_line": 1, "message": "CVE-2019-14697 Severity=High Package=musl-1.1.18-r3 Type=APKG Fix=1.1.18-r4 Url=https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-14697", "path": "Dockerfile", "start_line": 1, "title": "CVE-2019-14697"});
     })
 
-    it("generates a check run with gate annotations", async () => {
+    xit("generates a check run with gate annotations", async () => {
 
     })
 
     it("generates SARIF report with vulnerabilities", async () => {
+        let realWriteFileSync = fs.writeFileSync;
+        fs.writeFileSync = jest.fn();
+
         let scanResult = {
             ReturnCode: 0,
             Output: exampleReport,
@@ -354,27 +381,156 @@ describe("process scan results", () => {
         expect(fs.writeFileSync).toBeCalledWith("./sarif.json", expect.stringMatching(/"version": "2.1.0"/));
         expect(fs.writeFileSync).toBeCalledWith("./sarif.json", expect.stringMatching(/"id": "VULN_CVE-2019-14697_APKG_musl-1.1.18-r3/));
         expect(fs.writeFileSync).toBeCalledWith("./sarif.json", expect.stringMatching(/"ruleId": "VULN_CVE-2019-14697_APKG_musl-1.1.18-r3/));
+        fs.writeFileSync = realWriteFileSync;
     })
 
-    it("generates SARIF report with gates", async () => {
+    xit("generates SARIF report with gates", async () => {
 
     })
 })
 
 describe("run the full action", () => {
-    it("ends ok with scan pass", () => {
+    let tmpDir;
+    let oldEnv;
+    let exec;
+    let core;
 
+    beforeEach(() => {
+        oldEnv = process.env;
+
+        process.env['INPUT_IMAGE-TAG'] = "image:tag";
+        process.env['INPUT_SYSDIG-SECURE-TOKEN'] = "footoken";
+        process.env['INPUT_INPUT-TYPE'] = "pull";
+
+        tmpDir = prepareTemporaryDir();
+
+        exec = require("@actions/exec");
+        core = require("@actions/core");
+        index = require("..");
     })
 
-    it("fails if scan fails", () => {
+    afterEach(() => {
+        cleanupTemporaryDir(tmpDir);
 
+        jest.resetModules() // most important - it clears the cache
+        index = require("..");
+
+        process.env = oldEnv;
     })
 
-    it("ends ok if scan fails but ignoreScanFailed is true", () => {
+    it("ends ok with scan pass", async () => {
+        core.setFailed = jest.fn();
+        core.error = jest.fn();
+        exec.exec = jest.fn((cmdline, args, options) => {
+            if (options) { options.listeners.stdout(exampleReport); }
+            return Promise.resolve(0);
+        });
 
+        await index.run();
+
+        expect(core.setFailed).not.toBeCalled();
+        expect(core.error).not.toBeCalled();
     })
 
-    it("fails on unexpected error", () => {
+    it("writes scan report on pass", async () => {
+        core.setOutput = jest.fn();
+        exec.exec = jest.fn((cmdline, args, options) => {
+            if (options) { options.listeners.stdout(exampleReport); }
+            return Promise.resolve(0);
+        });
 
+        await index.run();
+
+        expect(core.setOutput).toBeCalledWith("scanReport", "./report.json");
+        let report = JSON.parse(fs.readFileSync("./report.json"));
+        expect(report.status).not.toBeUndefined();
     })
+
+    it("writes scan report on fail", async () => {
+        core.setOutput = jest.fn();
+        exec.exec = jest.fn((cmdline, args, options) => {
+            if (options) { options.listeners.stdout(exampleReport); }
+            return Promise.resolve(1);
+        });
+
+        await index.run();
+
+        expect(core.setOutput).toBeCalledWith("scanReport", "./report.json");
+        let report = JSON.parse(fs.readFileSync("./report.json"));
+        expect(report.status).not.toBeUndefined();
+    })
+
+    it("writes sarif report on pass", async () => {
+        core.setOutput = jest.fn();
+        exec.exec = jest.fn((cmdline, args, options) => {
+            if (options) { options.listeners.stdout(exampleReport); }
+            return Promise.resolve(0);
+        });
+
+        await index.run();
+
+        expect(core.setOutput).toBeCalledWith("sarifReport", "./sarif.json");
+        let sarif = JSON.parse(fs.readFileSync("./sarif.json"));
+        expect(sarif.version).toBe("2.1.0");
+        expect(sarif.runs[0].tool.driver.rules[0].id).toBe("VULN_CVE-2019-14697_APKG_musl-1.1.18-r3");
+        expect(sarif.runs[0].results[0].ruleId).toBe("VULN_CVE-2019-14697_APKG_musl-1.1.18-r3");
+    })
+
+    it("writes scan report on fail", async () => {
+        core.setOutput = jest.fn();
+        core.error = jest.fn();
+        exec.exec = jest.fn((cmdline, args, options) => {
+            if (options) { options.listeners.stdout(exampleReport); }
+            return Promise.resolve(1);
+        });
+
+        await index.run();
+        expect(core.error).not.toBeCalled();
+        expect(core.setOutput).toBeCalledWith("scanReport", "./report.json");
+        expect(core.setOutput).toBeCalledWith("sarifReport", "./sarif.json");
+
+        JSON.parse(fs.readFileSync("./report.json"));
+        JSON.parse(fs.readFileSync("./sarif.json"));
+    })
+
+    it("fails if scan fails", async () => {
+        core.setFailed = jest.fn();
+        exec.exec = jest.fn((cmdline, args, options) => {
+            if (options) { options.listeners.stdout(exampleReport); }
+            return Promise.resolve(1);
+        });
+
+        await index.run();
+
+        expect(core.setFailed).toBeCalled();
+    })
+
+    it("ends ok if scan fails but ignoreFailedScan is true", async () => {
+        process.env['INPUT_IGNORE-FAILED-SCAN'] = "true";
+
+        core.setFailed = jest.fn();
+        exec.exec = jest.fn((cmdline, args, options) => {
+            if (options) { options.listeners.stdout(exampleReport); }
+            return Promise.resolve(1);
+        });
+
+        await index.run();
+
+        expect(core.setFailed).not.toBeCalled();
+    })
+
+    it("fails on unexpected error", async () => {
+        process.env['INPUT_IGNORE-FAILED-SCAN'] = "true";
+
+        core.setFailed = jest.fn();
+        exec.exec = jest.fn((cmdline, args, options) => {
+            if (options) { options.listeners.stdout(exampleReport); }
+            return Promise.resolve(2);
+        });
+
+        await index.run();
+
+        expect(core.setFailed).toBeCalled();
+    })
+
 })
