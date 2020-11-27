@@ -1,8 +1,10 @@
-//const { TestScheduler } = require('jest')
-var index = require('..');
-const fs = require('fs');
+let core = require("@actions/core");
+let exec = require("@actions/exec");
+let github = require('@actions/github')
+let fs = require('fs');
 const process = require('process');
 const tmp = require('tmp');
+let index = require("..");
 
 describe("input parsing", () => {
     const OLD_ENV = process.env;
@@ -12,7 +14,7 @@ describe("input parsing", () => {
       process.env = { ...OLD_ENV }; // make a copy
     });
 
-    afterAll(() => {
+    afterEach(() => {
         process.env = OLD_ENV; // restore old env
       });
 
@@ -77,7 +79,7 @@ describe("input parsing", () => {
 
 })
 
-describe("Compose docker flags", () => {
+describe("docker flags", () => {
     it("uses default docker flags", () => {
         let flags = index.composeFlags({});
         expect(flags.dockerFlags).toMatch(/(^| )--rm($| )/)
@@ -122,7 +124,7 @@ describe("Compose docker flags", () => {
     })
 })
 
-describe("Compose execution flags", () => {
+describe("execution flags", () => {
     it("uses default flags", () => {
         let flags = index.composeFlags({sysdigSecureToken: "foo-token", imageTag: "image:tag"});
         expect(flags.runFlags).toMatch(/(^| )--sysdig-token[ =]foo-token($| )/)
@@ -170,59 +172,64 @@ describe("Compose execution flags", () => {
     })
 })
 
-describe("Image pulling", () => {
-    let exec;
+describe("image pulling", () => {
 
-    beforeEach(() => {
+    beforeAll(() => {
         jest.mock("@actions/exec");
         exec = require("@actions/exec");
         index = require("..");
     })
 
-    afterEach(() => {
-        exec.exec.mockRestore();
+    afterAll(()=> {
+        jest.resetModules() // most important - it clears the cache
     })
 
-    it("should pull the configured scan image", async () => {
+    it("pulls the configured scan image", async () => {
         await index.pullScanImage("dummy-image:tag");
-        expect(exec.exec).toHaveBeenCalledTimes(1);
-        expect(exec.exec).toHaveBeenCalledWith("docker pull dummy-image:tag", null);
+        expect(exec.exec).toBeCalledTimes(1);
+        expect(exec.exec).toBeCalledWith("docker pull dummy-image:tag", null);
     })
 })
 
-describe("Container execution", () => {
-    let exec;
+describe("inline-scan execution", () => {
     let tmpDir;
+    let cwd;
 
-    beforeEach(() => {
+    beforeAll(() => {
         jest.mock("@actions/exec");
         exec = require("@actions/exec");
         index = require("..");
+    })
 
+    afterAll(()=> {
+        jest.resetModules() // most important - it clears the cache
+    })
+
+    beforeEach(() => {
+        jest.resetAllMocks()
         tmpDir = tmp.dirSync().name;
+        cwd = process.cwd();
         process.chdir(tmpDir);
     })
 
     afterEach(() => {
-        jest.clearAllMocks()
-        exec.exec.mockRestore();
-
         fs.rmdirSync(tmpDir, {recursive: true});
+        process.chdir(cwd);
     })
 
-    it("should execute the container with the corresponding flags", async () => {
+    it("invokes the container with the corresponding flags", async () => {
         await index.executeInlineScan("inline-scan:tag", "--docker1 --docker2", "--run1 --run2 image-to-scan");
-        expect(exec.exec).toHaveBeenCalledTimes(1);
+        expect(exec.exec).toBeCalledTimes(1);
         expect(exec.exec.mock.calls[0][0]).toMatch(/docker run --docker1 --docker2 inline-scan:tag --run1 --run2 image-to-scan/)
     })
 
-    it("should return the return code", async () => {
+    it("returns the execution return code", async () => {
         exec.exec.mockResolvedValueOnce(123);
         let result = await index.executeInlineScan("inline-scan:tag");
         expect(result.ReturnCode).toBe(123);
     })
 
-    it("should return the output", async () => {
+    it("returns the output", async () => {
         exec.exec.mockImplementationOnce((cmdline, args, options) => {
             options.listeners.stdout("foo-output");
             return Promise.resolve(0);
@@ -232,10 +239,142 @@ describe("Container execution", () => {
     })
 })
 
-describe("Report generation tests", () => {
+describe("process scan results", () => {
 
+    const exampleReport = JSON.stringify(require("./fixtures/report.json"));
+
+    beforeAll(() => {
+        jest.mock("@actions/core");
+        jest.mock("@actions/github");
+        jest.mock("fs");
+        fs = require("fs")
+        core = require("@actions/core");
+        github = require('@actions/github')
+        index = require("..");
+    })
+
+    afterAll(()=> {
+        jest.resetModules() // most important - it clears the cache
+    })
+
+    beforeEach(() => {
+        jest.resetAllMocks()
+    })
+
+    it("returns true if success", async () => {
+        let scanResult = {
+            ReturnCode: 0,
+            Output: "{}",
+            Error: ""
+        };
+        let success = await index.processScanResult(scanResult);
+        expect(success).toBe(true);
+    })
+
+    it("returns false if not success", async () => {
+        let scanResult = {
+            ReturnCode: 1,
+            Output: "{}",
+            Error: ""
+        };
+        let success = await index.processScanResult(scanResult);
+        expect(success).toBe(false);
+    })
+
+    it("throws an error on failed execution", async () => {
+        let scanResult = {
+            ReturnCode: 3,
+            Output: "Some output",
+            Error: "Some error"
+        };
+        return expect(index.processScanResult(scanResult)).rejects.toThrow(new index.ExecutionError('Some output', "Some error"));
+    })
+
+    it("handles error on invalid JSON", async () => {
+        core.error.mockReturnValueOnce(123);
+        let scanResult = {
+            ReturnCode: 0,
+            Output: 'invalid JSON',
+            Error: ""
+        };
+
+        let success = await index.processScanResult(scanResult);
+        expect(success).toBe(true);
+        expect(core.error).toBeCalledTimes(1);
+        expect(core.error.mock.calls[0][0]).toMatch(/Error parsing analysis JSON report/)
+    })
+
+   it("generates a report JSON", async () => {
+        let reportData = '{"foo": "bar"}';
+        let scanResult = {
+            ReturnCode: 0,
+            Output: reportData,
+            Error: ""
+        };
+
+        await index.processScanResult(scanResult);
+        expect(fs.writeFileSync).toBeCalledWith("./report.json", reportData)
+    })
+    
+    it("generates a check run with vulnerability annotations", async () => {
+        var data;
+        core.getInput.mockReturnValueOnce("foo");
+        github.context.repo = { repo: "foo-repo", owner: "foo-owner"};
+        github.getOctokit.mockReturnValueOnce({
+            checks: {
+                create: async function (receivedData) {
+                    data = receivedData;
+                }
+            }
+        });
+
+        let scanResult = {
+            ReturnCode: 0,
+            Output: exampleReport,
+            Error: ""
+        };
+
+        await index.processScanResult(scanResult);
+        expect(github.getOctokit).toBeCalledWith("foo");
+        expect(data.name).toBe("Scan results");
+        expect(data.output.annotations).toContainEqual({"annotation_level": "warning", "end_line": 1, "message": "CVE-2019-14697 Severity=High Package=musl-1.1.18-r3 Type=APKG Fix=1.1.18-r4 Url=https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-14697", "path": "Dockerfile", "start_line": 1, "title": "CVE-2019-14697"});
+    })
+
+    it("generates a check run with gate annotations", async () => {
+
+    })
+
+    it("generates SARIF report with vulnerabilities", async () => {
+        let scanResult = {
+            ReturnCode: 0,
+            Output: exampleReport,
+            Error: ""
+        };
+        await index.processScanResult(scanResult);
+        expect(fs.writeFileSync).toBeCalledWith("./sarif.json", expect.stringMatching(/"version": "2.1.0"/));
+        expect(fs.writeFileSync).toBeCalledWith("./sarif.json", expect.stringMatching(/"id": "VULN_CVE-2019-14697_APKG_musl-1.1.18-r3/));
+        expect(fs.writeFileSync).toBeCalledWith("./sarif.json", expect.stringMatching(/"ruleId": "VULN_CVE-2019-14697_APKG_musl-1.1.18-r3/));
+    })
+
+    it("generates SARIF report with gates", async () => {
+
+    })
 })
 
-describe("Check run generation tests", () => {
+describe("run the full action", () => {
+    it("ends ok with scan pass", () => {
 
+    })
+
+    it("fails if scan fails", () => {
+
+    })
+
+    it("ends ok if scan fails but ignoreScanFailed is true", () => {
+
+    })
+
+    it("fails on unexpected error", () => {
+
+    })
 })

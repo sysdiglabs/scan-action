@@ -5,12 +5,20 @@ const github = require('@actions/github')
 const path = require('path');
 const performance = require('perf_hooks').performance;
 const process = require('process');
+const { openStdin } = require('process');
 const Tail = require('tail').Tail;
 
 const toolVersion = "3.0.0";
 const dottedQuadToolVersion = "3.0.0.0";
 const secureInlineScanImage = "airadier/secure-inline-scan:ci";
 
+class ExecutionError extends Error {
+  constructor(stdout, stderr) {
+    super("execution error\n\nstdout: " + stdout + "\n\nstderr: " + stderr);
+    this.stdout = stdout;
+    this.stderr = stderr;
+  }
+}
 
 function parseActionInputs() {
   return {
@@ -55,6 +63,8 @@ function printOptions(opts) {
   if (opts.sysdigSkipTLS) {
     core.info(`Sysdig skip TLS: true`);
   }
+
+  core.info('Analyzing image: ' + opts.imageTag);
 }
 
 function composeFlags(opts) {
@@ -120,47 +130,57 @@ async function run() {
     printOptions(opts);
     let flags = composeFlags(opts);
 
-    try {
-      await pullScanImage(secureInlineScanImage);
-
-      core.info('Analyzing image: ' + opts.imageTag);
-      let result = await executeInlineScan(secureInlineScanImage, flags.dockerFlags, flags.runFlags);
-
-      writeReport(result.Output);
-      
-      let scanResult = "unknown";
-      if (result.ReturnCode == 0) {
-        scanResult = "Success";
-        core.info(`Scan was SUCCESS.`);
-      } else if (result.ReturnCode == 1) {
-        scanResult = "Failed";
-        if (opts.ignoreFailedScan) {
-          core.info(`Scan was FAILED.`);
-        } else {
-          core.setFailed(`Scan was FAILED.`);
-        }
-      } else {
-        core.setFailed(`
-        or:\n${result.Output}`);
-      }
-
-      let report = JSON.parse(result.Output);
-
-      let vulnerabilities = [];
-      if (report.vulnsReport) {
-        vulnerabilities = report.vulnsReport.vulnerabilities;
-      }
-
-      let checkGensPromise = generateChecks(scanResult, vulnerabilities);
-      generateSARIFReport(vulnerabilities);
-
-      await checkGensPromise
-
-    } catch (error) {
-      core.setFailed(error.message);
+    await pullScanImage(secureInlineScanImage);
+    let scanResult = await executeInlineScan(secureInlineScanImage, flags.dockerFlags, flags.runFlags);
+    let success = await processScanResult(scanResult)
+    if (!(success || openStdin.ignoreFailedScan)) {
+      console.setFailed(`Scan was FAILED.`)
     }
+
   } catch (error) {
-    core.setFailed(error.message);
+    core.setFailed("Unexpected error");
+    core.error(error);
+  }
+}
+
+async function processScanResult(result) {
+  let scanResult;
+  if (result.ReturnCode == 0) {
+    scanResult = "Success";
+    core.info(`Scan was SUCCESS.`);
+  } else if (result.ReturnCode == 1) {
+    scanResult = "Failed";
+    core.info(`Scan was FAILED.`);
+  } else {
+    core.setFailed("Execution error");
+    throw new ExecutionError(result.Output, result.Error);
+  }
+
+  writeReport(result.Output);
+  
+  let report;
+  try {
+    report = JSON.parse(result.Output);
+  } catch (error) {
+    core.error("Error parsing analysis JSON report: " + error);
+  }
+  if (report) {
+
+    let vulnerabilities = [];
+    if (report.vulnsReport) {
+      vulnerabilities = report.vulnsReport.vulnerabilities;
+    }
+
+    generateSARIFReport(vulnerabilities);
+    await generateChecks(scanResult, vulnerabilities);
+  }
+
+  if (result.ReturnCode == 0) {
+    core.info(`Scan was SUCCESS.`);
+    return true;
+  } else if (result.ReturnCode == 1) {
+    core.info(`Scan was FAILED.`);
+    return false;
   }
 }
 
@@ -175,6 +195,7 @@ async function pullScanImage(scanImage) {
 async function executeInlineScan(scanImage, dockerFlags, runFlags) {
 
   let execOutput = '';
+  let errOutput = '';
 
   fs.mkdirSync("./scan-output", {recursive: true});
   fs.chmodSync("./scan-output", 0o777);
@@ -191,6 +212,9 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
     listeners:  {
       stdout: (data) => {
         execOutput += data.toString();
+      },
+      stderr: (data) => {
+        errOutput += data.toString();
       }
     }
   };
@@ -201,7 +225,7 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
   core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
   tail.unwatch();
 
-  return { ReturnCode: retCode, Output: execOutput };
+  return { ReturnCode: retCode, Output: execOutput, Error: errOutput };
 }
 
 function vulnerabilities2SARIF(vulnerabilities) {
@@ -344,10 +368,9 @@ function getRuleId(v) {
 }
 
 function generateSARIFReport(vulnerabilities) {
-
   let sarifOutput = vulnerabilities2SARIF(vulnerabilities);
-  fs.writeFileSync("./sarif.json", JSON.stringify(sarifOutput, null, 2));
   core.setOutput("sarifReport", "./sarif.json");
+  fs.writeFileSync("./sarif.json", JSON.stringify(sarifOutput, null, 2));
 }
 
 async function generateChecks(scanResult, vulnerabilities) {
@@ -357,6 +380,7 @@ async function generateChecks(scanResult, vulnerabilities) {
   }
 
   try {
+
     const octokit = github.getOctokit(githubToken);
 
     await octokit.checks.create({
@@ -390,7 +414,15 @@ function getReportAnnotations(vulnerabilities) {
   );
 }
 
-module.exports = {parseActionInputs, composeFlags, pullScanImage, executeInlineScan};
+module.exports = {
+  ExecutionError,
+  parseActionInputs,
+  composeFlags,
+  pullScanImage,
+  executeInlineScan,
+  processScanResult,
+  run
+};
 
 if (require.main === module) {
   run();
