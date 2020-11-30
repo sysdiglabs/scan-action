@@ -20,15 +20,79 @@ Sysdig Secure URL. Example: "https://secure-sysdig.svc.cluster.local".
 
 If not specified, it will default to Sysdig Secure SaaS URL (https://secure.sysdig.com/).
 
+### `sysdig-skip-tls`
+
+Skip TLS verification when calling secure endpoints.
+
 ### `dockerfile-path`
 
 Path to Dockerfile. Example: `"./Dockerfile"`.
 
-### `pull-from-registry`
+### `ignore-failed-scan`
 
-Pull container image from registry instead of using the locally built image.
+Don't fail the execution of this action even if the scan result is FAILED.
 
-## Example usage
+### `input-type`
+
+If specified, where should we scan the image from. Possible values:
+* pull            Pull the image from the registry.
+                  Default if not specified.
+* docker-daemon   Get the image from the Docker daemon.
+                  The docker socket must be available at /var/run/docker.sock
+* cri-o           Get the image from containers-storage (CRI-O and others).
+                  Images must be stored in /var/lib/containers
+* docker-archive  Image is provided as a Docker .tar file (from docker save).
+                  Specify path to the tar file with 'input-path'
+* oci-archive     Image is provided as a OCI image tar file.
+                  Specify path to the tar file with 'input-path'
+* oci-dir         Image is provided as a OCI image, untared.
+                  Specify path to the directory file with 'input-path'
+
+### `input-path`
+
+Path to the tar file or OCI layout directory.
+
+### `run-as-user`
+
+Run the scan container with this username or UID.
+It might required if scanning from docker-daemon or cri-o to provide a user with permissions on the socket or storage.
+
+### `extra-parameters`
+
+Additional parameters added to the secure-inline-scan container execution.
+
+### `extra-docker-parameters`
+
+Additional parameters added to the docker command when executing the secure-inline-scan container execution.
+
+## SARIF Report
+
+The action generates a SARIF report that can be uploaded using the `codeql-action/upload-sarif` action.
+
+You need to assign an ID to the Sysdig Scan Action step, like:
+
+```yaml
+    ...
+
+    - name: Scan image
+      id: scan
+      uses: sysdiglabs/scan-action@v3
+      with:
+        ...
+```
+
+and then add another step for uploading the SARIF report, providing the path in the `sarifReport` output:
+
+```yaml
+    ...
+      - uses: github/codeql-action/upload-sarif@v1
+      with:
+        sarif_file: ${{ steps.scan.outputs.sarifReport }}
+```
+
+## Example usages
+
+### Build and scan image locally using Docker, and upload SARIF report
 
 ```yaml
     ...
@@ -36,9 +100,42 @@ Pull container image from registry instead of using the locally built image.
       run: docker build . --file Dockerfile --tag sysdiglabs/dummy-vuln-app:latest
 
     - name: Scan image
-      uses: sysdiglabs/scan-action@v2
+      id: scan
+      uses: sysdiglabs/scan-action@v3
       with:
         image-tag: "sysdiglabs/dummy-vuln-app:latest"
         sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+        run-as-user: root
 
+      - uses: github/codeql-action/upload-sarif@v1
+      with:
+        sarif_file: ${{ steps.scan.outputs.sarifReport }}
+
+```
+
+### Pull and scan an image from a registry
+
+```yaml
+    ...
+
+    - name: Scan image
+      uses: sysdiglabs/scan-action@v3
+      with:
+        image-tag: "sysdiglabs/dummy-vuln-app:latest"
+        sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+```
+
+### Scan a docker archive image
+
+
+```yaml
+    ...
+
+    - name: Scan image
+      uses: sysdiglabs/scan-action@v3
+      with:
+        image-tag: "sysdiglabs/dummy-vuln-app:latest"
+        sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+        input-type: docker-archive
+        input-path: artifacts/my-image.tar
 ```

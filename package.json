@@ -1,10 +1,13 @@
 {
   "name": "secure-inline-scan-action",
-  "version": "1.0.0",
+  "version": "3.0.0",
   "description": "This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "eslint .",
+    "prepare": "ncc build index.js -o dist --source-map --license licenses.txt",
+    "test": "jest",
+    "all": "npm run lint && npm run prepare && npm run test"
   },
   "repository": {
     "type": "git",
@@ -26,6 +29,14 @@
   "homepage": "https://github.com/sysdiglabs/secure-inline-scan-action#readme",
   "dependencies": {
     "@actions/core": "^1.2.6",
-    "@actions/exec": "^1.0.1"
+    "@actions/exec": "^1.0.3",
+    "@actions/github": "^4.0.0",
+    "tail": "^2.0.4"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.25.1",
+    "eslint": "^7.13.0",
+    "jest": "^26.6.3",
+    "tmp": "^0.2.1"
   }
 }

@@ -2,24 +2,69 @@ name: 'Sysdig Secure Inline Scan'
 description: 'Perform image analysis on locally built container image and post the result of the analysis to Sysdig Secure.'
 inputs:
   image-tag:
-    description: 'Tag of the image to analyse'
+    description: Tag of the image to analyse.
     required: true
   sysdig-secure-token:
-    description: 'API token for Sysdig Scanning auth'
+    description: API token for Sysdig Scanning auth.
+    required: true
+  github-token:
+    description: Github App token to publish the checks. By default it will use "github.token value". See https://docs.github.com/en/free-pro-team@latest/actions/reference/authentication-in-a-workflow#about-the-github_token-secret
+    default: ${{ github.token }}
     required: true
   sysdig-secure-url:
-    description: 'Sysdig Secure URL (ex: "https://secure-sysdig.com")'
+    description: 'Sysdig Secure URL (ex: "https://secure-sysdig.com").'
     required: false
     default: https://secure.sysdig.com
+  sysdig-skip-tls:
+    description: Skip TLS verification when calling secure endpoints.
+    required: false
   dockerfile-path:
-    description: 'Path to Dockerfile (ex: "./Dockerfile")'
+    description: 'Path to Dockerfile (ex: "./Dockerfile").'
     required: false
-  pull-from-registry:
-    description: 'Pull docker image from registry'
+  ignore-failed-scan:
+    description: Don't fail the execution of this action even if the scan result is FAILED.
     required: false
+  input-type:
+    description: |
+      If specified, where should we scan the image from. Possible values:
+        pull            Pull the image from the registry.
+                        Default if not specified.
+        docker-daemon   Get the image from the Docker daemon.
+                        The docker socket must be available at /var/run/docker.sock
+        cri-o           Get the image from containers-storage (CRI-O and others).
+                        Images must be stored in /var/lib/containers
+        docker-archive  Image is provided as a Docker .tar file (from docker save).
+                        Specify path to the tar file with 'input-path'
+        oci-archive     Image is provided as a OCI image tar file.
+                        Specify path to the tar file with 'input-path'
+        oci-dir         Image is provided as a OCI image, untared.
+                        Specify path to the directory file with 'input-path'
+    default: pull
+    required: true
+  input-path:
+    description: Path to the tar file or OCI layout directory.
+    required: false  
+  run-as-user:
+    description: |
+      Run the scan container with this username or UID.
+      It might required if scanning from docker-daemon or cri-o to provide a user with permissions on the socket or storage.
+    required: false
+  extra-parameters:
+    description: Additional parameters added to the secure-inline-scan container execution.
+    required: false
+  extra-docker-parameters:
+    description: Additional parameters added to the docker command when executing the secure-inline-scan container execution.
+    required: false
+outputs:
+  scanReport:
+    description: Path to a JSON file containing the report results, failed evaluation gates, and found vulnerabilities.
+  sarifReport:
+    description: |
+      Path to a SARIF report, that can be uploaded using the codeql-action/upload-sarif action. See the README for more information.
+
 branding:
   icon: 'shield'
   color: 'orange'
 runs:
   using: 'node12'
-  main: 'index.js'
+  main: 'dist/index.js'
