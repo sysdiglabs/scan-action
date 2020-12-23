@@ -1,23 +1,21 @@
-name: Scan
+name: Scan Image
 
 on:
   push:
   workflow_dispatch:
-    inputs:
-      image:
-        description: Image to scan
-        required: true
-        default: alpine:3.7
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Scan image
+      - name: Scan dummy-vuln-app
         id: scan
-        uses: sysdiglabs/scan-action@use-inline-scan-v2 
+        uses: sysdiglabs/scan-action@master
         with:
-          image-tag: "alpine:3.7"
-          sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
-          pull-from-registry: true
+          # Tag of the image to analyse
+          image-tag: sysdiglabs/dummy-vuln-app:latest
+          # API token for Sysdig Scanning auth
+          sysdig-secure-token: ${{ secrets.KUBELAB_SECURE_API_TOKEN }}
+          input-type: pull
+          ignore-failed-scan: true
