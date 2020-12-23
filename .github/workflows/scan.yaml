@@ -1,25 +1,20 @@
-name: Scan
+name: Scan Image
 
 on:
   push:
   workflow_dispatch:
-    inputs:
-      image:
-        description: Image to scan
-        required: true
-        default: sysdiglabs/dummy-vuln-app:latest
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Sysdig image
+      - name: Scan dummy-vuln-app
         id: scan
-        uses: sysdiglabs/scan-action@fix-more-than-50-annotations
+        uses: sysdiglabs/scan-action@master
         with:
           # Tag of the image to analyse
-          image-tag: "sysdiglabs/dummy-vuln-app:latest"
+          image-tag: sysdiglabs/dummy-vuln-app:latest
           # API token for Sysdig Scanning auth
           sysdig-secure-token: ${{ secrets.KUBELAB_SECURE_API_TOKEN }}
           input-type: pull

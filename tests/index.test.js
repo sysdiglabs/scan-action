@@ -409,7 +409,7 @@ describe("process scan results", () => {
                 checks: {
                     create: async function (receivedData) {
                         createData = receivedData;
-                        return { "id": 1 };
+                        return { data: {id: 1 } };
                     },
                     update: async function (receivedData) {
                         updateData = receivedData;

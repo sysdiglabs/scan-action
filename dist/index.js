@@ -391,13 +391,20 @@ async function generateChecks(scanResult, evaluationResults, vulnerabilities) {
     core.warning("No github-token provided. Skipping creation of check run");
   }
 
+  let octokit;
+  let annotations;
+  let check_run;
+
   try {
+    octokit = github.getOctokit(githubToken);
+    annotations = getReportAnnotations(evaluationResults, vulnerabilities)
+  } catch (error) {
+    core.warning("Error creating octokit: " + error);
+    return;
+  }
 
-    const octokit = github.getOctokit(githubToken);
-
-    let annotations = getReportAnnotations(evaluationResults, vulnerabilities)
-
-    let check_run = await octokit.checks.create({
+  try {
+    check_run = await octokit.checks.create({
       owner: github.context.repo.owner,
       repo: github.context.repo.repo,
       name: "Scan results",
@@ -408,20 +415,25 @@ async function generateChecks(scanResult, evaluationResults, vulnerabilities) {
         annotations: annotations.slice(0,50)
       }
     });
+  } catch (error) {
+    core.warning("Error creating check run: " + error);
+  }
 
+  try {
     for (let i = 50; i < annotations.length; i+=50) {
       await octokit.checks.update({
         owner: github.context.repo.owner,
         repo: github.context.repo.repo,
-        check_run_id: check_run.id,
+        check_run_id: check_run.data.id,
         output: {
+          title: "Inline scan results",
+          summary: "Scan result is " + scanResult,
           annotations: annotations.slice(i, i+50)
         }
       });
     }
-
   } catch (error) {
-    core.warning("Error creating check run: " + error);
+    core.warning("Error updating check run: " + error);
   }
 }
 
