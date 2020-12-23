@@ -395,7 +395,9 @@ async function generateChecks(scanResult, evaluationResults, vulnerabilities) {
 
     const octokit = github.getOctokit(githubToken);
 
-    await octokit.checks.create({
+    let annotations = getReportAnnotations(evaluationResults, vulnerabilities)
+
+    let check_run = await octokit.checks.create({
       owner: github.context.repo.owner,
       repo: github.context.repo.repo,
       name: "Scan results",
@@ -403,9 +405,21 @@ async function generateChecks(scanResult, evaluationResults, vulnerabilities) {
       output: {
         title: "Inline scan results",
         summary: "Scan result is " + scanResult,
-        annotations: getReportAnnotations(evaluationResults, vulnerabilities)
+        annotations: annotations.slice(0,50)
       }
     });
+
+    for (let i = 50; i < annotations.length; i+=50) {
+      await octokit.checks.update({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        check_run_id: check_run.id,
+        output: {
+          annotations: annotations.slice(i, i+50)
+        }
+      });
+    }
+
   } catch (error) {
     core.warning("Error creating check run: " + error);
   }
@@ -2939,7 +2953,7 @@ function _objectWithoutProperties(source, excluded) {
   return target;
 }
 
-const VERSION = "3.2.1";
+const VERSION = "3.2.4";
 
 class Octokit {
   constructor(options = {}) {
@@ -3443,7 +3457,7 @@ function withDefaults(oldDefaults, newDefaults) {
   });
 }
 
-const VERSION = "6.0.9";
+const VERSION = "6.0.10";
 
 const userAgent = `octokit-endpoint.js/${VERSION} ${universalUserAgent.getUserAgent()}`; // DEFAULTS has all properties set that EndpointOptions has, except url.
 // So we use RequestParameters and add method as additional required property.
@@ -3480,7 +3494,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 var request = __webpack_require__(6234);
 var universalUserAgent = __webpack_require__(5030);
 
-const VERSION = "4.5.7";
+const VERSION = "4.5.8";
 
 class GraphqlError extends Error {
   constructor(request, response) {
@@ -3593,7 +3607,7 @@ exports.withCustomRequest = withCustomRequest;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 
-const VERSION = "2.6.0";
+const VERSION = "2.6.2";
 
 /**
  * Some “list” response that can be paginated have a different response structure
@@ -3751,13 +3765,24 @@ const Endpoints = {
     deleteSelfHostedRunnerFromRepo: ["DELETE /repos/{owner}/{repo}/actions/runners/{runner_id}"],
     deleteWorkflowRun: ["DELETE /repos/{owner}/{repo}/actions/runs/{run_id}"],
     deleteWorkflowRunLogs: ["DELETE /repos/{owner}/{repo}/actions/runs/{run_id}/logs"],
+    disableSelectedRepositoryGithubActionsOrganization: ["DELETE /orgs/{org}/actions/permissions/repositories/{repository_id}"],
+    disableWorkflow: ["PUT /repos/{owner}/{repo}/actions/workflows/{workflow_id}/disable"],
     downloadArtifact: ["GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}"],
     downloadJobLogsForWorkflowRun: ["GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs"],
     downloadWorkflowRunLogs: ["GET /repos/{owner}/{repo}/actions/runs/{run_id}/logs"],
+    enableSelectedRepositoryGithubActionsOrganization: ["PUT /orgs/{org}/actions/permissions/repositories/{repository_id}"],
+    enableWorkflow: ["PUT /repos/{owner}/{repo}/actions/workflows/{workflow_id}/enable"],
+    getAllowedActionsOrganization: ["GET /orgs/{org}/actions/permissions/selected-actions"],
+    getAllowedActionsRepository: ["GET /repos/{owner}/{repo}/actions/permissions/selected-actions"],
     getArtifact: ["GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}"],
+    getGithubActionsPermissionsOrganization: ["GET /orgs/{org}/actions/permissions"],
+    getGithubActionsPermissionsRepository: ["GET /repos/{owner}/{repo}/actions/permissions"],
     getJobForWorkflowRun: ["GET /repos/{owner}/{repo}/actions/jobs/{job_id}"],
     getOrgPublicKey: ["GET /orgs/{org}/actions/secrets/public-key"],
     getOrgSecret: ["GET /orgs/{org}/actions/secrets/{secret_name}"],
+    getRepoPermissions: ["GET /repos/{owner}/{repo}/actions/permissions", {}, {
+      renamed: ["actions", "getGithubActionsPermissionsRepository"]
+    }],
     getRepoPublicKey: ["GET /repos/{owner}/{repo}/actions/secrets/public-key"],
     getRepoSecret: ["GET /repos/{owner}/{repo}/actions/secrets/{secret_name}"],
     getSelfHostedRunnerForOrg: ["GET /orgs/{org}/actions/runners/{runner_id}"],
@@ -3774,6 +3799,7 @@ const Endpoints = {
     listRunnerApplicationsForOrg: ["GET /orgs/{org}/actions/runners/downloads"],
     listRunnerApplicationsForRepo: ["GET /repos/{owner}/{repo}/actions/runners/downloads"],
     listSelectedReposForOrgSecret: ["GET /orgs/{org}/actions/secrets/{secret_name}/repositories"],
+    listSelectedRepositoriesEnabledGithubActionsOrganization: ["GET /orgs/{org}/actions/permissions/repositories"],
     listSelfHostedRunnersForOrg: ["GET /orgs/{org}/actions/runners"],
     listSelfHostedRunnersForRepo: ["GET /repos/{owner}/{repo}/actions/runners"],
     listWorkflowRunArtifacts: ["GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts"],
@@ -3781,7 +3807,12 @@ const Endpoints = {
     listWorkflowRunsForRepo: ["GET /repos/{owner}/{repo}/actions/runs"],
     reRunWorkflow: ["POST /repos/{owner}/{repo}/actions/runs/{run_id}/rerun"],
     removeSelectedRepoFromOrgSecret: ["DELETE /orgs/{org}/actions/secrets/{secret_name}/repositories/{repository_id}"],
-    setSelectedReposForOrgSecret: ["PUT /orgs/{org}/actions/secrets/{secret_name}/repositories"]
+    setAllowedActionsOrganization: ["PUT /orgs/{org}/actions/permissions/selected-actions"],
+    setAllowedActionsRepository: ["PUT /repos/{owner}/{repo}/actions/permissions/selected-actions"],
+    setGithubActionsPermissionsOrganization: ["PUT /orgs/{org}/actions/permissions"],
+    setGithubActionsPermissionsRepository: ["PUT /repos/{owner}/{repo}/actions/permissions"],
+    setSelectedReposForOrgSecret: ["PUT /orgs/{org}/actions/secrets/{secret_name}/repositories"],
+    setSelectedRepositoriesEnabledGithubActionsOrganization: ["PUT /orgs/{org}/actions/permissions/repositories"]
   },
   activity: {
     checkRepoIsStarredByAuthenticatedUser: ["GET /user/starred/{owner}/{repo}"],
@@ -3837,6 +3868,7 @@ const Endpoints = {
     getSubscriptionPlanForAccount: ["GET /marketplace_listing/accounts/{account_id}"],
     getSubscriptionPlanForAccountStubbed: ["GET /marketplace_listing/stubbed/accounts/{account_id}"],
     getUserInstallation: ["GET /users/{username}/installation"],
+    getWebhookConfigForApp: ["GET /app/hook/config"],
     listAccountsForPlan: ["GET /marketplace_listing/plans/{plan_id}/accounts"],
     listAccountsForPlanStubbed: ["GET /marketplace_listing/stubbed/plans/{plan_id}/accounts"],
     listInstallationReposForAuthenticatedUser: ["GET /user/installations/{installation_id}/repositories"],
@@ -3851,7 +3883,8 @@ const Endpoints = {
     resetToken: ["PATCH /applications/{client_id}/token"],
     revokeInstallationAccessToken: ["DELETE /installation/token"],
     suspendInstallation: ["PUT /app/installations/{installation_id}/suspended"],
-    unsuspendInstallation: ["DELETE /app/installations/{installation_id}/suspended"]
+    unsuspendInstallation: ["DELETE /app/installations/{installation_id}/suspended"],
+    updateWebhookConfigForApp: ["PATCH /app/hook/config"]
   },
   billing: {
     getGithubActionsBillingOrg: ["GET /orgs/{org}/settings/billing/actions"],
@@ -3862,61 +3895,17 @@ const Endpoints = {
     getSharedStorageBillingUser: ["GET /users/{username}/settings/billing/shared-storage"]
   },
   checks: {
-    create: ["POST /repos/{owner}/{repo}/check-runs", {
-      mediaType: {
-        previews: ["antiope"]
-      }
-    }],
-    createSuite: ["POST /repos/{owner}/{repo}/check-suites", {
-      mediaType: {
-        previews: ["antiope"]
-      }
-    }],
-    get: ["GET /repos/{owner}/{repo}/check-runs/{check_run_id}", {
-      mediaType: {
-        previews: ["antiope"]
-      }
-    }],
-    getSuite: ["GET /repos/{owner}/{repo}/check-suites/{check_suite_id}", {
-      mediaType: {
-        previews: ["antiope"]
-      }
-    }],
-    listAnnotations: ["GET /repos/{owner}/{repo}/check-runs/{check_run_id}/annotations", {
-      mediaType: {
-        previews: ["antiope"]
-      }
-    }],
-    listForRef: ["GET /repos/{owner}/{repo}/commits/{ref}/check-runs", {
-      mediaType: {
-        previews: ["antiope"]
-      }
-    }],
-    listForSuite: ["GET /repos/{owner}/{repo}/check-suites/{check_suite_id}/check-runs", {
-      mediaType: {
-        previews: ["antiope"]
-      }
-    }],
-    listSuitesForRef: ["GET /repos/{owner}/{repo}/commits/{ref}/check-suites", {
-      mediaType: {
-        previews: ["antiope"]
-      }
-    }],
-    rerequestSuite: ["POST /repos/{owner}/{repo}/check-suites/{check_suite_id}/rerequest", {
-      mediaType: {
-        previews: ["antiope"]
-      }
-    }],
-    setSuitesPreferences: ["PATCH /repos/{owner}/{repo}/check-suites/preferences", {
-      mediaType: {
-        previews: ["antiope"]
-      }
-    }],
-    update: ["PATCH /repos/{owner}/{repo}/check-runs/{check_run_id}", {
-      mediaType: {
-        previews: ["antiope"]
-      }
-    }]
+    create: ["POST /repos/{owner}/{repo}/check-runs"],
+    createSuite: ["POST /repos/{owner}/{repo}/check-suites"],
+    get: ["GET /repos/{owner}/{repo}/check-runs/{check_run_id}"],
+    getSuite: ["GET /repos/{owner}/{repo}/check-suites/{check_suite_id}"],
+    listAnnotations: ["GET /repos/{owner}/{repo}/check-runs/{check_run_id}/annotations"],
+    listForRef: ["GET /repos/{owner}/{repo}/commits/{ref}/check-runs"],
+    listForSuite: ["GET /repos/{owner}/{repo}/check-suites/{check_suite_id}/check-runs"],
+    listSuitesForRef: ["GET /repos/{owner}/{repo}/commits/{ref}/check-suites"],
+    rerequestSuite: ["POST /repos/{owner}/{repo}/check-suites/{check_suite_id}/rerequest"],
+    setSuitesPreferences: ["PATCH /repos/{owner}/{repo}/check-suites/preferences"],
+    update: ["PATCH /repos/{owner}/{repo}/check-runs/{check_run_id}"]
   },
   codeScanning: {
     getAlert: ["GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}", {}, {
@@ -3948,6 +3937,16 @@ const Endpoints = {
   },
   emojis: {
     get: ["GET /emojis"]
+  },
+  enterpriseAdmin: {
+    disableSelectedOrganizationGithubActionsEnterprise: ["DELETE /enterprises/{enterprise}/actions/permissions/organizations/{org_id}"],
+    enableSelectedOrganizationGithubActionsEnterprise: ["PUT /enterprises/{enterprise}/actions/permissions/organizations/{org_id}"],
+    getAllowedActionsEnterprise: ["GET /enterprises/{enterprise}/actions/permissions/selected-actions"],
+    getGithubActionsPermissionsEnterprise: ["GET /enterprises/{enterprise}/actions/permissions"],
+    listSelectedOrganizationsEnabledGithubActionsEnterprise: ["GET /enterprises/{enterprise}/actions/permissions/organizations"],
+    setAllowedActionsEnterprise: ["PUT /enterprises/{enterprise}/actions/permissions/selected-actions"],
+    setGithubActionsPermissionsEnterprise: ["PUT /enterprises/{enterprise}/actions/permissions"],
+    setSelectedOrganizationsEnabledGithubActionsEnterprise: ["PUT /enterprises/{enterprise}/actions/permissions/organizations"]
   },
   gists: {
     checkIsStarred: ["GET /gists/{gist_id}/star"],
@@ -3991,36 +3990,15 @@ const Endpoints = {
     getTemplate: ["GET /gitignore/templates/{name}"]
   },
   interactions: {
-    getRestrictionsForOrg: ["GET /orgs/{org}/interaction-limits", {
-      mediaType: {
-        previews: ["sombra"]
-      }
-    }],
-    getRestrictionsForRepo: ["GET /repos/{owner}/{repo}/interaction-limits", {
-      mediaType: {
-        previews: ["sombra"]
-      }
-    }],
-    removeRestrictionsForOrg: ["DELETE /orgs/{org}/interaction-limits", {
-      mediaType: {
-        previews: ["sombra"]
-      }
-    }],
-    removeRestrictionsForRepo: ["DELETE /repos/{owner}/{repo}/interaction-limits", {
-      mediaType: {
-        previews: ["sombra"]
-      }
-    }],
-    setRestrictionsForOrg: ["PUT /orgs/{org}/interaction-limits", {
-      mediaType: {
-        previews: ["sombra"]
-      }
-    }],
-    setRestrictionsForRepo: ["PUT /repos/{owner}/{repo}/interaction-limits", {
-      mediaType: {
-        previews: ["sombra"]
-      }
-    }]
+    getRestrictionsForOrg: ["GET /orgs/{org}/interaction-limits"],
+    getRestrictionsForRepo: ["GET /repos/{owner}/{repo}/interaction-limits"],
+    getRestrictionsForYourPublicRepos: ["GET /user/interaction-limits"],
+    removeRestrictionsForOrg: ["DELETE /orgs/{org}/interaction-limits"],
+    removeRestrictionsForRepo: ["DELETE /repos/{owner}/{repo}/interaction-limits"],
+    removeRestrictionsForYourPublicRepos: ["DELETE /user/interaction-limits"],
+    setRestrictionsForOrg: ["PUT /orgs/{org}/interaction-limits"],
+    setRestrictionsForRepo: ["PUT /repos/{owner}/{repo}/interaction-limits"],
+    setRestrictionsForYourPublicRepos: ["PUT /user/interaction-limits"]
   },
   issues: {
     addAssignees: ["POST /repos/{owner}/{repo}/issues/{issue_number}/assignees"],
@@ -4081,7 +4059,10 @@ const Endpoints = {
     }]
   },
   meta: {
-    get: ["GET /meta"]
+    get: ["GET /meta"],
+    getOctocat: ["GET /octocat"],
+    getZen: ["GET /zen"],
+    root: ["GET /"]
   },
   migrations: {
     cancelImport: ["DELETE /repos/{owner}/{repo}/import"],
@@ -4168,6 +4149,7 @@ const Endpoints = {
     getMembershipForAuthenticatedUser: ["GET /user/memberships/orgs/{org}"],
     getMembershipForUser: ["GET /orgs/{org}/memberships/{username}"],
     getWebhook: ["GET /orgs/{org}/hooks/{hook_id}"],
+    getWebhookConfigForOrg: ["GET /orgs/{org}/hooks/{hook_id}/config"],
     list: ["GET /organizations"],
     listAppInstallations: ["GET /orgs/{org}/installations"],
     listBlockedUsers: ["GET /orgs/{org}/blocks"],
@@ -4190,7 +4172,8 @@ const Endpoints = {
     unblockUser: ["DELETE /orgs/{org}/blocks/{username}"],
     update: ["PATCH /orgs/{org}"],
     updateMembershipForAuthenticatedUser: ["PATCH /user/memberships/orgs/{org}"],
-    updateWebhook: ["PATCH /orgs/{org}/hooks/{hook_id}"]
+    updateWebhook: ["PATCH /orgs/{org}/hooks/{hook_id}"],
+    updateWebhookConfigForOrg: ["PATCH /orgs/{org}/hooks/{hook_id}/config"]
   },
   projects: {
     addCollaborator: ["PUT /projects/{project_id}/collaborators/{username}", {
@@ -4421,7 +4404,7 @@ const Endpoints = {
         previews: ["squirrel-girl"]
       }
     }, {
-      deprecated: "octokit.reactions.deleteLegacy() is deprecated, see https://developer.github.com/v3/reactions/#delete-a-reaction-legacy"
+      deprecated: "octokit.reactions.deleteLegacy() is deprecated, see https://docs.github.com/v3/reactions/#delete-a-reaction-legacy"
     }],
     listForCommitComment: ["GET /repos/{owner}/{repo}/comments/{comment_id}/reactions", {
       mediaType: {
@@ -4537,7 +4520,11 @@ const Endpoints = {
         previews: ["dorian"]
       }
     }],
-    downloadArchive: ["GET /repos/{owner}/{repo}/{archive_format}/{ref}"],
+    downloadArchive: ["GET /repos/{owner}/{repo}/zipball/{ref}", {}, {
+      renamed: ["repos", "downloadZipballArchive"]
+    }],
+    downloadTarballArchive: ["GET /repos/{owner}/{repo}/tarball/{ref}"],
+    downloadZipballArchive: ["GET /repos/{owner}/{repo}/zipball/{ref}"],
     enableAutomatedSecurityFixes: ["PUT /repos/{owner}/{repo}/automated-security-fixes", {
       mediaType: {
         previews: ["london"]
@@ -4572,11 +4559,7 @@ const Endpoints = {
         previews: ["zzzax"]
       }
     }],
-    getCommunityProfileMetrics: ["GET /repos/{owner}/{repo}/community/profile", {
-      mediaType: {
-        previews: ["black-panther"]
-      }
-    }],
+    getCommunityProfileMetrics: ["GET /repos/{owner}/{repo}/community/profile"],
     getContent: ["GET /repos/{owner}/{repo}/contents/{path}"],
     getContributorsStats: ["GET /repos/{owner}/{repo}/stats/contributors"],
     getDeployKey: ["GET /repos/{owner}/{repo}/keys/{key_id}"],
@@ -4600,6 +4583,7 @@ const Endpoints = {
     getUsersWithAccessToProtectedBranch: ["GET /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/users"],
     getViews: ["GET /repos/{owner}/{repo}/traffic/views"],
     getWebhook: ["GET /repos/{owner}/{repo}/hooks/{hook_id}"],
+    getWebhookConfigForRepo: ["GET /repos/{owner}/{repo}/hooks/{hook_id}/config"],
     listBranches: ["GET /repos/{owner}/{repo}/branches"],
     listBranchesForHeadCommit: ["GET /repos/{owner}/{repo}/commits/{commit_sha}/branches-where-head", {
       mediaType: {
@@ -4679,8 +4663,12 @@ const Endpoints = {
     updatePullRequestReviewProtection: ["PATCH /repos/{owner}/{repo}/branches/{branch}/protection/required_pull_request_reviews"],
     updateRelease: ["PATCH /repos/{owner}/{repo}/releases/{release_id}"],
     updateReleaseAsset: ["PATCH /repos/{owner}/{repo}/releases/assets/{asset_id}"],
-    updateStatusCheckPotection: ["PATCH /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks"],
+    updateStatusCheckPotection: ["PATCH /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks", {}, {
+      renamed: ["repos", "updateStatusCheckProtection"]
+    }],
+    updateStatusCheckProtection: ["PATCH /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks"],
     updateWebhook: ["PATCH /repos/{owner}/{repo}/hooks/{hook_id}"],
+    updateWebhookConfigForRepo: ["PATCH /repos/{owner}/{repo}/hooks/{hook_id}/config"],
     uploadReleaseAsset: ["POST /repos/{owner}/{repo}/releases/{release_id}/assets{?name,label}", {
       baseUrl: "https://uploads.github.com"
     }]
@@ -4701,6 +4689,11 @@ const Endpoints = {
       }
     }],
     users: ["GET /search/users"]
+  },
+  secretScanning: {
+    getAlert: ["GET /repos/{owner}/{repo}/secret-scanning/alerts/{alert_number}"],
+    listAlertsForRepo: ["GET /repos/{owner}/{repo}/secret-scanning/alerts"],
+    updateAlert: ["PATCH /repos/{owner}/{repo}/secret-scanning/alerts/{alert_number}"]
   },
   teams: {
     addOrUpdateMembershipForUserInOrg: ["PUT /orgs/{org}/teams/{team_slug}/memberships/{username}"],
@@ -4782,7 +4775,7 @@ const Endpoints = {
   }
 };
 
-const VERSION = "4.2.1";
+const VERSION = "4.4.1";
 
 function endpointsToMethods(octokit, endpointsMap) {
   const newMethods = {};
@@ -4966,7 +4959,7 @@ var isPlainObject = __webpack_require__(3287);
 var nodeFetch = _interopDefault(__webpack_require__(467));
 var requestError = __webpack_require__(537);
 
-const VERSION = "5.4.10";
+const VERSION = "5.4.12";
 
 function getBufferResponse(response) {
   return response.arrayBuffer();
@@ -7065,236 +7058,213 @@ function onceStrict (fn) {
 /***/ 5824:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-// Generated by CoffeeScript 2.4.1
-var Tail, environment, events, fs, path,
-  boundMethodCheck = function(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new Error('Bound instance method accessed before binding'); } };
+let events = __webpack_require__(8614)
+let fs = __webpack_require__(5747)
+let path = __webpack_require__(5622)
 
-events = __webpack_require__(8614);
+// const environment = process.env['NODE_ENV'] || 'development'
 
-fs = __webpack_require__(5747);
-
-path = __webpack_require__(5622);
-
-environment = process.env['NODE_ENV'] || 'development';
-
-Tail = class Tail extends events.EventEmitter {
-  readBlock() {
-    var block, stream;
-    boundMethodCheck(this, Tail);
-    if (this.queue.length >= 1) {
-      block = this.queue[0];
-      if (block.end > block.start) {
-        stream = fs.createReadStream(this.filename, {
-          start: block.start,
-          end: block.end - 1,
-          encoding: this.encoding
-        });
-        stream.on('error', (error) => {
-          if (this.logger) {
-            this.logger.error(`Tail error: ${error}`);
-          }
-          return this.emit('error', error);
-        });
-        stream.on('end', () => {
-          var x;
-          x = this.queue.shift();
-          if (this.queue.length > 0) {
-            this.internalDispatcher.emit("next");
-          }
-          if (this.flushAtEOF && this.buffer.length > 0) {
-            this.emit("line", this.buffer);
-            return this.buffer = '';
-          }
-        });
-        return stream.on('data', (data) => {
-          var chunk, i, len, parts, results;
-          if (this.separator === null) {
-            return this.emit("line", data);
-          } else {
-            this.buffer += data;
-            parts = this.buffer.split(this.separator);
-            this.buffer = parts.pop();
-            results = [];
-            for (i = 0, len = parts.length; i < len; i++) {
-              chunk = parts[i];
-              results.push(this.emit("line", chunk));
-            }
-            return results;
-          }
-        });
-      }
-    }
-  }
-
-  constructor(filename, options = {}) {
-    var err, fromBeginning;
-    super(filename, options);
-    this.readBlock = this.readBlock.bind(this);
-    this.change = this.change.bind(this);
-    this.filename = filename;
-    this.absPath = path.dirname(this.filename);
-    ({separator: this.separator = /[\r]{0,1}\n/, fsWatchOptions: this.fsWatchOptions = {}, follow: this.follow = true, logger: this.logger, useWatchFile: this.useWatchFile = false, flushAtEOF: this.flushAtEOF = false, encoding: this.encoding = "utf-8", fromBeginning = false} = options);
-    if (this.logger) {
-      this.logger.info("Tail starting...");
-      this.logger.info(`filename: ${this.filename}`);
-      this.logger.info(`encoding: ${this.encoding}`);
-      try {
-        fs.accessSync(this.filename, fs.constants.F_OK);
-      } catch (error1) {
-        err = error1;
-        if (err.code === 'ENOENT') {
-          throw err;
-        }
-      }
-    }
-    this.buffer = '';
-    this.internalDispatcher = new events.EventEmitter();
-    this.queue = [];
-    this.isWatching = false;
-    this.internalDispatcher.on('next', () => {
-      return this.readBlock();
-    });
-    this.watch(fromBeginning);
-  }
-
-  change(filename) {
-    var err, stats;
-    boundMethodCheck(this, Tail);
-    try {
-      stats = fs.statSync(filename);
-    } catch (error1) {
-      err = error1;
-      if (this.logger) {
-        this.logger.error(`change event for ${filename} failed: ${err}`);
-      }
-      this.emit("error", `change event for ${filename} failed: ${err}`);
-      return;
-    }
-    if (stats.size < this.pos) { //scenario where texts is not appended but it's actually a w+
-      this.pos = stats.size;
-    }
-    if (stats.size > this.pos) {
-      this.queue.push({
-        start: this.pos,
-        end: stats.size
-      });
-      this.pos = stats.size;
-      if (this.queue.length === 1) {
-        return this.internalDispatcher.emit("next");
-      }
-    }
-  }
-
-  watch(fromBeginning) {
-    var err, stats;
-    if (this.isWatching) {
-      return;
-    }
-    if (this.logger) {
-      this.logger.info(`filesystem.watch present? ${fs.watch !== void 0}`);
-      this.logger.info(`useWatchFile: ${this.useWatchFile}`);
-      this.logger.info(`fromBeginning: ${fromBeginning}`);
-    }
-    this.isWatching = true;
-    try {
-      stats = fs.statSync(this.filename);
-    } catch (error1) {
-      err = error1;
-      if (this.logger) {
-        this.logger.error(`watch for ${this.filename} failed: ${err}`);
-      }
-      this.emit("error", `watch for ${this.filename} failed: ${err}`);
-      return;
-    }
-    this.pos = fromBeginning ? 0 : stats.size;
-    if (this.pos === 0) {
-      this.change(this.filename);
-    }
-    if (!this.useWatchFile && fs.watch) {
-      if (this.logger) {
-        this.logger.info("watch strategy: watch");
-      }
-      return this.watcher = fs.watch(this.filename, this.fsWatchOptions, (e, filename) => {
-        return this.watchEvent(e, filename);
-      });
-    } else {
-      if (this.logger) {
-        this.logger.info("watch strategy: watchFile");
-      }
-      return fs.watchFile(this.filename, this.fsWatchOptions, (curr, prev) => {
-        return this.watchFileEvent(curr, prev);
-      });
-    }
-  }
-
-  rename(filename) {
-    //MacOS sometimes throws a rename event for no reason.
-    //Different platforms might behave differently.
-    //see https://nodejs.org/api/fs.html#fs_fs_watch_filename_options_listener
-    //filename might not be present.
-    //https://nodejs.org/api/fs.html#fs_filename_argument
-    //Better solution would be check inode but it will require a timeout and
-    // a sync file read.
-    if (filename === void 0 || filename !== this.filename) {
-      this.unwatch();
-      if (this.follow) {
-        this.filename = path.join(this.absPath, filename);
-        return this.rewatchId = setTimeout((() => {
-          return this.watch();
-        }), 1000);
-      } else {
-        if (this.logger) {
-          this.logger.error(`'rename' event for ${this.filename}. File not available.`);
-        }
-        return this.emit("error", `'rename' event for ${this.filename}. File not available.`);
-      }
-    } else {
-
-    }
-  }
-
-  // @logger.info("rename event but same filename")
-  watchEvent(e, evtFilename) {
-    if (e === 'change') {
-      return this.change(this.filename);
-    } else if (e === 'rename') {
-      return this.rename(evtFilename);
-    }
-  }
-
-  watchFileEvent(curr, prev) {
-    if (curr.size > prev.size) {
-      this.pos = curr.size; // Update @pos so that a consumer can determine if entire file has been handled
-      this.queue.push({
-        start: prev.size,
-        end: curr.size
-      });
-      if (this.queue.length === 1) {
-        return this.internalDispatcher.emit("next");
-      }
-    }
-  }
-
-  unwatch() {
-    if (this.watcher) {
-      this.watcher.close();
-    } else {
-      fs.unwatchFile(this.filename);
-    }
-    if (this.rewatchId) {
-      clearTimeout(this.rewatchId);
-      this.rewatchId = void 0;
-    }
-    this.isWatching = false;
-    this.queue = [];
-    if (this.logger) {
-      return this.logger.info("Unwatch ", this.filename);
-    }
-  }
-
+class devNull {
+    info() { };
+    error() { };
 };
 
-exports.x = Tail;
+class Tail extends events.EventEmitter {
+        
+    constructor(filename, options = {}) {
+        super();
+        this.filename = filename;
+        this.absPath = path.dirname(this.filename);
+        this.separator = (options.separator !== undefined) ? options.separator : /[\r]{0,1}\n/;// null is a valid param
+        this.fsWatchOptions = options.fsWatchOptions || {};
+        this.follow = options.follow || true;
+        this.logger = options.logger || new devNull();
+        this.useWatchFile = options.useWatchFile || false;
+        this.flushAtEOF = options.flushAtEOF || false;
+        this.encoding = options.encoding || `utf-8`;
+        const fromBeginning = options.fromBeginning || false;
+
+
+        this.logger.info(`Tail starting...`)
+        this.logger.info(`filename: ${this.filename}`);
+        this.logger.info(`encoding: ${this.encoding}`);
+
+        try {
+            fs.accessSync(this.filename, fs.constants.F_OK);
+        } catch (err) {
+            if (err.code == 'ENOENT') {
+                throw err
+            }
+        }
+
+        this.buffer = '';
+        this.internalDispatcher = new events.EventEmitter();
+        this.queue = [];
+        this.isWatching = false;
+
+        // this.internalDispatcher.on('next',this.readBlock);
+        this.internalDispatcher.on('next', () => {
+            this.readBlock();
+        });
+
+        this.logger.info(`fromBeginning: ${fromBeginning}`);
+        let startingPos = undefined;
+        if (fromBeginning) {
+            startingPos = 0;
+            //if fromBeginning triggers a check for content to flush the existing file
+            //without waiting for a new appended line
+            this.change(this.filename);
+        } 
+        this.watch(startingPos);
+    }
+
+    latestPosition() {
+        try {
+            return fs.statSync(this.filename).size;
+        } catch (err) {
+            this.logger.error(`size check for ${this.filename} failed: ${err}`);
+            this.emit("error", `size check for ${this.filename} failed: ${err}`);
+            throw err;
+        }
+    }
+
+    readBlock() {
+        if (this.queue.length >= 1) {
+            const block = this.queue[0];
+            if (block.end > block.start) {
+                let stream = fs.createReadStream(this.filename, { start: block.start, end: block.end - 1, encoding: this.encoding });
+                stream.on('error', (error) => {
+                    this.logger.error(`Tail error: ${error}`);
+                    this.emit('error', error);
+                });
+                stream.on('end', () => {
+                    let _ = this.queue.shift();
+                    if (this.queue.length > 0) {
+                        this.internalDispatcher.emit('next');
+                    }
+                    if (this.flushAtEOF && this.buffer.length > 0) {
+                        this.emit('line', this.buffer);
+                        this.buffer = "";
+                    }
+                });
+                stream.on('data', (d) => {
+                    if (this.separator === null) {
+                        this.emit("line", d);
+                    } else {
+                        this.buffer += d;
+                        let parts = this.buffer.split(this.separator);
+                        this.buffer = parts.pop();
+                        for (const chunk of parts) {
+                            this.emit("line", chunk);
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    change(filename) {
+        let p = this.latestPosition()
+        if (p < this.pos) {//scenario where text is not appended but it's actually a w+
+            this.pos = p
+        } else if (p > this.pos) {
+            this.queue.push({ start: this.pos, end: p});
+            this.pos = p
+            if (this.queue.length == 1) {
+                this.internalDispatcher.emit("next");
+            }
+        }
+    }
+
+    watch(startingPos) {
+        if (this.isWatching) {
+            return
+        }
+        this.logger.info(`filesystem.watch present? ${fs.watch != undefined}`);
+        this.logger.info(`useWatchFile: ${this.useWatchFile}`);
+
+        this.isWatching = true;
+        this.pos = (startingPos === undefined) ? this.latestPosition() : startingPos;
+
+        try {
+            if (!this.useWatchFile && fs.watch) {
+                this.logger.info(`watch strategy: watch`);
+                this.watcher = fs.watch(this.filename, this.fsWatchOptions, (e, filename) => { this.watchEvent(e, filename); });
+    
+            } else {
+                this.logger.info(`watch strategy: watchFile`);
+                fs.watchFile(this.filename, this.fsWatchOptions, (curr, prev) => { this.watchFileEvent(curr, prev) });
+            }
+        } catch (err) {
+            this.logger.error(`watch for ${this.filename} failed: ${err}`);
+            this.emit("error", `watch for ${this.filename} failed: ${err}`);
+            return
+        }
+    }
+
+    rename(filename) {
+        //TODO
+        //MacOS sometimes throws a rename event for no reason.
+        //Different platforms might behave differently.
+        //see https://nodejs.org/api/fs.html#fs_fs_watch_filename_options_listener
+        //filename might not be present.
+        //https://nodejs.org/api/fs.html#fs_filename_argument
+        //Better solution would be check inode but it will require a timeout and
+        // a sync file read.
+        if (filename === undefined || filename !== this.filename) {
+            this.unwatch();
+            if (this.follow) {
+                this.filename = path.join(this.absPath, filename);
+                this.rewatchId = setTimeout((() => { 
+                    this.watch(this.pos); 
+                }), 1000);
+            } else {
+                this.logger.error(`'rename' event for ${this.filename}. File not available anymore.`);
+                this.emit("error", `'rename' event for ${this.filename}. File not available anymore.`);
+            }
+        } else {
+            // this.logger.info("rename event but same filename")
+        }
+    }
+
+    watchEvent(e, evtFilename) {
+        if (e === 'change') {
+            this.change(this.filename);
+        } else if (e === 'rename') {
+            this.rename(evtFilename);
+        }
+    }
+
+    watchFileEvent(curr, prev) {
+        if (curr.size > prev.size) {
+            this.pos = curr.size;    //Update this.pos so that a consumer can determine if entire file has been handled
+            this.queue.push({ start: prev.size, end: curr.size });
+            if (this.queue.length == 1) {
+                this.internalDispatcher.emit("next");
+            }
+        }
+    }
+
+    unwatch() {
+        if (this.watcher) {
+            this.watcher.close();
+        } else {
+            fs.unwatchFile(this.filename);
+        }
+        if (this.rewatchId) {
+            clearTimeout(this.rewatchId);
+            this.rewatchId = undefined;
+        }
+        this.isWatching = false;
+        this.queue = [];// TODO: is this correct behaviour?
+        if (this.logger) {
+            this.logger.info(`Unwatch ${this.filename}`);
+        }
+    }
+
+}
+
+exports.x = Tail
 
 
 /***/ }),

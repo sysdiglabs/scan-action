@@ -17,6 +17,7 @@ function cleanupTemporaryDir(tmpDir) {
 }
 
 const exampleReport = JSON.stringify(require("./fixtures/report.json"));
+const exampleLongReport = JSON.stringify(require("./fixtures/longreport.json"));
 
 describe("input parsing", () => {
     let oldEnv;
@@ -393,6 +394,39 @@ describe("process scan results", () => {
         expect(data.name).toBe("Scan results");
         expect(data.output.annotations).toContainEqual({ "annotation_level": "warning", "end_line": 1, "message": "warn dockerfile:instruction\nDockerfile directive 'HEALTHCHECK' not found, matching condition 'not_exists' check", "path": "Dockerfile", "start_line": 1, "title": "warn dockerfile" });
         expect(data.output.annotations).toContainEqual({ "annotation_level": "failure", "end_line": 1, "message": "stop dockerfile:instruction\nDockerfile directive 'USER' not found, matching condition 'not_exists' check", "path": "Dockerfile", "start_line": 1, "title": "stop dockerfile" });
+    })
+
+    it("generates a check run and then updates it if more than 50 entries", async () => {
+        let createData;
+        let updateData
+        github.context = { repo: { repo: "foo-repo", owner: "foo-owner" } };
+
+        core.getInput = jest.fn();
+        core.getInput.mockReturnValueOnce("foo");
+
+        github.getOctokit = jest.fn(() => {
+            return {
+                checks: {
+                    create: async function (receivedData) {
+                        createData = receivedData;
+                        return { "id": 1 };
+                    },
+                    update: async function (receivedData) {
+                        updateData = receivedData;
+                    }
+                }
+            }
+        });
+
+        let scanResult = {
+            ReturnCode: 0,
+            Output: exampleLongReport,
+            Error: ""
+        };
+
+        await index.processScanResult(scanResult);
+        expect(createData.output.annotations).not.toContainEqual({ "annotation_level": "failure", "end_line": 1, "message": "stop dockerfile:instruction\nDockerfile directive 'USER' not found, matching condition 'not_exists' check", "path": "Dockerfile", "start_line": 1, "title": "stop dockerfile" });
+        expect(updateData.output.annotations).toContainEqual({ "annotation_level": "failure", "end_line": 1, "message": "stop dockerfile:instruction\nDockerfile directive 'USER' not found, matching condition 'not_exists' check", "path": "Dockerfile", "start_line": 1, "title": "stop dockerfile" });
     })
 
     it("generates SARIF report with vulnerabilities", async () => {

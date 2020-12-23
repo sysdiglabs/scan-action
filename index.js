@@ -388,7 +388,9 @@ async function generateChecks(scanResult, evaluationResults, vulnerabilities) {
 
     const octokit = github.getOctokit(githubToken);
 
-    await octokit.checks.create({
+    let annotations = getReportAnnotations(evaluationResults, vulnerabilities)
+
+    let check_run = await octokit.checks.create({
       owner: github.context.repo.owner,
       repo: github.context.repo.repo,
       name: "Scan results",
@@ -396,9 +398,21 @@ async function generateChecks(scanResult, evaluationResults, vulnerabilities) {
       output: {
         title: "Inline scan results",
         summary: "Scan result is " + scanResult,
-        annotations: getReportAnnotations(evaluationResults, vulnerabilities)
+        annotations: annotations.slice(0,50)
       }
     });
+
+    for (let i = 50; i < annotations.length; i+=50) {
+      await octokit.checks.update({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        check_run_id: check_run.id,
+        output: {
+          annotations: annotations.slice(i, i+50)
+        }
+      });
+    }
+
   } catch (error) {
     core.warning("Error creating check run: " + error);
   }
