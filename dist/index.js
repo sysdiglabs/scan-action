@@ -102,6 +102,8 @@ function composeFlags(opts) {
 
   if (opts.runAsUser) {
     dockerFlags += ` -u ${opts.runAsUser}`;
+  } else {
+    dockerFlags += ` -u ${process.getuid()}`
   }
 
   if (opts.sysdigSkipTLS) {
@@ -172,9 +174,11 @@ async function processScanResult(result) {
   let report;
   try {
     report = JSON.parse(result.Output);
-  } catch (error) {
-    core.error("Error parsing analysis JSON report: " + error);
+  } catch (error) {    
+    core.error("Error parsing analysis JSON report: " + error + ". Output was: " + result.output);
+    throw new ExecutionError(result.Output, result.Error);
   }
+
   if (report) {
 
     let vulnerabilities = [];

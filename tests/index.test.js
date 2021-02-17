@@ -304,7 +304,7 @@ describe("process scan results", () => {
             Output: "Some output",
             Error: "Some error"
         };
-        return expect(index.processScanResult(scanResult)).rejects.toThrow(new index.ExecutionError('Some output', "Some error"));
+        return expect(index.processScanResult(scanResult)).rejects.toThrow(new index.ExecutionError('Some output', 'Some error'));
     })
 
     it("handles error on invalid JSON", async () => {
@@ -316,8 +316,7 @@ describe("process scan results", () => {
             Error: ""
         };
 
-        let success = await index.processScanResult(scanResult);
-        expect(success).toBe(true);
+        await expect(index.processScanResult(scanResult)).rejects.toThrow(new index.ExecutionError('invalid JSON', ''));
         expect(core.error).toBeCalledTimes(1);
         expect(core.error.mock.calls[0][0]).toMatch(/Error parsing analysis JSON report/)
     })
