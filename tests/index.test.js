@@ -104,7 +104,7 @@ describe("docker flags", () => {
     it("uses default docker flags", () => {
         let flags = index.composeFlags({});
         expect(flags.dockerFlags).toMatch(/(^| )--rm($| )/)
-        expect(flags.dockerFlags).toMatch(new RegExp(`(^| )-v ${process.cwd()}/scan-output:/tmp/sysdig-inline-scan/logs($| )`));
+        expect(flags.dockerFlags).toMatch(new RegExp(`(^| )-v ${process.cwd()}/scan-output:/tmp/logs($| )`));
     })
 
     it("mounts the input file", () => {
