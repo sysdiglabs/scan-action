@@ -167,7 +167,7 @@ async function processScanResult(result) {
   let report;
   try {
     report = JSON.parse(result.Output);
-  } catch (error) {    
+  } catch (error) {
     core.error("Error parsing analysis JSON report: " + error + ". Output was: " + result.output);
     throw new ExecutionError(result.Output, result.Error);
   }
@@ -212,9 +212,7 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
   let errOutput = '';
 
   fs.mkdirSync("./scan-output", { recursive: true });
-  fs.chmodSync("./scan-output", 0o777);
   fs.closeSync(fs.openSync("./scan-output/info.log", 'w'));
-  fs.chmodSync("./scan-output/info.log", 0o666);
   let tail = new Tail("./scan-output/info.log", { fromBeginning: true, follow: true });
   tail.on("line", function (data) {
     console.log(data);
@@ -235,6 +233,7 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
 
   let start = performance.now();
   let cmd = `docker run ${dockerFlags} ${scanImage} ${runFlags}`;
+  core.info("Running command: " + cmd);
   let retCode = await exec.exec(cmd, null, options);
   core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
   tail.unwatch();
