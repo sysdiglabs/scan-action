@@ -233,7 +233,6 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
 
   let start = performance.now();
   let cmd = `docker run ${dockerFlags} ${scanImage} ${runFlags}`;
-  core.info("Running command: " + cmd);
   let retCode = await exec.exec(cmd, null, options);
   core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
   tail.unwatch();
@@ -404,12 +403,19 @@ async function generateChecks(scanResult, evaluationResults, vulnerabilities) {
     return;
   }
 
+  let conclusion = "success";
+  if (scanResult != "Success") {
+    conclusion = "failure";
+  }
+
   try {
     check_run = await octokit.checks.create({
       owner: github.context.repo.owner,
       repo: github.context.repo.repo,
       name: "Scan results",
       head_sha: github.context.sha,
+      status: "completed",
+      conclusion:  conclusion,
       output: {
         title: "Inline scan results",
         summary: "Scan result is " + scanResult,
