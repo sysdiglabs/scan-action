@@ -1,7 +1,6 @@
 name: Scan Image
 
 on:
-  push:
   workflow_dispatch:
 
 jobs:
