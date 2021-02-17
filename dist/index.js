@@ -38,7 +38,8 @@ function parseActionInputs() {
     inputPath: core.getInput('input-path'),
     runAsUser: core.getInput('run-as-user'),
     extraParameters: core.getInput('extra-parameters'),
-    extraDockerParameters: core.getInput('extra-docker-parameters')
+    extraDockerParameters: core.getInput('extra-docker-parameters'),
+    inlineScanImage: core.getInput('inline-scan-image'),
   }
 }
 
@@ -136,8 +137,12 @@ async function run() {
     printOptions(opts);
     let flags = composeFlags(opts);
 
-    await pullScanImage(secureInlineScanImage);
-    let scanResult = await executeInlineScan(secureInlineScanImage, flags.dockerFlags, flags.runFlags);
+    let inlineScanImage = secureInlineScanImage;
+    if (opts.inlineScanImage) {
+      inlineScanImage = opts.inlineScanImage;
+    }
+    await pullScanImage(inlineScanImage);
+    let scanResult = await executeInlineScan(inlineScanImage, flags.dockerFlags, flags.runFlags);
     let success = await processScanResult(scanResult);
     if (!(success || opts.ignoreFailedScan)) {
       core.setFailed(`Scan was FAILED.`)

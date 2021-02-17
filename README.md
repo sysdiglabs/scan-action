@@ -66,6 +66,11 @@ Additional parameters added to the secure-inline-scan container execution.
 
 Additional parameters added to the docker command when executing the secure-inline-scan container execution.
 
+### `inline-scan-image`
+
+The image `quay.io/sysdig/secure-inline-scan:2` which points to the latest 2.x version of the Sysdig Secure inline scanner is used by default.
+This parameter allows overriding the default image, to use a specific version or for air-gapped environments.
+
 ## SARIF Report
 
 The action generates a SARIF report that can be uploaded using the `codeql-action/upload-sarif` action.
