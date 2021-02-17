@@ -62,6 +62,7 @@ describe("input parsing", () => {
             "runAsUser": "",
             "sysdigSecureURL": "",
             "sysdigSkipTLS": false,
+            "inlineScanImage": "",
         })
     })
 
@@ -77,6 +78,7 @@ describe("input parsing", () => {
         process.env['INPUT_RUN-AS-USER'] = "user";
         process.env['INPUT_SYSDIG-SECURE-URL'] = "https://foo";
         process.env['INPUT_SYSDIG-SKIP-TLS'] = "true";
+        process.env['INPUT_INLINE-SCAN-IMAGE'] = "my-custom-image:latest";
         let opts = index.parseActionInputs()
 
         expect(opts).toEqual({
@@ -91,6 +93,7 @@ describe("input parsing", () => {
             "runAsUser": "user",
             "sysdigSecureURL": "https://foo",
             "sysdigSkipTLS": true,
+            "inlineScanImage": "my-custom-image:latest",
         })
     })
 
@@ -592,6 +595,20 @@ describe("run the full action", () => {
         await index.run();
 
         expect(core.setFailed).toBeCalled();
+    })
+
+
+    it("allows override of inline-scan image", async () => {
+        process.env['INPUT_INLINE-SCAN-IMAGE'] = "my-custom-image:latest";
+
+        exec.exec = jest.fn(() => {
+            return Promise.resolve(0);
+        });
+
+        await index.run();
+        expect(exec.exec).toBeCalledTimes(2);
+        expect(exec.exec).toBeCalledWith("docker pull my-custom-image:latest", null);
+        expect(exec.exec).toBeCalledWith(expect.stringMatching(/docker run .* my-custom-image:latest/), null, expect.anything());
     })
 
 })
