@@ -104,7 +104,7 @@ describe("docker flags", () => {
     it("uses default docker flags", () => {
         let flags = index.composeFlags({});
         expect(flags.dockerFlags).toMatch(/(^| )--rm($| )/)
-        expect(flags.dockerFlags).toMatch(new RegExp(`(^| )-v ${process.cwd()}/scan-output:/tmp/sysdig-inline-scan($| )`));
+        expect(flags.dockerFlags).toMatch(new RegExp(`(^| )-v ${process.cwd()}/scan-output:/tmp/logs($| )`));
     })
 
     it("mounts the input file", () => {
@@ -304,7 +304,7 @@ describe("process scan results", () => {
             Output: "Some output",
             Error: "Some error"
         };
-        return expect(index.processScanResult(scanResult)).rejects.toThrow(new index.ExecutionError('Some output', "Some error"));
+        return expect(index.processScanResult(scanResult)).rejects.toThrow(new index.ExecutionError('Some output', 'Some error'));
     })
 
     it("handles error on invalid JSON", async () => {
@@ -316,8 +316,7 @@ describe("process scan results", () => {
             Error: ""
         };
 
-        let success = await index.processScanResult(scanResult);
-        expect(success).toBe(true);
+        await expect(index.processScanResult(scanResult)).rejects.toThrow(new index.ExecutionError('invalid JSON', ''));
         expect(core.error).toBeCalledTimes(1);
         expect(core.error.mock.calls[0][0]).toMatch(/Error parsing analysis JSON report/)
     })
@@ -449,7 +448,7 @@ describe("process scan results", () => {
     })
 
     xit("generates SARIF report with gates", async () => {
-
+        //TODO: Gates are not included in SARIF report
     })
 })
 

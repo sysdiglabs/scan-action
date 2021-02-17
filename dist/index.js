@@ -75,7 +75,7 @@ function printOptions(opts) {
 }
 
 function composeFlags(opts) {
-  let dockerFlags = `--rm -v ${process.cwd()}/scan-output:/tmp/sysdig-inline-scan`;
+  let dockerFlags = `--rm -v ${process.cwd()}/scan-output:/tmp/logs -e LOGS_DIR=/tmp/logs`;
   let runFlags = `--sysdig-token=${opts.sysdigSecureToken || ""} --format=JSON`;
 
   if (opts.sysdigSecureURL) {
@@ -102,6 +102,8 @@ function composeFlags(opts) {
 
   if (opts.runAsUser) {
     dockerFlags += ` -u ${opts.runAsUser}`;
+  } else {
+    dockerFlags += ` -u ${process.getuid()}`
   }
 
   if (opts.sysdigSkipTLS) {
@@ -173,8 +175,10 @@ async function processScanResult(result) {
   try {
     report = JSON.parse(result.Output);
   } catch (error) {
-    core.error("Error parsing analysis JSON report: " + error);
+    core.error("Error parsing analysis JSON report: " + error + ". Output was: " + result.output);
+    throw new ExecutionError(result.Output, result.Error);
   }
+
   if (report) {
 
     let vulnerabilities = [];
@@ -215,9 +219,7 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
   let errOutput = '';
 
   fs.mkdirSync("./scan-output", { recursive: true });
-  fs.chmodSync("./scan-output", 0o777);
   fs.closeSync(fs.openSync("./scan-output/info.log", 'w'));
-  fs.chmodSync("./scan-output/info.log", 0o666);
   let tail = new Tail("./scan-output/info.log", { fromBeginning: true, follow: true });
   tail.on("line", function (data) {
     console.log(data);
@@ -408,12 +410,19 @@ async function generateChecks(scanResult, evaluationResults, vulnerabilities) {
     return;
   }
 
+  let conclusion = "success";
+  if (scanResult != "Success") {
+    conclusion = "failure";
+  }
+
   try {
     check_run = await octokit.checks.create({
       owner: github.context.repo.owner,
       repo: github.context.repo.repo,
       name: "Scan results",
       head_sha: github.context.sha,
+      status: "completed",
+      conclusion:  conclusion,
       output: {
         title: "Inline scan results",
         summary: "Scan result is " + scanResult,
