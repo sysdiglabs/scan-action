@@ -75,7 +75,7 @@ function printOptions(opts) {
 }
 
 function composeFlags(opts) {
-  let dockerFlags = `--rm -v ${process.cwd()}/scan-output:/tmp/sysdig-inline-scan`;
+  let dockerFlags = `--rm -v ${process.cwd()}/scan-output:/tmp/sysdig-inline-scan/logs`;
   let runFlags = `--sysdig-token=${opts.sysdigSecureToken || ""} --format=JSON`;
 
   if (opts.sysdigSecureURL) {

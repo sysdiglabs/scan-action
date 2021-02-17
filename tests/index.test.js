@@ -104,7 +104,7 @@ describe("docker flags", () => {
     it("uses default docker flags", () => {
         let flags = index.composeFlags({});
         expect(flags.dockerFlags).toMatch(/(^| )--rm($| )/)
-        expect(flags.dockerFlags).toMatch(new RegExp(`(^| )-v ${process.cwd()}/scan-output:/tmp/sysdig-inline-scan($| )`));
+        expect(flags.dockerFlags).toMatch(new RegExp(`(^| )-v ${process.cwd()}/scan-output:/tmp/sysdig-inline-scan/logs($| )`));
     })
 
     it("mounts the input file", () => {
@@ -449,7 +449,7 @@ describe("process scan results", () => {
     })
 
     xit("generates SARIF report with gates", async () => {
-
+        //TODO: Gates are not included in SARIF report
     })
 })
 
