@@ -1,7 +1,7 @@
 
 # Sysdig Secure Inline Scan Action
 
-This action performs analysis on locally built container image and posts the result to Sysdig Secure. For more information about Secure Inline Scan, see  Sysdig Secure documentation](https://docs.sysdig.com/en/image-scanning.html).
+This action performs analysis on locally built container image and posts the result to Sysdig Secure. For more information about Secure Inline Scan, see [Sysdig Secure documentation](https://docs.sysdig.com/en/image-scanning.html).
 
 ## Inputs
 
