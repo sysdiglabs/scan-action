@@ -416,7 +416,7 @@ async function generateChecks(scanResult, evaluationResults, vulnerabilities) {
   }
 
   try {
-    check_run = await octokit.checks.create({
+    check_run = await octokit.rest.checks.create({
       owner: github.context.repo.owner,
       repo: github.context.repo.repo,
       name: "Scan results",
@@ -435,7 +435,7 @@ async function generateChecks(scanResult, evaluationResults, vulnerabilities) {
 
   try {
     for (let i = 50; i < annotations.length; i+=50) {
-      await octokit.checks.update({
+      await octokit.rest.checks.update({
         owner: github.context.repo.owner,
         repo: github.context.repo.repo,
         check_run_id: check_run.data.id,
