@@ -20,14 +20,13 @@ jobs:
 
   scan-from-docker-archive:
     runs-on: ubuntu-latest
-
     steps:
 
       - name: Pull image
-        id: pull and export
+        id: pull-and-save
         run: |
           docker pull sysdiglabs/dummy-vuln-app:latest
-          docker save image.tar
+          docker save sysdiglabs/dummy-vuln-app:latest -o image.tar
 
       - name: Scan dummy-vuln-app from archive
         id: scan
@@ -38,5 +37,5 @@ jobs:
           # API token for Sysdig Scanning auth
           sysdig-secure-token: ${{ secrets.KUBELAB_SECURE_API_TOKEN }}
           input-type: docker-archive
+          input-path: ${{ env.GITHUB_WORKSPACE }}/image.tar
           ignore-failed-scan: true
-          input-path: $(pwd)/image.tar
