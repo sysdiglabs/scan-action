@@ -37,5 +37,5 @@ jobs:
           # API token for Sysdig Scanning auth
           sysdig-secure-token: ${{ secrets.KUBELAB_SECURE_API_TOKEN }}
           input-type: docker-archive
-          input-path: ${{ env.GITHUB_WORKSPACE }}/image.tar
+          input-path: ${{ github.workspace }}/image.tar
           ignore-failed-scan: true
