@@ -346,9 +346,11 @@ describe("process scan results", () => {
 
         github.getOctokit = jest.fn(() => {
             return {
-                checks: {
-                    create: async function (receivedData) {
-                        data = receivedData;
+                rest: {
+                    checks: {
+                        create: async function (receivedData) {
+                            data = receivedData;
+                        }
                     }
                 }
             }
@@ -376,9 +378,11 @@ describe("process scan results", () => {
 
         github.getOctokit = jest.fn(() => {
             return {
-                checks: {
-                    create: async function (receivedData) {
-                        data = receivedData;
+                rest: {
+                        checks: {
+                        create: async function (receivedData) {
+                            data = receivedData;
+                        }
                     }
                 }
             }
@@ -408,13 +412,15 @@ describe("process scan results", () => {
 
         github.getOctokit = jest.fn(() => {
             return {
-                checks: {
-                    create: async function (receivedData) {
-                        createData = receivedData;
-                        return { data: {id: 1 } };
-                    },
-                    update: async function (receivedData) {
-                        updateData = receivedData;
+                rest: {
+                    checks: {
+                        create: async function (receivedData) {
+                            createData = receivedData;
+                            return { data: {id: 1 } };
+                        },
+                        update: async function (receivedData) {
+                            updateData = receivedData;
+                        }
                     }
                 }
             }
