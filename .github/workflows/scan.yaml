@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  scan-from-registry:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Scan dummy-vuln-app
+      - name: Scan dummy-vuln-app from registry
         id: scan
         uses: sysdiglabs/scan-action@master
         with:
@@ -16,5 +16,26 @@ jobs:
           image-tag: sysdiglabs/dummy-vuln-app:latest
           # API token for Sysdig Scanning auth
           sysdig-secure-token: ${{ secrets.KUBELAB_SECURE_API_TOKEN }}
-          input-type: pull
+          ignore-failed-scan: true
+
+  scan-from-docker-archive:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Pull image
+        id: pull-and-save
+        run: |
+          docker pull sysdiglabs/dummy-vuln-app:latest
+          docker save sysdiglabs/dummy-vuln-app:latest -o image.tar
+
+      - name: Scan dummy-vuln-app from archive
+        id: scan
+        uses: sysdiglabs/scan-action@master
+        with:
+          # Tag of the image to analyse
+          image-tag: sysdiglabs/dummy-vuln-app:latest
+          # API token for Sysdig Scanning auth
+          sysdig-secure-token: ${{ secrets.KUBELAB_SECURE_API_TOKEN }}
+          input-type: docker-archive
+          input-path: ${{ github.workspace }}/image.tar
           ignore-failed-scan: true
