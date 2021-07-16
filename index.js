@@ -229,7 +229,7 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
     return { ReturnCode: -1, Output: execOutput, Error: errOutput };
   }
 
-  let containerId = execOutput;
+  let containerId = execOutput.trim();
   await exec.exec(`docker exec ${containerId} mkdir -p /tmp/sysdig-inline-scan/logs/`, null);
   await exec.exec(`docker exec ${containerId} touch /tmp/sysdig-inline-scan/logs/info.log`, null);
   exec.exec(`docker exec ${containerId} tail -f /tmp/sysdig-inline-scan/logs/info.log`, null, {silent: false});
