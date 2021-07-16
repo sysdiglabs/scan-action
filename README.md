@@ -88,9 +88,9 @@ and then add another step for uploading the SARIF report, providing the path in 
 ```yaml
     ...
       - uses: github/codeql-action/upload-sarif@v1
-      with:
-        if: always()
-        sarif_file: ${{ steps.scan.outputs.sarifReport }}
+        with:
+          if: always()
+          sarif_file: ${{ steps.scan.outputs.sarifReport }}
 ```
 
 The `if: always()` option makes sure the SARIF report is uploaded even if the scan fails and interrupts the workflow.
