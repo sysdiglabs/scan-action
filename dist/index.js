@@ -236,9 +236,9 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
   }
 
   let containerId = execOutput.trim();
-  await exec.exec(`docker exec ${containerId} mkdir -p /tmp/sysdig-inline-scan/logs/`, null);
-  await exec.exec(`docker exec ${containerId} touch /tmp/sysdig-inline-scan/logs/info.log`, null);
-  exec.exec(`docker exec ${containerId} tail -f /tmp/sysdig-inline-scan/logs/info.log`, null, {silent: false});
+  await exec.exec(`docker exec ${containerId} mkdir -p /tmp/sysdig-inline-scan/logs/`, null, {silent: true, ignoreReturnCode: true});
+  await exec.exec(`docker exec ${containerId} touch /tmp/sysdig-inline-scan/logs/info.log`, null, {silent: true, ignoreReturnCode: true});
+  let tailExec = exec.exec(`docker exec ${containerId} tail -f /tmp/sysdig-inline-scan/logs/info.log`, null, {silent: false, ignoreReturnCode: true});
 
   execOutput = '';
   let start = performance.now();
@@ -246,6 +246,20 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
   core.debug("Executing: " + cmd);
   retCode = await exec.exec(cmd, null, options);
   core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
+
+  await function () {
+    return new Promise((resolve) => {
+      setTimeout(resolve, 1000);
+    });
+  }();
+
+  try {
+    await exec.exec(`docker stop ${containerId} -t 0`, null, {silent: true});
+    await exec.exec(`docker rm ${containerId}`, null, {silent: true});
+    await tailExec;
+  } catch (error) {
+    core.info("Error stopping container: " + error);
+  }
 
   return { ReturnCode: retCode, Output: execOutput, Error: errOutput };
 }

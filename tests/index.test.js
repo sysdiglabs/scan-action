@@ -252,7 +252,7 @@ describe("inline-scan execution", () => {
 
         await index.executeInlineScan("inline-scan:tag", "--docker1 --docker2", "--run1 --run2 image-to-scan");
 
-        expect(exec.exec).toBeCalledTimes(5);
+        expect(exec.exec).toBeCalledTimes(7);
         expect(exec.exec.mock.calls[0][0]).toMatch(/docker run -d --entrypoint \/bin\/cat -ti --docker1 --docker2 inline-scan:tag/);
         expect(exec.exec.mock.calls[4][0]).toMatch(/docker exec foo-id \/sysdig-inline-scan.sh --run1 --run2 image-to-scan/);
     })
@@ -708,7 +708,7 @@ describe("run the full action", () => {
         });
 
         await index.run();
-        expect(exec.exec).toBeCalledTimes(6);
+        expect(exec.exec).toBeCalledTimes(8);
         expect(exec.exec).toBeCalledWith("docker pull my-custom-image:latest", null);
         expect(exec.exec).toBeCalledWith(expect.stringMatching(/docker run .* my-custom-image:latest/), null, expect.anything());
     })
