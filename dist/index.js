@@ -11,7 +11,6 @@ const github = __nccwpck_require__(5438)
 const path = __nccwpck_require__(5622);
 const performance = __nccwpck_require__(630).performance;
 const process = __nccwpck_require__(1765);
-const Tail = __nccwpck_require__(5824)/* .Tail */ .x;
 
 const toolVersion = "3.0.0";
 const dottedQuadToolVersion = "3.0.0.0";
@@ -74,8 +73,8 @@ function printOptions(opts) {
 }
 
 function composeFlags(opts) {
-  let dockerFlags = `--rm -v ${process.cwd()}/scan-output:/tmp/logs -e LOGS_DIR=/tmp/logs`;
-  let runFlags = `--sysdig-token=${opts.sysdigSecureToken || ""} --format=JSON`;
+  let dockerFlags = `--rm -e SYSDIG_API_TOKEN=${opts.sysdigSecureToken || ""}`;
+  let runFlags = `--format=JSON`;
 
   if (opts.sysdigSecureURL) {
     runFlags += ` --sysdig-url ${opts.sysdigSecureURL}`;
@@ -217,13 +216,6 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
   let execOutput = '';
   let errOutput = '';
 
-  fs.mkdirSync("./scan-output", { recursive: true });
-  fs.closeSync(fs.openSync("./scan-output/info.log", 'w'));
-  let tail = new Tail("./scan-output/info.log", { fromBeginning: true, follow: true });
-  tail.on("line", function (data) {
-    console.log(data);
-  });
-
   const options = {
     silent: true,
     ignoreReturnCode: true,
@@ -237,12 +229,23 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
     }
   };
 
+
+  let retCode = await exec.exec(`docker run -d --entrypoint /bin/cat -ti ${dockerFlags} ${scanImage}`, null, options);
+  if (retCode != 0) {
+    return { ReturnCode: -1, Output: execOutput, Error: errOutput };
+  }
+
+  let containerId = execOutput;
+  await exec.exec(`docker exec ${containerId} mkdir -p /tmp/sysdig-inline-scan/logs/`, null);
+  await exec.exec(`docker exec ${containerId} touch /tmp/sysdig-inline-scan/logs/info.log`, null);
+  exec.exec(`docker exec ${containerId} tail -f /tmp/sysdig-inline-scan/logs/info.log`, null, {silent: false});
+
+  execOutput = '';
   let start = performance.now();
-  let cmd = `docker run ${dockerFlags} ${scanImage} ${runFlags}`;
+  let cmd = `docker exec ${containerId} /sysdig-inline-scan.sh ${runFlags}`;
   core.debug("Executing: " + cmd);
-  let retCode = await exec.exec(cmd, null, options);
+  retCode = await exec.exec(cmd, null, options);
   core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
-  tail.unwatch();
 
   return { ReturnCode: retCode, Output: execOutput, Error: errOutput };
 }
@@ -458,7 +461,7 @@ function getReportAnnotations(evaluationResults, vulnerabilities) {
   let outputCol = evaluationResults.header.indexOf("Check_Output");
   let gates = evaluationResults.rows.map(g => {
     let action = g[actionCol];
-    let level = "notice" 
+    let level = "notice"
     if (action == "warn") {
       level = "warning";
     } else if (action == "stop") {
@@ -7553,236 +7556,6 @@ function onceStrict (fn) {
   f.called = false
   return f
 }
-
-
-/***/ }),
-
-/***/ 5824:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-let events = __nccwpck_require__(8614)
-let fs = __nccwpck_require__(5747)
-let path = __nccwpck_require__(5622)
-
-// const environment = process.env['NODE_ENV'] || 'development'
-
-class devNull {
-    info() { };
-    error() { };
-};
-
-class Tail extends events.EventEmitter {
-
-    constructor(filename, options = {}) {
-        super();
-        this.filename = filename;
-        this.absPath = path.dirname(this.filename);
-        this.separator = (options.separator !== undefined) ? options.separator : /[\r]{0,1}\n/;// null is a valid param
-        this.fsWatchOptions = options.fsWatchOptions || {};
-        this.follow = options['follow'] != undefined ? options['follow'] : true;
-        this.logger = options.logger || new devNull();
-        this.useWatchFile = options.useWatchFile || false;
-        this.flushAtEOF = options.flushAtEOF || false;
-        this.encoding = options.encoding || 'utf-8';
-        const fromBeginning = options.fromBeginning || false;
-        this.nLines = options.nLines || undefined;
-
-        this.logger.info(`Tail starting...`)
-        this.logger.info(`filename: ${this.filename}`);
-        this.logger.info(`encoding: ${this.encoding}`);
-
-        try {
-            fs.accessSync(this.filename, fs.constants.F_OK);
-        } catch (err) {
-            if (err.code == 'ENOENT') {
-                throw err
-            }
-        }
-
-        this.buffer = '';
-        this.internalDispatcher = new events.EventEmitter();
-        this.queue = [];
-        this.isWatching = false;
-        this.pos = 0;
-
-        // this.internalDispatcher.on('next',this.readBlock);
-        this.internalDispatcher.on('next', () => {
-            this.readBlock();
-        });
-
-        this.logger.info(`fromBeginning: ${fromBeginning}`);
-        let startingCursor;
-        if (fromBeginning) {
-            startingCursor = 0;
-        } else if (this.nLines !== undefined) {
-            const data = fs.readFileSync(this.filename, {
-                flag: 'r',
-                encoding: this.encoding
-            });
-            const tokens = data.split(this.separator);
-            const dropLastToken = (tokens[tokens.length - 1] === '') ? 1 : 0;//if the file end with empty line ignore line NL
-            const match = data.match(new RegExp(`(?:[^\r\n]*[\r]{0,1}\n){${tokens.length - this.nLines - dropLastToken}}`));
-            startingCursor = (match && match.length) ? Buffer.byteLength(match[0], this.encoding) : this.latestPosition();
-        } else {
-            startingCursor = this.latestPosition();
-        }
-        if (startingCursor === undefined) throw new Error("Tail can't initialize.");
-        const flush = fromBeginning || (this.nLines != undefined);
-        try {
-            this.watch(startingCursor, flush);
-        } catch (err) {
-            this.logger.error(`watch for ${this.filename} failed: ${err}`);
-            this.emit("error", `watch for ${this.filename} failed: ${err}`);
-
-        }
-
-    }
-
-    latestPosition() {
-        try {
-            return fs.statSync(this.filename).size;
-        } catch (err) {
-            this.logger.error(`size check for ${this.filename} failed: ${err}`);
-            this.emit("error", `size check for ${this.filename} failed: ${err}`);
-            throw err;
-        }
-    }
-
-    readBlock() {
-        if (this.queue.length >= 1) {
-            const block = this.queue[0];
-            if (block.end > block.start) {
-                let stream = fs.createReadStream(this.filename, { start: block.start, end: block.end - 1, encoding: this.encoding });
-                stream.on('error', (error) => {
-                    this.logger.error(`Tail error: ${error}`);
-                    this.emit('error', error);
-                });
-                stream.on('end', () => {
-                    let _ = this.queue.shift();
-                    if (this.queue.length > 0) {
-                        this.internalDispatcher.emit('next');
-                    }
-                    if (this.flushAtEOF && this.buffer.length > 0) {
-                        this.emit('line', this.buffer);
-                        this.buffer = "";
-                    }
-                });
-                stream.on('data', (d) => {
-                    if (this.separator === null) {
-                        this.emit("line", d);
-                    } else {
-                        this.buffer += d;
-                        let parts = this.buffer.split(this.separator);
-                        this.buffer = parts.pop();
-                        for (const chunk of parts) {
-                            this.emit("line", chunk);
-                        }
-                    }
-                });
-            }
-        }
-    }
-
-    change() {
-        let p = this.latestPosition()
-        if (p < this.currentCursorPos) {//scenario where text is not appended but it's actually a w+
-            this.currentCursorPos = p
-        } else if (p > this.currentCursorPos) {
-            this.queue.push({ start: this.currentCursorPos, end: p });
-            this.currentCursorPos = p
-            if (this.queue.length == 1) {
-                this.internalDispatcher.emit("next");
-            }
-        }
-    }
-
-    watch(startingCursor, flush) {
-        if (this.isWatching) return;
-        this.logger.info(`filesystem.watch present? ${fs.watch != undefined}`);
-        this.logger.info(`useWatchFile: ${this.useWatchFile}`);
-
-        this.isWatching = true;
-        this.currentCursorPos = startingCursor;
-        //force a file flush is either fromBegining or nLines flags were passed.
-        if (flush) this.change();
-
-        if (!this.useWatchFile && fs.watch) {
-            this.logger.info(`watch strategy: watch`);
-            this.watcher = fs.watch(this.filename, this.fsWatchOptions, (e, filename) => { this.watchEvent(e, filename); });
-        } else {
-            this.logger.info(`watch strategy: watchFile`);
-            fs.watchFile(this.filename, this.fsWatchOptions, (curr, prev) => { this.watchFileEvent(curr, prev) });
-        }
-    }
-
-    rename(filename) {
-        //TODO
-        //MacOS sometimes throws a rename event for no reason.
-        //Different platforms might behave differently.
-        //see https://nodejs.org/api/fs.html#fs_fs_watch_filename_options_listener
-        //filename might not be present.
-        //https://nodejs.org/api/fs.html#fs_filename_argument
-        //Better solution would be check inode but it will require a timeout and
-        // a sync file read.
-        if (filename === undefined || filename !== this.filename) {
-            this.unwatch();
-            if (this.follow) {
-                this.filename = path.join(this.absPath, filename);
-                this.rewatchId = setTimeout((() => {
-                    try {
-                        this.watch(this.currentCursorPos);
-                    } catch (ex) {
-                        this.logger.error(`'rename' event for ${this.filename}. File not available anymore.`);
-                        this.emit("error", ex);
-                    }
-                }), 1000);
-            } else {
-                this.logger.error(`'rename' event for ${this.filename}. File not available anymore.`);
-                this.emit("error", `'rename' event for ${this.filename}. File not available anymore.`);
-            }
-        } else {
-            // this.logger.info("rename event but same filename")
-        }
-    }
-
-    watchEvent(e, evtFilename) {
-        if (e === 'change') {
-            this.change();
-        } else if (e === 'rename') {
-            this.rename(evtFilename);
-        }
-    }
-
-    watchFileEvent(curr, prev) {
-        if (curr.size > prev.size) {
-            this.currentCursorPos = curr.size;    //Update this.currentCursorPos so that a consumer can determine if entire file has been handled
-            this.queue.push({ start: prev.size, end: curr.size });
-            if (this.queue.length == 1) {
-                this.internalDispatcher.emit("next");
-            }
-        }
-    }
-
-    unwatch() {
-        if (this.watcher) {
-            this.watcher.close();
-        } else {
-            fs.unwatchFile(this.filename);
-        }
-        if (this.rewatchId) {
-            clearTimeout(this.rewatchId);
-            this.rewatchId = undefined;
-        }
-        this.isWatching = false;
-        this.queue = [];// TODO: is this correct behaviour?
-        if (this.logger) {
-            this.logger.info(`Unwatch ${this.filename}`);
-        }
-    }
-
-}
-
-exports.x = Tail
 
 
 /***/ }),

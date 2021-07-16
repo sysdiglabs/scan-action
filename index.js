@@ -5,7 +5,6 @@ const github = require('@actions/github')
 const path = require('path');
 const performance = require('perf_hooks').performance;
 const process = require('process');
-const Tail = require('tail').Tail;
 
 const toolVersion = "3.0.0";
 const dottedQuadToolVersion = "3.0.0.0";
@@ -68,8 +67,8 @@ function printOptions(opts) {
 }
 
 function composeFlags(opts) {
-  let dockerFlags = `--rm -v ${process.cwd()}/scan-output:/tmp/logs -e LOGS_DIR=/tmp/logs`;
-  let runFlags = `--sysdig-token=${opts.sysdigSecureToken || ""} --format=JSON`;
+  let dockerFlags = `--rm -e SYSDIG_API_TOKEN=${opts.sysdigSecureToken || ""}`;
+  let runFlags = `--format=JSON`;
 
   if (opts.sysdigSecureURL) {
     runFlags += ` --sysdig-url ${opts.sysdigSecureURL}`;
@@ -211,13 +210,6 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
   let execOutput = '';
   let errOutput = '';
 
-  fs.mkdirSync("./scan-output", { recursive: true });
-  fs.closeSync(fs.openSync("./scan-output/info.log", 'w'));
-  let tail = new Tail("./scan-output/info.log", { fromBeginning: true, follow: true });
-  tail.on("line", function (data) {
-    console.log(data);
-  });
-
   const options = {
     silent: true,
     ignoreReturnCode: true,
@@ -231,12 +223,23 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
     }
   };
 
+
+  let retCode = await exec.exec(`docker run -d --entrypoint /bin/cat -ti ${dockerFlags} ${scanImage}`, null, options);
+  if (retCode != 0) {
+    return { ReturnCode: -1, Output: execOutput, Error: errOutput };
+  }
+
+  let containerId = execOutput;
+  await exec.exec(`docker exec ${containerId} mkdir -p /tmp/sysdig-inline-scan/logs/`, null);
+  await exec.exec(`docker exec ${containerId} touch /tmp/sysdig-inline-scan/logs/info.log`, null);
+  exec.exec(`docker exec ${containerId} tail -f /tmp/sysdig-inline-scan/logs/info.log`, null, {silent: false});
+
+  execOutput = '';
   let start = performance.now();
-  let cmd = `docker run ${dockerFlags} ${scanImage} ${runFlags}`;
+  let cmd = `docker exec ${containerId} /sysdig-inline-scan.sh ${runFlags}`;
   core.debug("Executing: " + cmd);
-  let retCode = await exec.exec(cmd, null, options);
+  retCode = await exec.exec(cmd, null, options);
   core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
-  tail.unwatch();
 
   return { ReturnCode: retCode, Output: execOutput, Error: errOutput };
 }
@@ -452,7 +455,7 @@ function getReportAnnotations(evaluationResults, vulnerabilities) {
   let outputCol = evaluationResults.header.indexOf("Check_Output");
   let gates = evaluationResults.rows.map(g => {
     let action = g[actionCol];
-    let level = "notice" 
+    let level = "notice"
     if (action == "warn") {
       level = "warning";
     } else if (action == "stop") {

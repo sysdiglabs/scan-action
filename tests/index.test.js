@@ -104,7 +104,7 @@ describe("docker flags", () => {
     it("uses default docker flags", () => {
         let flags = index.composeFlags({});
         expect(flags.dockerFlags).toMatch(/(^| )--rm($| )/)
-        expect(flags.dockerFlags).toMatch(new RegExp(`(^| )-v ${process.cwd()}/scan-output:/tmp/logs($| )`));
+        expect(flags.dockerFlags).toMatch(new RegExp(`(^| )-u ${process.getuid()}($| )`));
     })
 
     it("mounts the input file", () => {
@@ -143,13 +143,20 @@ describe("docker flags", () => {
         });
         expect(flags.dockerFlags).toMatch(/(^| )--extra-param($| )/);
     })
+
+    it("adds the token as environment", () => {
+        let flags = index.composeFlags({
+            sysdigSecureToken: "foo-token",
+        });
+        expect(flags.dockerFlags).toMatch(/(^| )-e SYSDIG_API_TOKEN[ =]foo-token($| )/)
+
+    })
 })
 
 describe("execution flags", () => {
 
     it("uses default flags", () => {
         let flags = index.composeFlags({ sysdigSecureToken: "foo-token", imageTag: "image:tag" });
-        expect(flags.runFlags).toMatch(/(^| )--sysdig-token[ =]foo-token($| )/)
         expect(flags.runFlags).toMatch(/(^| )--format[ =]JSON($| )/);
         expect(flags.runFlags).toMatch(/(^| )image:tag($| )/);
     })
@@ -238,22 +245,35 @@ describe("inline-scan execution", () => {
     })
 
     it("invokes the container with the corresponding flags", async () => {
+        exec.exec.mockImplementationOnce((cmdline, args, options) => {
+            options.listeners.stdout("foo-id");
+            return Promise.resolve(0);
+        });
+
         await index.executeInlineScan("inline-scan:tag", "--docker1 --docker2", "--run1 --run2 image-to-scan");
-        expect(exec.exec).toBeCalledTimes(1);
-        expect(exec.exec.mock.calls[0][0]).toMatch(/docker run --docker1 --docker2 inline-scan:tag --run1 --run2 image-to-scan/)
+
+        expect(exec.exec).toBeCalledTimes(5);
+        expect(exec.exec.mock.calls[0][0]).toMatch(/docker run -d --entrypoint \/bin\/cat -ti --docker1 --docker2 inline-scan:tag/);
+        expect(exec.exec.mock.calls[4][0]).toMatch(/docker exec foo-id \/sysdig-inline-scan.sh --run1 --run2 image-to-scan/);
     })
 
     it("returns the execution return code", async () => {
+        exec.exec.mockResolvedValueOnce(0);
+        exec.exec.mockResolvedValueOnce(0);
+        exec.exec.mockResolvedValueOnce(0);
+        exec.exec.mockResolvedValueOnce(0);
         exec.exec.mockResolvedValueOnce(123);
         let result = await index.executeInlineScan("inline-scan:tag");
         expect(result.ReturnCode).toBe(123);
     })
 
     it("returns the output", async () => {
-        exec.exec.mockImplementationOnce((cmdline, args, options) => {
-            options.listeners.stdout("foo-output");
+
+        exec.exec = jest.fn((cmd, args, options) => {
+            if (options && options.listeners) { options.listeners.stdout("foo-output"); }
             return Promise.resolve(0);
         });
+
         let result = await index.executeInlineScan("inline-scan:tag");
         expect(result.Output).toBe("foo-output");
     })
@@ -476,7 +496,33 @@ describe("run the full action", () => {
         exec = require("@actions/exec");
         core = require("@actions/core");
         index = require("..");
+
+        exec.exec = jest.fn();
     })
+
+    function setupExecMocks() {
+        /* eslint-disable no-unused-vars */
+        exec.exec.mockImplementationOnce((cmdline, args, options) => {
+            return Promise.resolve(0);
+        });
+
+        exec.exec.mockImplementationOnce((cmdline, args, options) => {
+            return Promise.resolve(0);
+        });
+
+        exec.exec.mockImplementationOnce((cmdline, args, options) => {
+            return Promise.resolve(0);
+        });
+
+        exec.exec.mockImplementationOnce((cmdline, args, options) => {
+            return Promise.resolve(0);
+        });
+
+        exec.exec.mockImplementationOnce((_cmdline, _args, options) => {
+            return Promise.resolve(0);
+        });
+        /* eslint-enable no-unused-vars */
+    }
 
     afterEach(() => {
         cleanupTemporaryDir(tmpDir);
@@ -490,8 +536,11 @@ describe("run the full action", () => {
     it("ends ok with scan pass", async () => {
         core.setFailed = jest.fn();
         core.error = jest.fn();
-        exec.exec = jest.fn((cmdline, args, options) => {
-            if (options) { options.listeners.stdout(exampleReport); }
+
+        setupExecMocks();
+        /* eslint-disable no-unused-vars */
+        exec.exec.mockImplementationOnce((cmdline, args, options) => {
+            options.listeners.stdout(exampleReport);
             return Promise.resolve(0);
         });
 
@@ -503,10 +552,14 @@ describe("run the full action", () => {
 
     it("writes scan report on pass", async () => {
         core.setOutput = jest.fn();
-        exec.exec = jest.fn((cmdline, args, options) => {
-            if (options) { options.listeners.stdout(exampleReport); }
+
+        setupExecMocks();
+        /* eslint-disable no-unused-vars */
+        exec.exec.mockImplementationOnce((cmdline, args, options) => {
+            options.listeners.stdout(exampleReport);
             return Promise.resolve(0);
         });
+        /* eslint-enable no-unused-vars */
 
         await index.run();
 
@@ -517,10 +570,15 @@ describe("run the full action", () => {
 
     it("writes scan report on fail", async () => {
         core.setOutput = jest.fn();
-        exec.exec = jest.fn((cmdline, args, options) => {
-            if (options) { options.listeners.stdout(exampleReport); }
+
+
+        setupExecMocks();
+        /* eslint-disable no-unused-vars */
+        exec.exec.mockImplementationOnce((cmdline, args, options) => {
+            options.listeners.stdout(exampleReport);
             return Promise.resolve(1);
         });
+        /* eslint-enable no-unused-vars */
 
         await index.run();
 
@@ -531,10 +589,14 @@ describe("run the full action", () => {
 
     it("writes sarif report on pass", async () => {
         core.setOutput = jest.fn();
-        exec.exec = jest.fn((cmdline, args, options) => {
-            if (options) { options.listeners.stdout(exampleReport); }
+
+        setupExecMocks();
+        /* eslint-disable no-unused-vars */
+        exec.exec.mockImplementationOnce((cmdline, args, options) => {
+            options.listeners.stdout(exampleReport);
             return Promise.resolve(0);
         });
+        /* eslint-enable no-unused-vars */
 
         await index.run();
 
@@ -548,10 +610,14 @@ describe("run the full action", () => {
     it("writes scan report on fail", async () => {
         core.setOutput = jest.fn();
         core.error = jest.fn();
-        exec.exec = jest.fn((cmdline, args, options) => {
-            if (options) { options.listeners.stdout(exampleReport); }
+
+        setupExecMocks();
+        /* eslint-disable no-unused-vars */
+        exec.exec.mockImplementationOnce((cmdline, args, options) => {
+            options.listeners.stdout(exampleReport);
             return Promise.resolve(1);
         });
+        /* eslint-enable no-unused-vars */
 
         await index.run();
         expect(core.error).not.toBeCalled();
@@ -564,10 +630,15 @@ describe("run the full action", () => {
 
     it("fails if scan fails", async () => {
         core.setFailed = jest.fn();
-        exec.exec = jest.fn((cmdline, args, options) => {
-            if (options) { options.listeners.stdout(exampleReport); }
+
+        setupExecMocks();
+
+        /* eslint-disable no-unused-vars */
+        exec.exec.mockImplementationOnce((cmdline, args, options) => {
+            options.listeners.stdout(exampleReport);
             return Promise.resolve(1);
         });
+        /* eslint-enable no-unused-vars */
 
         await index.run();
 
@@ -578,8 +649,11 @@ describe("run the full action", () => {
         process.env['INPUT_IGNORE-FAILED-SCAN'] = "true";
 
         core.setFailed = jest.fn();
-        exec.exec = jest.fn((cmdline, args, options) => {
-            if (options) { options.listeners.stdout(exampleReport); }
+
+        setupExecMocks();
+
+        exec.exec.mockImplementationOnce((cmdline, args, options) => {
+            options.listeners.stdout(exampleReport);
             return Promise.resolve(1);
         });
 
@@ -588,12 +662,35 @@ describe("run the full action", () => {
         expect(core.setFailed).not.toBeCalled();
     })
 
+    it("fails if container creation fails", async () => {
+        process.env['INPUT_IGNORE-FAILED-SCAN'] = "true";
+
+        core.setFailed = jest.fn();
+
+        /* eslint-disable no-unused-vars */
+        exec.exec.mockImplementationOnce((cmdline, args, options) => {
+            return Promise.resolve(0);
+        });
+
+        exec.exec.mockImplementationOnce((cmdline, args, options) => {
+            options.listeners.stderr("some-error");
+            return Promise.resolve(1);
+        });
+        /* eslint-enable no-unused-vars */
+
+        await index.run();
+
+        expect(core.setFailed).toBeCalled();
+    })
+
     it("fails on unexpected error", async () => {
         process.env['INPUT_IGNORE-FAILED-SCAN'] = "true";
 
         core.setFailed = jest.fn();
-        exec.exec = jest.fn((cmdline, args, options) => {
-            if (options) { options.listeners.stdout(exampleReport); }
+        setupExecMocks();
+
+        exec.exec.mockImplementationOnce((cmdline, args, options) => {
+            options.listeners.stdout(exampleReport);
             return Promise.resolve(2);
         });
 
@@ -611,7 +708,7 @@ describe("run the full action", () => {
         });
 
         await index.run();
-        expect(exec.exec).toBeCalledTimes(2);
+        expect(exec.exec).toBeCalledTimes(6);
         expect(exec.exec).toBeCalledWith("docker pull my-custom-image:latest", null);
         expect(exec.exec).toBeCalledWith(expect.stringMatching(/docker run .* my-custom-image:latest/), null, expect.anything());
     })
