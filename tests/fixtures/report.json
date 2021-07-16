@@ -1,5 +1,6 @@
 {
     "status": "foo",
+    "tag": "myimage:mytag",
     "scanReport": [
         {
             "foo-digest": {

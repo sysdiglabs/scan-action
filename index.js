@@ -5,7 +5,6 @@ const github = require('@actions/github')
 const path = require('path');
 const performance = require('perf_hooks').performance;
 const process = require('process');
-const Tail = require('tail').Tail;
 
 const toolVersion = "3.0.0";
 const dottedQuadToolVersion = "3.0.0.0";
@@ -68,8 +67,8 @@ function printOptions(opts) {
 }
 
 function composeFlags(opts) {
-  let dockerFlags = `--rm -v ${process.cwd()}/scan-output:/tmp/logs -e LOGS_DIR=/tmp/logs`;
-  let runFlags = `--sysdig-token=${opts.sysdigSecureToken || ""} --format=JSON`;
+  let dockerFlags = `--rm -e SYSDIG_API_TOKEN=${opts.sysdigSecureToken || ""}`;
+  let runFlags = `--format=JSON`;
 
   if (opts.sysdigSecureURL) {
     runFlags += ` --sysdig-url ${opts.sysdigSecureURL}`;
@@ -191,8 +190,8 @@ async function processScanResult(result) {
       }
     }
 
-    generateSARIFReport(vulnerabilities);
-    await generateChecks(scanResult, evaluationResults, vulnerabilities);
+    generateSARIFReport(report.tag, vulnerabilities);
+    await generateChecks(report.tag, scanResult, evaluationResults, vulnerabilities);
   }
 
   return result.ReturnCode == 0;
@@ -211,14 +210,21 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
   let execOutput = '';
   let errOutput = '';
 
-  fs.mkdirSync("./scan-output", { recursive: true });
-  fs.closeSync(fs.openSync("./scan-output/info.log", 'w'));
-  let tail = new Tail("./scan-output/info.log", { fromBeginning: true, follow: true });
-  tail.on("line", function (data) {
-    console.log(data);
-  });
+  const tailOptions = {
+    silent: true,
+    ignoreReturnCode: true,
+    listeners: {
+      stdout: (data) => {
+        process.stdout.write(data);
+      },
+      stderr: (data) => {
+        process.stderr.write(data);
+      }
+    }
 
-  const options = {
+  }
+
+  const scanOptions = {
     silent: true,
     ignoreReturnCode: true,
     listeners: {
@@ -231,17 +237,42 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
     }
   };
 
+
+  let retCode = await exec.exec(`docker run -d --entrypoint /bin/cat -ti ${dockerFlags} ${scanImage}`, null, scanOptions);
+  if (retCode != 0) {
+    return { ReturnCode: -1, Output: execOutput, Error: errOutput };
+  }
+
+  let containerId = execOutput.trim();
+  await exec.exec(`docker exec ${containerId} mkdir -p /tmp/sysdig-inline-scan/logs/`, null, {silent: true, ignoreReturnCode: true});
+  await exec.exec(`docker exec ${containerId} touch /tmp/sysdig-inline-scan/logs/info.log`, null, {silent: true, ignoreReturnCode: true});
+  let tailExec = exec.exec(`docker exec ${containerId} tail -f /tmp/sysdig-inline-scan/logs/info.log`, null, tailOptions);
+
+  execOutput = '';
   let start = performance.now();
-  let cmd = `docker run ${dockerFlags} ${scanImage} ${runFlags}`;
+  let cmd = `docker exec ${containerId} /sysdig-inline-scan.sh ${runFlags}`;
   core.debug("Executing: " + cmd);
-  let retCode = await exec.exec(cmd, null, options);
+  retCode = await exec.exec(cmd, null, scanOptions);
   core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
-  tail.unwatch();
+
+  await function () {
+    return new Promise((resolve) => {
+      setTimeout(resolve, 1000);
+    });
+  }();
+
+  try {
+    await exec.exec(`docker stop ${containerId} -t 0`, null, {silent: true, ignoreReturnCode: true});
+    await exec.exec(`docker rm ${containerId}`, null, {silent: true, ignoreReturnCode: true});
+    await tailExec;
+  } catch (error) {
+    core.info("Error stopping container: " + error);
+  }
 
   return { ReturnCode: retCode, Output: execOutput, Error: errOutput };
 }
 
-function vulnerabilities2SARIF(vulnerabilities) {
+function vulnerabilities2SARIF(tag, vulnerabilities) {
 
   const sarifOutput = {
     "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
@@ -264,7 +295,7 @@ function vulnerabilities2SARIF(vulnerabilities) {
           kind: "namespace"
         }
       ],
-      results: vulnerabilities2SARIFResults(vulnerabilities),
+      results: vulnerabilities2SARIFResults(tag, vulnerabilities),
       columnKind: "utf16CodeUnits"
     }]
   };
@@ -292,7 +323,7 @@ function vulnerabilities2SARIFRules(vulnerabilities) {
   return (ret);
 }
 
-function vulnerabilities2SARIFResults(vulnerabilities) {
+function vulnerabilities2SARIFResults(tag, vulnerabilities) {
   var ret = {};
 
   if (vulnerabilities) {
@@ -306,14 +337,14 @@ function vulnerabilities2SARIFResults(vulnerabilities) {
           id: "default",
         },
         analysisTarget: {
-          uri: "Container image",
+          uri: `Container image ${tag}`,
           index: 0,
         },
         locations: [
           {
             physicalLocation: {
               artifactLocation: {
-                uri: "Container image",
+                uri: `Container image ${tag}`,
               },
               region: {
                 startLine: 1,
@@ -326,7 +357,7 @@ function vulnerabilities2SARIFResults(vulnerabilities) {
             },
             logicalLocations: [
               {
-                fullyQualifiedName: "container-image",
+                fullyQualifiedName: `Container image ${tag}`,
               },
             ],
           },
@@ -380,13 +411,13 @@ function getRuleId(v) {
   return "VULN_" + v.vuln + "_" + v.package_type + "_" + v.package;
 }
 
-function generateSARIFReport(vulnerabilities) {
-  let sarifOutput = vulnerabilities2SARIF(vulnerabilities);
+function generateSARIFReport(tag, vulnerabilities) {
+  let sarifOutput = vulnerabilities2SARIF(tag, vulnerabilities);
   core.setOutput("sarifReport", "./sarif.json");
   fs.writeFileSync("./sarif.json", JSON.stringify(sarifOutput, null, 2));
 }
 
-async function generateChecks(scanResult, evaluationResults, vulnerabilities) {
+async function generateChecks(tag, scanResult, evaluationResults, vulnerabilities) {
   const githubToken = core.getInput('github-token');
   if (!githubToken) {
     core.warning("No github-token provided. Skipping creation of check run");
@@ -413,12 +444,12 @@ async function generateChecks(scanResult, evaluationResults, vulnerabilities) {
     check_run = await octokit.rest.checks.create({
       owner: github.context.repo.owner,
       repo: github.context.repo.repo,
-      name: "Scan results",
+      name: `Scan results for ${tag}`,
       head_sha: github.context.sha,
       status: "completed",
       conclusion:  conclusion,
       output: {
-        title: "Inline scan results",
+        title: `Inline scan results for ${tag}`,
         summary: "Scan result is " + scanResult,
         annotations: annotations.slice(0,50)
       }
@@ -452,7 +483,7 @@ function getReportAnnotations(evaluationResults, vulnerabilities) {
   let outputCol = evaluationResults.header.indexOf("Check_Output");
   let gates = evaluationResults.rows.map(g => {
     let action = g[actionCol];
-    let level = "notice" 
+    let level = "notice"
     if (action == "warn") {
       level = "warning";
     } else if (action == "stop") {
