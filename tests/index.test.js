@@ -385,7 +385,7 @@ describe("process scan results", () => {
         await index.processScanResult(scanResult);
         expect(github.getOctokit).toBeCalledWith("foo");
         expect(data).not.toBeUndefined();
-        expect(data.name).toBe("Scan results");
+        expect(data.name).toBe("Scan results for myimage:mytag");
         expect(data.output.annotations).toContainEqual({ "annotation_level": "warning", "end_line": 1, "message": "CVE-2019-14697 Severity=High Package=musl-1.1.18-r3 Type=APKG Fix=1.1.18-r4 Url=https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-14697", "path": "Dockerfile", "start_line": 1, "title": "Vulnerability found: CVE-2019-14697" });
     })
 
@@ -417,7 +417,7 @@ describe("process scan results", () => {
         await index.processScanResult(scanResult);
         expect(github.getOctokit).toBeCalledWith("foo");
         expect(data).not.toBeUndefined();
-        expect(data.name).toBe("Scan results");
+        expect(data.name).toBe("Scan results for myimage:mytag");
         expect(data.output.annotations).toContainEqual({ "annotation_level": "warning", "end_line": 1, "message": "warn dockerfile:instruction\nDockerfile directive 'HEALTHCHECK' not found, matching condition 'not_exists' check", "path": "Dockerfile", "start_line": 1, "title": "warn dockerfile" });
         expect(data.output.annotations).toContainEqual({ "annotation_level": "failure", "end_line": 1, "message": "stop dockerfile:instruction\nDockerfile directive 'USER' not found, matching condition 'not_exists' check", "path": "Dockerfile", "start_line": 1, "title": "stop dockerfile" });
     })
