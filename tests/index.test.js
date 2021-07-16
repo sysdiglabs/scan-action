@@ -246,7 +246,7 @@ describe("inline-scan execution", () => {
 
     it("invokes the container with the corresponding flags", async () => {
         exec.exec.mockImplementationOnce((cmdline, args, options) => {
-            options.listeners.stdout("foo-id");
+            if (options && options.listeners) { options.listeners.stdout("foo-id"); }
             return Promise.resolve(0);
         });
 

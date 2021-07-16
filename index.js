@@ -210,7 +210,21 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
   let execOutput = '';
   let errOutput = '';
 
-  const options = {
+  const tailOptions = {
+    silent: true,
+    ignoreReturnCode: true,
+    listeners: {
+      stdout: (data) => {
+        process.stdout.write(data);
+      },
+      stderr: (data) => {
+        process.stderr.write(data);
+      }
+    }
+
+  }
+
+  const scanOptions = {
     silent: true,
     ignoreReturnCode: true,
     listeners: {
@@ -224,7 +238,7 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
   };
 
 
-  let retCode = await exec.exec(`docker run -d --entrypoint /bin/cat -ti ${dockerFlags} ${scanImage}`, null, options);
+  let retCode = await exec.exec(`docker run -d --entrypoint /bin/cat -ti ${dockerFlags} ${scanImage}`, null, scanOptions);
   if (retCode != 0) {
     return { ReturnCode: -1, Output: execOutput, Error: errOutput };
   }
@@ -232,13 +246,13 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
   let containerId = execOutput.trim();
   await exec.exec(`docker exec ${containerId} mkdir -p /tmp/sysdig-inline-scan/logs/`, null, {silent: true, ignoreReturnCode: true});
   await exec.exec(`docker exec ${containerId} touch /tmp/sysdig-inline-scan/logs/info.log`, null, {silent: true, ignoreReturnCode: true});
-  let tailExec = exec.exec(`docker exec ${containerId} tail -f /tmp/sysdig-inline-scan/logs/info.log`, null, {silent: false, ignoreReturnCode: true});
+  let tailExec = exec.exec(`docker exec ${containerId} tail -f /tmp/sysdig-inline-scan/logs/info.log`, null, tailOptions);
 
   execOutput = '';
   let start = performance.now();
   let cmd = `docker exec ${containerId} /sysdig-inline-scan.sh ${runFlags}`;
   core.debug("Executing: " + cmd);
-  retCode = await exec.exec(cmd, null, options);
+  retCode = await exec.exec(cmd, null, scanOptions);
   core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
 
   await function () {
@@ -248,8 +262,8 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
   }();
 
   try {
-    await exec.exec(`docker stop ${containerId} -t 0`, null, {silent: true});
-    await exec.exec(`docker rm ${containerId}`, null, {silent: true});
+    await exec.exec(`docker stop ${containerId} -t 0`, null, {silent: true, ignoreReturnCode: true});
+    await exec.exec(`docker rm ${containerId}`, null, {silent: true, ignoreReturnCode: true});
     await tailExec;
   } catch (error) {
     core.info("Error stopping container: " + error);
