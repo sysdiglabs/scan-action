@@ -4,3 +4,6 @@ node_modules/
 .vscode/
 .idea/
 *.iml
+node_modules/
+report.json
+sarif.json

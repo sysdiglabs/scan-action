@@ -57,10 +57,20 @@ It might be required when scanning from docker-daemon or cri-o to provide a user
 ### `extra-parameters`
 
 Additional parameters added to the secure-inline-scan container execution.
-
 ### `extra-docker-parameters`
 
 Additional parameters added to the `docker` command when executing the secure-inline-scan container execution.
+
+### `severity`
+
+Filter output annotations by severity. Default is "unknown".
+Possible values:
+- ciritcal
+- high
+- medium
+- negligible
+- unknown
+
 
 ### `inline-scan-image`
 
