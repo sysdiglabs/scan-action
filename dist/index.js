@@ -510,7 +510,7 @@ function getReportAnnotations(evaluationResults, vulnerabilities) {
       title: `${g[actionCol]} ${g[gateCol]}`
     }
   });
-  let severities = {"ciritcal":0,"high":1, "medium":2,"negligible":3,"unknown":4}
+  let severities = {"critical":0,"high":1, "medium":2,"negligible":3,"unknown":4}
   let severity =  core.getInput('severity') || "unknown";
   let vulns = vulnerabilities.filter(v => severities[v.severity.toLowerCase()] <=  severities[severity.toLowerCase()]).map(v => {
     return {
