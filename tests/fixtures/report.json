@@ -60,6 +60,7 @@
     "vulnsReport": {
         "imageDigest": "foo-digest",
         "vulnerabilities": [
+
             {
                 "feed": "vulnerabilities",
                 "feed_group": "alpine:3.7",
@@ -121,6 +122,25 @@
                 "url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-14697",
                 "vendor_data": [],
                 "vuln": "CVE-2019-14697"
+            },
+            {
+                "feed": "vulnerabilities",
+                "feed_group": "alpine:3.7",
+                "fix": null,
+                "nvd_data": [
+
+                ],
+                "package": "apt-1.0",
+                "package_cpe": "None",
+                "package_cpe23": "None",
+                "package_name": "apt",
+                "package_path": "pkgdb",
+                "package_type": "APKG",
+                "package_version": "1.0",
+                "severity": "Negligible",
+                "url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2011-3374",
+                "vendor_data": [],
+                "vuln": "CVE-2011-3374"
             }
         ]
     }

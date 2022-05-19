@@ -55,6 +55,9 @@ inputs:
   extra-docker-parameters:
     description: Additional parameters added to the docker command when executing the secure-inline-scan container execution.
     required: false
+  severity:
+    description: Filter output annotations by severity. Default is "unknown".
+    required: false
 outputs:
   scanReport:
     description: Path to a JSON file containing the report results, failed evaluation gates, and found vulnerabilities.

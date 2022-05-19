@@ -36,6 +36,7 @@ function parseActionInputs() {
     inputPath: core.getInput('input-path'),
     runAsUser: core.getInput('run-as-user'),
     extraParameters: core.getInput('extra-parameters'),
+
     extraDockerParameters: core.getInput('extra-docker-parameters'),
     inlineScanImage: core.getInput('inline-scan-image'),
   }
@@ -67,6 +68,10 @@ function printOptions(opts) {
 
   if (opts.sysdigSkipTLS) {
     core.info(`Sysdig skip TLS: true`);
+  }
+
+  if (opts.severity) {
+    core.info(`Severity level: ${opts.severity}`);
   }
 
   core.info('Analyzing image: ' + opts.imageTag);
@@ -111,6 +116,7 @@ function composeFlags(opts) {
   if (opts.extraParameters) {
     runFlags += ` ${opts.extraParameters}`;
   }
+
 
   if (opts.extraDockerParameters) {
     dockerFlags += ` ${opts.extraDockerParameters}`;
@@ -504,7 +510,9 @@ function getReportAnnotations(evaluationResults, vulnerabilities) {
       title: `${g[actionCol]} ${g[gateCol]}`
     }
   });
-  let vulns = vulnerabilities.map(v => {
+  let severities = {"critcal":0,"high":1, "medium":2, "low":3, "negligible":4,"unknown":5}
+  let severity =  core.getInput('severity') || "unknown";
+  let vulns = vulnerabilities.filter(v => severities[v.severity.toLowerCase()] <=  severities[severity.toLowerCase()]).map(v => {
     return {
       path: "Dockerfile",
       start_line: 1,

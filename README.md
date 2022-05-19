@@ -62,6 +62,17 @@ Additional parameters added to the secure-inline-scan container execution.
 
 Additional parameters added to the `docker` command when executing the secure-inline-scan container execution.
 
+### `severity`
+
+Filter output annotations by severity. Default is "unknown".
+Possible values:
+- critical
+- high
+- medium
+- negligible
+- unknown
+
+
 ### `inline-scan-image`
 
 The image `quay.io/sysdig/secure-inline-scan:2`, which points to the latest 2.x version of the Sysdig Secure inline scanner is used by default.
