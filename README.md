@@ -72,6 +72,12 @@ Possible values:
 - negligible
 - unknown
 
+### `unique-report-by-package`
+
+Only one annotation by package name/version will be displayed in the build output.
+It increased the readability of the output, avoiding duplicates for the same package.
+Default to false.
+
 
 ### `inline-scan-image`
 

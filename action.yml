@@ -24,6 +24,9 @@ inputs:
   ignore-failed-scan:
     description: Don't fail the execution of this action even if the scan result is FAILED.
     required: false
+  unique-report-by-package:
+    description: Report only once an issue with a specific package and its version. Default to false
+    required: false
   input-type:
     description: |
       If specified, where should we scan the image from. Possible values:
