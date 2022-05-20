@@ -74,8 +74,9 @@ Possible values:
 
 ### `unique-report-by-package`
 
-Only one annotation by package name/version will be displayed in the build output.
-It increased the readability of the output, avoiding duplicates for the same package.
+Only one annotation by package name/version will be displayed in the build output. 
+The last highest (by severity) vulnerability will be displayed by package.
+It increases the readability of the output, avoiding duplicates for the same package.
 Default to false.
 
 
