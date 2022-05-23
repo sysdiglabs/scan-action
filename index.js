@@ -504,9 +504,16 @@ function getReportAnnotations(evaluationResults, vulnerabilities) {
       title: `${g[actionCol]} ${g[gateCol]}`
     }
   });
-  let severities = {"critcal":0,"high":1, "medium":2, "low":3, "negligible":4,"unknown":5}
+  let severities = {"critical":0,"high":1, "medium":2, "low":3, "negligible":4,"unknown":5}
   let severity =  core.getInput('severity') || "unknown";
-  let vulns = vulnerabilities.filter(v => severities[v.severity.toLowerCase()] <=  severities[severity.toLowerCase()]).map(v => {
+  let uniqueReportByPackage = core.getInput('unique-report-by-package') === 'true' || false;
+  let _vulns = vulnerabilities
+  if(uniqueReportByPackage) {
+    const key = 'package'; // Show only one issue by package, avoiding flood of annotations
+    let _sortedVulns = _vulns.sort((a, b) => severities[b.severity.toLowerCase()] - severities[a.severity.toLowerCase()]);
+    _vulns = [...new Map(_sortedVulns.map(item => [item[key], item])).values()];
+  }
+  let vulns = _vulns.filter(v => severities[v.severity.toLowerCase()] <=  severities[severity.toLowerCase()]).map(v => {
     return {
       path: "Dockerfile",
       start_line: 1,

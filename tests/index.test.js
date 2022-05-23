@@ -421,6 +421,46 @@ describe("process scan results", () => {
         expect(data.name).toBe("Scan results for myimage:mytag");
         expect(data.output.annotations).toContainEqual({ "annotation_level": "warning", "end_line": 1, "message": "CVE-2019-14697 Severity=High Package=musl-1.1.18-r3 Type=APKG Fix=1.1.18-r4 Url=https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-14697", "path": "Dockerfile", "start_line": 1, "title": "Vulnerability found: CVE-2019-14697" });
         expect(data.output.annotations).not.toContainEqual({"path": "Dockerfile", "start_line": 1, "end_line": 1, "annotation_level": "warning", "message": "CVE-2011-3374 Severity=Negligible Package=apt-1.0 Type=APKG Fix=null Url=https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2011-3374", "title": "Vulnerability found: CVE-2011-3374"});
+        expect(data.output.annotations).toContainEqual({"path": "Dockerfile", "start_line": 1, "end_line": 1, "annotation_level": "warning", "message": "CVE-2019-14697 Severity=High Package=musl-utils-1.1.18-r3 Type=APKG Fix=1.1.18-r4 Url=https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-14697", "title": "Vulnerability found: CVE-2019-14697"});
+        expect(data.output.annotations).toContainEqual({"path": "Dockerfile", "start_line": 1, "end_line": 1, "annotation_level": "warning", "message": "CVE-2019-14698 Severity=Medium Package=musl-utils-1.1.18-r3 Type=APKG Fix=1.1.18-r4 Url=https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-14698", "title": "Vulnerability found: CVE-2019-14698"});
+    })
+
+    it("generates a check run with unique vulnerability annotations", async () => {
+        let data;
+        github.context = { repo: { repo: "foo-repo", owner: "foo-owner" } };
+
+        core.getInput = jest.fn();
+        core.getInput.mockReturnValueOnce("foo");
+
+
+        github.getOctokit = jest.fn(() => {
+            return {
+                rest: {
+                    checks: {
+                        create: async function (receivedData) {
+                            data = receivedData;
+                        }
+                    }
+                }
+            }
+        });
+
+        let scanResult = {
+            ReturnCode: 0,
+            Output: exampleReport,
+            Error: ""
+        };
+        core.getInput.mockReturnValueOnce("medium")
+        core.getInput.mockReturnValueOnce("true")
+
+        await index.processScanResult(scanResult);
+        expect(github.getOctokit).toBeCalledWith("foo");
+        expect(data).not.toBeUndefined();
+        expect(data.name).toBe("Scan results for myimage:mytag");
+        //Should display the vulnerability with the highest severity
+        expect(data.output.annotations).toContainEqual({"path": "Dockerfile", "start_line": 1, "end_line": 1, "annotation_level": "warning", "message": "CVE-2019-14697 Severity=High Package=musl-utils-1.1.18-r3 Type=APKG Fix=1.1.18-r4 Url=https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-14697", "title": "Vulnerability found: CVE-2019-14697"});
+        expect(data.output.annotations).not.toContainEqual({"path": "Dockerfile", "start_line": 1, "end_line": 1, "annotation_level": "warning", "message": "CVE-2019-14698 Severity=Medium Package=musl-utils-1.1.18-r3 Type=APKG Fix=1.1.18-r4 Url=https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-14698", "title": "Vulnerability found: CVE-2019-14698"});
+
     })
 
     it("generates a check run with gate annotations", async () => {

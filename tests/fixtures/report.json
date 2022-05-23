@@ -141,6 +141,37 @@
                 "url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2011-3374",
                 "vendor_data": [],
                 "vuln": "CVE-2011-3374"
+            },
+            {
+                "feed": "vulnerabilities",
+                "feed_group": "alpine:3.7",
+                "fix": "1.1.18-r4",
+                "nvd_data": [
+                    {
+                        "cvss_v2": {
+                            "base_score": 7.5,
+                            "exploitability_score": 10,
+                            "impact_score": 6.4
+                        },
+                        "cvss_v3": {
+                            "base_score": 9.8,
+                            "exploitability_score": 3.9,
+                            "impact_score": 5.9
+                        },
+                        "id": "CVE-2019-14698"
+                    }
+                ],
+                "package": "musl-utils-1.1.18-r3",
+                "package_cpe": "None",
+                "package_cpe23": "None",
+                "package_name": "musl-utils",
+                "package_path": "pkgdb",
+                "package_type": "APKG",
+                "package_version": "1.1.18-r3",
+                "severity": "Medium",
+                "url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-14698",
+                "vendor_data": [],
+                "vuln": "CVE-2019-14698"
             }
         ]
     }
