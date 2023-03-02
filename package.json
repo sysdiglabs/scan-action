@@ -1,6 +1,6 @@
 {
   "name": "secure-inline-scan-action",
-  "version": "3.4.0",
+  "version": "3.5.0",
   "description": "This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.",
   "main": "index.js",
   "scripts": {
@@ -33,7 +33,7 @@
     "@actions/github": "^5.0.0"
   },
   "devDependencies": {
-    "@vercel/ncc": "^0.28.6",
+    "@vercel/ncc": "^0.36.1",
     "eslint": "^7.13.0",
     "jest": "^27.0.6",
     "tmp": "^0.2.1"
