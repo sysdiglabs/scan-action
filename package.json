@@ -28,7 +28,7 @@
   },
   "homepage": "https://github.com/sysdiglabs/secure-inline-scan-action#readme",
   "dependencies": {
-    "@actions/core": "^1.4.0",
+    "@actions/core": "^1.9.1",
     "@actions/exec": "^1.1.0",
     "@actions/github": "^5.0.0"
   },
