@@ -1,13 +1,13 @@
 {
   "info": {
-    "scanTime": "2024-01-25T14:35:20.666712293Z",
-    "scanDuration": "1m10.095431762s",
-    "resultUrl": "https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/overview",
-    "resultId": "17ad9dc8d622ad7c3626ba87c6d95f80"
+    "scanTime": "2024-01-26T16:22:15.587532559Z",
+    "scanDuration": "56.478880188s",
+    "resultUrl": "https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/overview",
+    "resultId": "17adf232f8589756931065afd58c0e70"
   },
   "scanner": {
     "name": "sysdig-cli-scanner",
-    "version": "1.8.0"
+    "version": "1.8.1"
   },
   "result": {
     "type": "dockerImage",
@@ -116,51 +116,6 @@
         "suggestedFix": "v2.1.1",
         "vulns": [
           {
-            "name": "CVE-2022-29361",
-            "severity": {
-              "value": "Critical",
-              "sourceName": "nvd"
-            },
-            "cvssScore": {
-              "value": {
-                "version": "3.1",
-                "score": 9.8,
-                "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
-              },
-              "sourceName": "nvd"
-            },
-            "disclosureDate": "2022-05-24",
-            "exploitable": false,
-            "fixedInVersion": "v2.1.1",
-            "publishDateByVendor": {
-              "nvd": "2022-05-25",
-              "vulndb": "2022-05-24"
-            }
-          },
-          {
-            "name": "CVE-2023-46136",
-            "severity": {
-              "value": "High",
-              "sourceName": "nvd"
-            },
-            "cvssScore": {
-              "value": {
-                "version": "3.1",
-                "score": 7.5,
-                "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
-              },
-              "sourceName": "nvd"
-            },
-            "disclosureDate": "2023-10-24",
-            "solutionDate": "2023-10-24",
-            "exploitable": false,
-            "fixedInVersion": "v2.3.8",
-            "publishDateByVendor": {
-              "nvd": "2023-10-25",
-              "vulndb": "2023-10-24"
-            }
-          },
-          {
             "name": "CVE-2023-23934",
             "severity": {
               "value": "Low",
@@ -204,6 +159,51 @@
             "publishDateByVendor": {
               "nvd": "2023-02-14",
               "vulndb": "2023-02-14"
+            }
+          },
+          {
+            "name": "CVE-2022-29361",
+            "severity": {
+              "value": "Critical",
+              "sourceName": "nvd"
+            },
+            "cvssScore": {
+              "value": {
+                "version": "3.1",
+                "score": 9.8,
+                "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+              },
+              "sourceName": "nvd"
+            },
+            "disclosureDate": "2022-05-24",
+            "exploitable": false,
+            "fixedInVersion": "v2.1.1",
+            "publishDateByVendor": {
+              "nvd": "2022-05-25",
+              "vulndb": "2022-05-24"
+            }
+          },
+          {
+            "name": "CVE-2023-46136",
+            "severity": {
+              "value": "High",
+              "sourceName": "nvd"
+            },
+            "cvssScore": {
+              "value": {
+                "version": "3.1",
+                "score": 7.5,
+                "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+              },
+              "sourceName": "nvd"
+            },
+            "disclosureDate": "2023-10-24",
+            "solutionDate": "2023-10-24",
+            "exploitable": false,
+            "fixedInVersion": "v2.3.8",
+            "publishDateByVendor": {
+              "nvd": "2023-10-25",
+              "vulndb": "2023-10-24"
             }
           }
         ]
@@ -1866,6 +1866,29 @@
         "suggestedFix": "v1.16.1",
         "vulns": [
           {
+            "name": "CVE-2021-41496",
+            "severity": {
+              "value": "Medium",
+              "sourceName": "nvd"
+            },
+            "cvssScore": {
+              "value": {
+                "version": "3.1",
+                "score": 5.5,
+                "vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+              },
+              "sourceName": "nvd"
+            },
+            "disclosureDate": "2021-05-13",
+            "solutionDate": "2020-06-20",
+            "exploitable": false,
+            "fixedInVersion": "v1.19.0",
+            "publishDateByVendor": {
+              "nvd": "2021-12-17",
+              "vulndb": "2021-05-13"
+            }
+          },
+          {
             "name": "CVE-2019-6446",
             "severity": {
               "value": "Critical",
@@ -1931,29 +1954,6 @@
               "nvd": "2021-12-17",
               "vulndb": "2021-05-19"
             }
-          },
-          {
-            "name": "CVE-2021-41496",
-            "severity": {
-              "value": "Medium",
-              "sourceName": "nvd"
-            },
-            "cvssScore": {
-              "value": {
-                "version": "3.1",
-                "score": 5.5,
-                "vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
-              },
-              "sourceName": "nvd"
-            },
-            "disclosureDate": "2021-05-13",
-            "solutionDate": "2020-06-20",
-            "exploitable": false,
-            "fixedInVersion": "v1.19.0",
-            "publishDateByVendor": {
-              "nvd": "2021-12-17",
-              "vulndb": "2021-05-13"
-            }
           }
         ]
       },
@@ -1964,6 +1964,29 @@
         "path": "/usr/lib/python2.7/dist-packages/pip-9.0.1.egg-info/PKG-INFO",
         "suggestedFix": "v19.2.0",
         "vulns": [
+          {
+            "name": "CVE-2019-20916",
+            "severity": {
+              "value": "High",
+              "sourceName": "nvd"
+            },
+            "cvssScore": {
+              "value": {
+                "version": "3.1",
+                "score": 7.5,
+                "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+              },
+              "sourceName": "nvd"
+            },
+            "disclosureDate": "2019-04-16",
+            "solutionDate": "2019-07-22",
+            "exploitable": false,
+            "fixedInVersion": "v19.2.0",
+            "publishDateByVendor": {
+              "nvd": "2020-09-04",
+              "vulndb": "2019-04-16"
+            }
+          },
           {
             "name": "CVE-2021-3572",
             "severity": {
@@ -1985,27 +2008,6 @@
             "publishDateByVendor": {
               "nvd": "2021-11-10",
               "vulndb": "2021-04-24"
-            }
-          },
-          {
-            "name": "CVE-2018-20225",
-            "severity": {
-              "value": "High",
-              "sourceName": "nvd"
-            },
-            "cvssScore": {
-              "value": {
-                "version": "3.1",
-                "score": 7.8,
-                "vector": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
-              },
-              "sourceName": "nvd"
-            },
-            "disclosureDate": "2020-05-08",
-            "exploitable": false,
-            "publishDateByVendor": {
-              "nvd": "2020-05-08",
-              "vulndb": "2020-05-08"
             }
           },
           {
@@ -2032,7 +2034,7 @@
             }
           },
           {
-            "name": "CVE-2019-20916",
+            "name": "CVE-2018-20225",
             "severity": {
               "value": "High",
               "sourceName": "nvd"
@@ -2040,18 +2042,16 @@
             "cvssScore": {
               "value": {
                 "version": "3.1",
-                "score": 7.5,
-                "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+                "score": 7.8,
+                "vector": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
               },
               "sourceName": "nvd"
             },
-            "disclosureDate": "2019-04-16",
-            "solutionDate": "2019-07-22",
+            "disclosureDate": "2020-05-08",
             "exploitable": false,
-            "fixedInVersion": "v19.2.0",
             "publishDateByVendor": {
-              "nvd": "2020-09-04",
-              "vulndb": "2019-04-16"
+              "nvd": "2020-05-08",
+              "vulndb": "2020-05-08"
             }
           }
         ]
@@ -2061,12 +2061,6 @@
         "name": "pyasn1",
         "version": "0.1.9",
         "path": "/usr/lib/python2.7/dist-packages/pyasn1-0.1.9.egg-info/PKG-INFO"
-      },
-      {
-        "type": "python",
-        "name": "PyGObject",
-        "version": "3.22.0",
-        "path": "/usr/lib/python2.7/dist-packages/pygobject-3.22.0.egg-info"
       },
       {
         "type": "python",
@@ -2117,6 +2111,12 @@
             }
           }
         ]
+      },
+      {
+        "type": "python",
+        "name": "PyGObject",
+        "version": "3.22.0",
+        "path": "/usr/lib/python2.7/dist-packages/pygobject-3.22.0.egg-info"
       },
       {
         "type": "python",
@@ -2257,6 +2257,148 @@
     ],
     "policyEvaluations": [
       {
+        "name": "Cardholder Policy",
+        "identifier": "cardholder-policy",
+        "type": "alwaysApply",
+        "bundles": [
+          {
+            "name": "PCI DSS (Payment Card Industry Data Security Standard) v3.2.1",
+            "identifier": "pci-dss-v3-2-1",
+            "type": "predefined",
+            "rules": [
+              {
+                "ruleType": "imageConfigSensitiveInformationAndSecrets",
+                "failureType": "imageConfigFailure",
+                "description": "Forbid sensitive information and secrets in the image metadata",
+                "evaluationResult": "passed",
+                "predicates": [
+                  {
+                    "type": "imageConfigSensitiveInformationAndSecrets"
+                  }
+                ]
+              },
+              {
+                "ruleType": "imageConfigDefaultUser",
+                "failureType": "imageConfigFailure",
+                "description": "User is root",
+                "failures": [
+                  {
+                    "remediation": "Modify your image configuration and set the default user to other than root\nCheck the documentation to learn why and how to change the default image user\n",
+                    "Arguments": {}
+                  }
+                ],
+                "evaluationResult": "failed",
+                "predicates": [
+                  {
+                    "type": "imageConfigDefaultUserIsRoot"
+                  }
+                ]
+              },
+              {
+                "ruleType": "vulnSeverityAndThreats",
+                "failureType": "pkgVulnFailure",
+                "description": "Severity greater than or equal high",
+                "failures": [
+                  {
+                    "pkgIndex": 0,
+                    "vulnInPkgIndex": 0,
+                    "ref": "$.result.packages[0].vuln[0]",
+                    "description": "CVE-2023-30861 found in pkg 'Flask:1.1.2'"
+                  },
+                  {
+                    "pkgIndex": 3,
+                    "vulnInPkgIndex": 1,
+                    "ref": "$.result.packages[3].vuln[1]",
+                    "description": "CVE-2023-25577 found in pkg 'Werkzeug:1.0.1'"
+                  },
+                  {
+                    "pkgIndex": 3,
+                    "vulnInPkgIndex": 2,
+                    "ref": "$.result.packages[3].vuln[2]",
+                    "description": "CVE-2022-29361 found in pkg 'Werkzeug:1.0.1'"
+                  },
+                  {
+                    "pkgIndex": 3,
+                    "vulnInPkgIndex": 3,
+                    "ref": "$.result.packages[3].vuln[3]",
+                    "description": "CVE-2023-46136 found in pkg 'Werkzeug:1.0.1'"
+                  },
+                  {
+                    "pkgIndex": 265,
+                    "vulnInPkgIndex": 0,
+                    "ref": "$.result.packages[265].vuln[0]",
+                    "description": "CVE-2023-0286 found in pkg 'cryptography:1.7.1'"
+                  },
+                  {
+                    "pkgIndex": 271,
+                    "vulnInPkgIndex": 1,
+                    "ref": "$.result.packages[271].vuln[1]",
+                    "description": "CVE-2019-6446 found in pkg 'numpy:1.12.1'"
+                  },
+                  {
+                    "pkgIndex": 271,
+                    "vulnInPkgIndex": 2,
+                    "ref": "$.result.packages[271].vuln[2]",
+                    "description": "CVE-2017-12852 found in pkg 'numpy:1.12.1'"
+                  },
+                  {
+                    "pkgIndex": 272,
+                    "vulnInPkgIndex": 0,
+                    "ref": "$.result.packages[272].vuln[0]",
+                    "description": "CVE-2019-20916 found in pkg 'pip:9.0.1'"
+                  },
+                  {
+                    "pkgIndex": 272,
+                    "vulnInPkgIndex": 3,
+                    "ref": "$.result.packages[272].vuln[3]",
+                    "description": "CVE-2018-20225 found in pkg 'pip:9.0.1'"
+                  },
+                  {
+                    "pkgIndex": 274,
+                    "vulnInPkgIndex": 0,
+                    "ref": "$.result.packages[274].vuln[0]",
+                    "description": "CVE-2013-7459 found in pkg 'pycrypto:2.6.1'"
+                  },
+                  {
+                    "pkgIndex": 274,
+                    "vulnInPkgIndex": 1,
+                    "ref": "$.result.packages[274].vuln[1]",
+                    "description": "CVE-2018-6594 found in pkg 'pycrypto:2.6.1'"
+                  },
+                  {
+                    "pkgIndex": 278,
+                    "vulnInPkgIndex": 0,
+                    "ref": "$.result.packages[278].vuln[0]",
+                    "description": "CVE-2022-40898 found in pkg 'wheel:0.29.0'"
+                  },
+                  {
+                    "pkgIndex": 281,
+                    "vulnInPkgIndex": 1,
+                    "ref": "$.result.packages[281].vuln[1]",
+                    "description": "CVE-2019-12761 found in pkg 'pyxdg:0.25'"
+                  }
+                ],
+                "evaluationResult": "failed",
+                "predicates": [
+                  {
+                    "type": "vulnSeverity",
+                    "extra": {
+                      "level": "high"
+                    }
+                  }
+                ]
+              }
+            ],
+            "createdAt": "2023-02-08T12:19:19.250652Z",
+            "updatedAt": "2023-02-08T12:19:19.250652Z"
+          }
+        ],
+        "acceptedRiskTotal": 0,
+        "evaluationResult": "failed",
+        "createdAt": "2023-09-11T14:47:23.765266Z",
+        "updatedAt": "2023-09-11T14:47:23.765266Z"
+      },
+      {
         "name": "Sysdig Best Practices",
         "identifier": "sysdig_best_practices",
         "type": "alwaysApply",
@@ -2273,14 +2415,14 @@
                 "failures": [
                   {
                     "pkgIndex": 3,
-                    "vulnInPkgIndex": 0,
-                    "ref": "$.result.packages[3].vuln[0]",
+                    "vulnInPkgIndex": 2,
+                    "ref": "$.result.packages[3].vuln[2]",
                     "description": "CVE-2022-29361 found in pkg 'Werkzeug:1.0.1'"
                   },
                   {
                     "pkgIndex": 271,
-                    "vulnInPkgIndex": 0,
-                    "ref": "$.result.packages[271].vuln[0]",
+                    "vulnInPkgIndex": 1,
+                    "ref": "$.result.packages[271].vuln[1]",
                     "description": "CVE-2019-6446 found in pkg 'numpy:1.12.1'"
                   }
                 ],
@@ -2312,13 +2454,13 @@
                     "pkgIndex": 3,
                     "vulnInPkgIndex": 1,
                     "ref": "$.result.packages[3].vuln[1]",
-                    "description": "CVE-2023-46136 found in pkg 'Werkzeug:1.0.1'"
+                    "description": "CVE-2023-25577 found in pkg 'Werkzeug:1.0.1'"
                   },
                   {
                     "pkgIndex": 3,
                     "vulnInPkgIndex": 3,
                     "ref": "$.result.packages[3].vuln[3]",
-                    "description": "CVE-2023-25577 found in pkg 'Werkzeug:1.0.1'"
+                    "description": "CVE-2023-46136 found in pkg 'Werkzeug:1.0.1'"
                   },
                   {
                     "pkgIndex": 265,
@@ -2328,14 +2470,14 @@
                   },
                   {
                     "pkgIndex": 271,
-                    "vulnInPkgIndex": 1,
-                    "ref": "$.result.packages[271].vuln[1]",
+                    "vulnInPkgIndex": 2,
+                    "ref": "$.result.packages[271].vuln[2]",
                     "description": "CVE-2017-12852 found in pkg 'numpy:1.12.1'"
                   },
                   {
                     "pkgIndex": 272,
-                    "vulnInPkgIndex": 3,
-                    "ref": "$.result.packages[272].vuln[3]",
+                    "vulnInPkgIndex": 0,
+                    "ref": "$.result.packages[272].vuln[0]",
                     "description": "CVE-2019-20916 found in pkg 'pip:9.0.1'"
                   },
                   {
@@ -2380,21 +2522,21 @@
                   },
                   {
                     "pkgIndex": 3,
-                    "vulnInPkgIndex": 0,
-                    "ref": "$.result.packages[3].vuln[0]",
-                    "description": "CVE-2022-29361 found in pkg 'Werkzeug:1.0.1'"
+                    "vulnInPkgIndex": 1,
+                    "ref": "$.result.packages[3].vuln[1]",
+                    "description": "CVE-2023-25577 found in pkg 'Werkzeug:1.0.1'"
                   },
                   {
                     "pkgIndex": 3,
-                    "vulnInPkgIndex": 1,
-                    "ref": "$.result.packages[3].vuln[1]",
-                    "description": "CVE-2023-46136 found in pkg 'Werkzeug:1.0.1'"
+                    "vulnInPkgIndex": 2,
+                    "ref": "$.result.packages[3].vuln[2]",
+                    "description": "CVE-2022-29361 found in pkg 'Werkzeug:1.0.1'"
                   },
                   {
                     "pkgIndex": 3,
                     "vulnInPkgIndex": 3,
                     "ref": "$.result.packages[3].vuln[3]",
-                    "description": "CVE-2023-25577 found in pkg 'Werkzeug:1.0.1'"
+                    "description": "CVE-2023-46136 found in pkg 'Werkzeug:1.0.1'"
                   },
                   {
                     "pkgIndex": 265,
@@ -2404,20 +2546,20 @@
                   },
                   {
                     "pkgIndex": 271,
-                    "vulnInPkgIndex": 0,
-                    "ref": "$.result.packages[271].vuln[0]",
+                    "vulnInPkgIndex": 1,
+                    "ref": "$.result.packages[271].vuln[1]",
                     "description": "CVE-2019-6446 found in pkg 'numpy:1.12.1'"
                   },
                   {
                     "pkgIndex": 271,
-                    "vulnInPkgIndex": 1,
-                    "ref": "$.result.packages[271].vuln[1]",
+                    "vulnInPkgIndex": 2,
+                    "ref": "$.result.packages[271].vuln[2]",
                     "description": "CVE-2017-12852 found in pkg 'numpy:1.12.1'"
                   },
                   {
                     "pkgIndex": 272,
-                    "vulnInPkgIndex": 3,
-                    "ref": "$.result.packages[272].vuln[3]",
+                    "vulnInPkgIndex": 0,
+                    "ref": "$.result.packages[272].vuln[0]",
                     "description": "CVE-2019-20916 found in pkg 'pip:9.0.1'"
                   },
                   {
@@ -2499,21 +2641,21 @@
                   },
                   {
                     "pkgIndex": 3,
-                    "vulnInPkgIndex": 0,
-                    "ref": "$.result.packages[3].vuln[0]",
-                    "description": "CVE-2022-29361 found in pkg 'Werkzeug:1.0.1'"
+                    "vulnInPkgIndex": 1,
+                    "ref": "$.result.packages[3].vuln[1]",
+                    "description": "CVE-2023-25577 found in pkg 'Werkzeug:1.0.1'"
                   },
                   {
                     "pkgIndex": 3,
-                    "vulnInPkgIndex": 1,
-                    "ref": "$.result.packages[3].vuln[1]",
-                    "description": "CVE-2023-46136 found in pkg 'Werkzeug:1.0.1'"
+                    "vulnInPkgIndex": 2,
+                    "ref": "$.result.packages[3].vuln[2]",
+                    "description": "CVE-2022-29361 found in pkg 'Werkzeug:1.0.1'"
                   },
                   {
                     "pkgIndex": 3,
                     "vulnInPkgIndex": 3,
                     "ref": "$.result.packages[3].vuln[3]",
-                    "description": "CVE-2023-25577 found in pkg 'Werkzeug:1.0.1'"
+                    "description": "CVE-2023-46136 found in pkg 'Werkzeug:1.0.1'"
                   },
                   {
                     "pkgIndex": 265,
@@ -2523,38 +2665,38 @@
                   },
                   {
                     "pkgIndex": 271,
-                    "vulnInPkgIndex": 0,
-                    "ref": "$.result.packages[271].vuln[0]",
+                    "vulnInPkgIndex": 1,
+                    "ref": "$.result.packages[271].vuln[1]",
                     "description": "CVE-2019-6446 found in pkg 'numpy:1.12.1'"
                   },
                   {
                     "pkgIndex": 271,
-                    "vulnInPkgIndex": 1,
-                    "ref": "$.result.packages[271].vuln[1]",
+                    "vulnInPkgIndex": 2,
+                    "ref": "$.result.packages[271].vuln[2]",
                     "description": "CVE-2017-12852 found in pkg 'numpy:1.12.1'"
                   },
                   {
                     "pkgIndex": 272,
-                    "vulnInPkgIndex": 1,
-                    "ref": "$.result.packages[272].vuln[1]",
-                    "description": "CVE-2018-20225 found in pkg 'pip:9.0.1'"
+                    "vulnInPkgIndex": 0,
+                    "ref": "$.result.packages[272].vuln[0]",
+                    "description": "CVE-2019-20916 found in pkg 'pip:9.0.1'"
                   },
                   {
                     "pkgIndex": 272,
                     "vulnInPkgIndex": 3,
                     "ref": "$.result.packages[272].vuln[3]",
-                    "description": "CVE-2019-20916 found in pkg 'pip:9.0.1'"
+                    "description": "CVE-2018-20225 found in pkg 'pip:9.0.1'"
                   },
                   {
-                    "pkgIndex": 275,
+                    "pkgIndex": 274,
                     "vulnInPkgIndex": 0,
-                    "ref": "$.result.packages[275].vuln[0]",
+                    "ref": "$.result.packages[274].vuln[0]",
                     "description": "CVE-2013-7459 found in pkg 'pycrypto:2.6.1'"
                   },
                   {
-                    "pkgIndex": 275,
+                    "pkgIndex": 274,
                     "vulnInPkgIndex": 1,
-                    "ref": "$.result.packages[275].vuln[1]",
+                    "ref": "$.result.packages[274].vuln[1]",
                     "description": "CVE-2018-6594 found in pkg 'pycrypto:2.6.1'"
                   },
                   {
@@ -2673,21 +2815,21 @@
                   },
                   {
                     "pkgIndex": 3,
-                    "vulnInPkgIndex": 0,
-                    "ref": "$.result.packages[3].vuln[0]",
-                    "description": "CVE-2022-29361 found in pkg 'Werkzeug:1.0.1'"
+                    "vulnInPkgIndex": 1,
+                    "ref": "$.result.packages[3].vuln[1]",
+                    "description": "CVE-2023-25577 found in pkg 'Werkzeug:1.0.1'"
                   },
                   {
                     "pkgIndex": 3,
-                    "vulnInPkgIndex": 1,
-                    "ref": "$.result.packages[3].vuln[1]",
-                    "description": "CVE-2023-46136 found in pkg 'Werkzeug:1.0.1'"
+                    "vulnInPkgIndex": 2,
+                    "ref": "$.result.packages[3].vuln[2]",
+                    "description": "CVE-2022-29361 found in pkg 'Werkzeug:1.0.1'"
                   },
                   {
                     "pkgIndex": 3,
                     "vulnInPkgIndex": 3,
                     "ref": "$.result.packages[3].vuln[3]",
-                    "description": "CVE-2023-25577 found in pkg 'Werkzeug:1.0.1'"
+                    "description": "CVE-2023-46136 found in pkg 'Werkzeug:1.0.1'"
                   },
                   {
                     "pkgIndex": 265,
@@ -2705,54 +2847,54 @@
                     "pkgIndex": 271,
                     "vulnInPkgIndex": 0,
                     "ref": "$.result.packages[271].vuln[0]",
-                    "description": "CVE-2019-6446 found in pkg 'numpy:1.12.1'"
+                    "description": "CVE-2021-41496 found in pkg 'numpy:1.12.1'"
                   },
                   {
                     "pkgIndex": 271,
                     "vulnInPkgIndex": 1,
                     "ref": "$.result.packages[271].vuln[1]",
-                    "description": "CVE-2017-12852 found in pkg 'numpy:1.12.1'"
+                    "description": "CVE-2019-6446 found in pkg 'numpy:1.12.1'"
                   },
                   {
                     "pkgIndex": 271,
                     "vulnInPkgIndex": 2,
                     "ref": "$.result.packages[271].vuln[2]",
-                    "description": "CVE-2021-41495 found in pkg 'numpy:1.12.1'"
+                    "description": "CVE-2017-12852 found in pkg 'numpy:1.12.1'"
                   },
                   {
                     "pkgIndex": 271,
                     "vulnInPkgIndex": 3,
                     "ref": "$.result.packages[271].vuln[3]",
-                    "description": "CVE-2021-41496 found in pkg 'numpy:1.12.1'"
+                    "description": "CVE-2021-41495 found in pkg 'numpy:1.12.1'"
                   },
                   {
                     "pkgIndex": 272,
                     "vulnInPkgIndex": 0,
                     "ref": "$.result.packages[272].vuln[0]",
-                    "description": "CVE-2021-3572 found in pkg 'pip:9.0.1'"
+                    "description": "CVE-2019-20916 found in pkg 'pip:9.0.1'"
                   },
                   {
                     "pkgIndex": 272,
                     "vulnInPkgIndex": 1,
                     "ref": "$.result.packages[272].vuln[1]",
-                    "description": "CVE-2018-20225 found in pkg 'pip:9.0.1'"
+                    "description": "CVE-2021-3572 found in pkg 'pip:9.0.1'"
                   },
                   {
                     "pkgIndex": 272,
                     "vulnInPkgIndex": 3,
                     "ref": "$.result.packages[272].vuln[3]",
-                    "description": "CVE-2019-20916 found in pkg 'pip:9.0.1'"
+                    "description": "CVE-2018-20225 found in pkg 'pip:9.0.1'"
                   },
                   {
-                    "pkgIndex": 275,
+                    "pkgIndex": 274,
                     "vulnInPkgIndex": 0,
-                    "ref": "$.result.packages[275].vuln[0]",
+                    "ref": "$.result.packages[274].vuln[0]",
                     "description": "CVE-2013-7459 found in pkg 'pycrypto:2.6.1'"
                   },
                   {
-                    "pkgIndex": 275,
+                    "pkgIndex": 274,
                     "vulnInPkgIndex": 1,
-                    "ref": "$.result.packages[275].vuln[1]",
+                    "ref": "$.result.packages[274].vuln[1]",
                     "description": "CVE-2018-6594 found in pkg 'pycrypto:2.6.1'"
                   },
                   {
@@ -2883,21 +3025,21 @@
                   },
                   {
                     "pkgIndex": 3,
-                    "vulnInPkgIndex": 0,
-                    "ref": "$.result.packages[3].vuln[0]",
-                    "description": "CVE-2022-29361 found in pkg 'Werkzeug:1.0.1'"
+                    "vulnInPkgIndex": 1,
+                    "ref": "$.result.packages[3].vuln[1]",
+                    "description": "CVE-2023-25577 found in pkg 'Werkzeug:1.0.1'"
                   },
                   {
                     "pkgIndex": 3,
-                    "vulnInPkgIndex": 1,
-                    "ref": "$.result.packages[3].vuln[1]",
-                    "description": "CVE-2023-46136 found in pkg 'Werkzeug:1.0.1'"
+                    "vulnInPkgIndex": 2,
+                    "ref": "$.result.packages[3].vuln[2]",
+                    "description": "CVE-2022-29361 found in pkg 'Werkzeug:1.0.1'"
                   },
                   {
                     "pkgIndex": 3,
                     "vulnInPkgIndex": 3,
                     "ref": "$.result.packages[3].vuln[3]",
-                    "description": "CVE-2023-25577 found in pkg 'Werkzeug:1.0.1'"
+                    "description": "CVE-2023-46136 found in pkg 'Werkzeug:1.0.1'"
                   },
                   {
                     "pkgIndex": 265,
@@ -2907,38 +3049,38 @@
                   },
                   {
                     "pkgIndex": 271,
-                    "vulnInPkgIndex": 0,
-                    "ref": "$.result.packages[271].vuln[0]",
+                    "vulnInPkgIndex": 1,
+                    "ref": "$.result.packages[271].vuln[1]",
                     "description": "CVE-2019-6446 found in pkg 'numpy:1.12.1'"
                   },
                   {
                     "pkgIndex": 271,
-                    "vulnInPkgIndex": 1,
-                    "ref": "$.result.packages[271].vuln[1]",
+                    "vulnInPkgIndex": 2,
+                    "ref": "$.result.packages[271].vuln[2]",
                     "description": "CVE-2017-12852 found in pkg 'numpy:1.12.1'"
                   },
                   {
                     "pkgIndex": 272,
-                    "vulnInPkgIndex": 1,
-                    "ref": "$.result.packages[272].vuln[1]",
-                    "description": "CVE-2018-20225 found in pkg 'pip:9.0.1'"
+                    "vulnInPkgIndex": 0,
+                    "ref": "$.result.packages[272].vuln[0]",
+                    "description": "CVE-2019-20916 found in pkg 'pip:9.0.1'"
                   },
                   {
                     "pkgIndex": 272,
                     "vulnInPkgIndex": 3,
                     "ref": "$.result.packages[272].vuln[3]",
-                    "description": "CVE-2019-20916 found in pkg 'pip:9.0.1'"
+                    "description": "CVE-2018-20225 found in pkg 'pip:9.0.1'"
                   },
                   {
-                    "pkgIndex": 275,
+                    "pkgIndex": 274,
                     "vulnInPkgIndex": 0,
-                    "ref": "$.result.packages[275].vuln[0]",
+                    "ref": "$.result.packages[274].vuln[0]",
                     "description": "CVE-2013-7459 found in pkg 'pycrypto:2.6.1'"
                   },
                   {
-                    "pkgIndex": 275,
+                    "pkgIndex": 274,
                     "vulnInPkgIndex": 1,
-                    "ref": "$.result.packages[275].vuln[1]",
+                    "ref": "$.result.packages[274].vuln[1]",
                     "description": "CVE-2018-6594 found in pkg 'pycrypto:2.6.1'"
                   },
                   {
@@ -2973,148 +3115,6 @@
         "evaluationResult": "failed",
         "createdAt": "2023-03-03T12:26:00.245432Z",
         "updatedAt": "2023-03-03T12:26:23.341136Z"
-      },
-      {
-        "name": "Cardholder Policy",
-        "identifier": "cardholder-policy",
-        "type": "alwaysApply",
-        "bundles": [
-          {
-            "name": "PCI DSS (Payment Card Industry Data Security Standard) v3.2.1",
-            "identifier": "pci-dss-v3-2-1",
-            "type": "predefined",
-            "rules": [
-              {
-                "ruleType": "imageConfigSensitiveInformationAndSecrets",
-                "failureType": "imageConfigFailure",
-                "description": "Forbid sensitive information and secrets in the image metadata",
-                "evaluationResult": "passed",
-                "predicates": [
-                  {
-                    "type": "imageConfigSensitiveInformationAndSecrets"
-                  }
-                ]
-              },
-              {
-                "ruleType": "imageConfigDefaultUser",
-                "failureType": "imageConfigFailure",
-                "description": "User is root",
-                "failures": [
-                  {
-                    "remediation": "Modify your image configuration and set the default user to other than root\nCheck the documentation to learn why and how to change the default image user\n",
-                    "Arguments": {}
-                  }
-                ],
-                "evaluationResult": "failed",
-                "predicates": [
-                  {
-                    "type": "imageConfigDefaultUserIsRoot"
-                  }
-                ]
-              },
-              {
-                "ruleType": "vulnSeverityAndThreats",
-                "failureType": "pkgVulnFailure",
-                "description": "Severity greater than or equal high",
-                "failures": [
-                  {
-                    "pkgIndex": 0,
-                    "vulnInPkgIndex": 0,
-                    "ref": "$.result.packages[0].vuln[0]",
-                    "description": "CVE-2023-30861 found in pkg 'Flask:1.1.2'"
-                  },
-                  {
-                    "pkgIndex": 3,
-                    "vulnInPkgIndex": 0,
-                    "ref": "$.result.packages[3].vuln[0]",
-                    "description": "CVE-2022-29361 found in pkg 'Werkzeug:1.0.1'"
-                  },
-                  {
-                    "pkgIndex": 3,
-                    "vulnInPkgIndex": 1,
-                    "ref": "$.result.packages[3].vuln[1]",
-                    "description": "CVE-2023-46136 found in pkg 'Werkzeug:1.0.1'"
-                  },
-                  {
-                    "pkgIndex": 3,
-                    "vulnInPkgIndex": 3,
-                    "ref": "$.result.packages[3].vuln[3]",
-                    "description": "CVE-2023-25577 found in pkg 'Werkzeug:1.0.1'"
-                  },
-                  {
-                    "pkgIndex": 265,
-                    "vulnInPkgIndex": 0,
-                    "ref": "$.result.packages[265].vuln[0]",
-                    "description": "CVE-2023-0286 found in pkg 'cryptography:1.7.1'"
-                  },
-                  {
-                    "pkgIndex": 271,
-                    "vulnInPkgIndex": 0,
-                    "ref": "$.result.packages[271].vuln[0]",
-                    "description": "CVE-2019-6446 found in pkg 'numpy:1.12.1'"
-                  },
-                  {
-                    "pkgIndex": 271,
-                    "vulnInPkgIndex": 1,
-                    "ref": "$.result.packages[271].vuln[1]",
-                    "description": "CVE-2017-12852 found in pkg 'numpy:1.12.1'"
-                  },
-                  {
-                    "pkgIndex": 272,
-                    "vulnInPkgIndex": 1,
-                    "ref": "$.result.packages[272].vuln[1]",
-                    "description": "CVE-2018-20225 found in pkg 'pip:9.0.1'"
-                  },
-                  {
-                    "pkgIndex": 272,
-                    "vulnInPkgIndex": 3,
-                    "ref": "$.result.packages[272].vuln[3]",
-                    "description": "CVE-2019-20916 found in pkg 'pip:9.0.1'"
-                  },
-                  {
-                    "pkgIndex": 275,
-                    "vulnInPkgIndex": 0,
-                    "ref": "$.result.packages[275].vuln[0]",
-                    "description": "CVE-2013-7459 found in pkg 'pycrypto:2.6.1'"
-                  },
-                  {
-                    "pkgIndex": 275,
-                    "vulnInPkgIndex": 1,
-                    "ref": "$.result.packages[275].vuln[1]",
-                    "description": "CVE-2018-6594 found in pkg 'pycrypto:2.6.1'"
-                  },
-                  {
-                    "pkgIndex": 278,
-                    "vulnInPkgIndex": 0,
-                    "ref": "$.result.packages[278].vuln[0]",
-                    "description": "CVE-2022-40898 found in pkg 'wheel:0.29.0'"
-                  },
-                  {
-                    "pkgIndex": 281,
-                    "vulnInPkgIndex": 1,
-                    "ref": "$.result.packages[281].vuln[1]",
-                    "description": "CVE-2019-12761 found in pkg 'pyxdg:0.25'"
-                  }
-                ],
-                "evaluationResult": "failed",
-                "predicates": [
-                  {
-                    "type": "vulnSeverity",
-                    "extra": {
-                      "level": "high"
-                    }
-                  }
-                ]
-              }
-            ],
-            "createdAt": "2023-02-08T12:19:19.250652Z",
-            "updatedAt": "2023-02-08T12:19:19.250652Z"
-          }
-        ],
-        "acceptedRiskTotal": 0,
-        "evaluationResult": "failed",
-        "createdAt": "2023-09-11T14:47:23.765266Z",
-        "updatedAt": "2023-09-11T14:47:23.765266Z"
       }
     ],
     "policyEvaluationsResult": "failed"
