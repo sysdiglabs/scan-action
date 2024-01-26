@@ -61,54 +61,6 @@
               }
             },
             {
-              "id": "CVE-2022-29361",
-              "name": "python",
-              "shortDescription": {
-                "text": "CVE-2022-29361 Severity: Critical Package: Werkzeug"
-              },
-              "fullDescription": {
-                "text": "CVE-2022-29361\nSeverity: Critical\nPackage: Werkzeug\nType: python\nFix: v2.1.1\nURL: https://nvd.nist.gov/vuln/detail/CVE-2022-29361"
-              },
-              "helpUri": "https://nvd.nist.gov/vuln/detail/CVE-2022-29361",
-              "help": {
-                "text": "Vulnerability CVE-2022-29361\nSeverity: Critical\nPackage: Werkzeug\nCVSS Score: 9.8\nCVSS Version: 3.1\nCVSS Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H\nVersion: 1.0.1\nFix Version: v2.1.1\nExploitable: false\nType: python\nLocation: /usr/local/lib/python2.7/dist-packages/Werkzeug-1.0.1.dist-info/METADATA\nURL: https://nvd.nist.gov/vuln/detail/CVE-2022-29361",
-                "markdown": "\n**Vulnerability [CVE-2022-29361](https://nvd.nist.gov/vuln/detail/CVE-2022-29361)**\n| Severity | Package | CVSS Score | CVSS Version | CVSS Vector | Fixed Version | Exploitable |\n| -------- | ------- | ---------- | ------------ | ----------- | ------------- | ----------- |\n| Critical | Werkzeug | 9.8 | 3.1 | CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H | v2.1.1 | false |"
-              },
-              "properties": {
-                "precision": "very-high",
-                "security-severity": "9.8",
-                "tags": [
-                  "vulnerability",
-                  "security",
-                  "Critical"
-                ]
-              }
-            },
-            {
-              "id": "CVE-2023-46136",
-              "name": "python",
-              "shortDescription": {
-                "text": "CVE-2023-46136 Severity: High Package: Werkzeug"
-              },
-              "fullDescription": {
-                "text": "CVE-2023-46136\nSeverity: High\nPackage: Werkzeug\nType: python\nFix: v2.1.1\nURL: https://nvd.nist.gov/vuln/detail/CVE-2023-46136"
-              },
-              "helpUri": "https://nvd.nist.gov/vuln/detail/CVE-2023-46136",
-              "help": {
-                "text": "Vulnerability CVE-2023-46136\nSeverity: High\nPackage: Werkzeug\nCVSS Score: 7.5\nCVSS Version: 3.1\nCVSS Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H\nVersion: 1.0.1\nFix Version: v2.1.1\nExploitable: false\nType: python\nLocation: /usr/local/lib/python2.7/dist-packages/Werkzeug-1.0.1.dist-info/METADATA\nURL: https://nvd.nist.gov/vuln/detail/CVE-2023-46136",
-                "markdown": "\n**Vulnerability [CVE-2023-46136](https://nvd.nist.gov/vuln/detail/CVE-2023-46136)**\n| Severity | Package | CVSS Score | CVSS Version | CVSS Vector | Fixed Version | Exploitable |\n| -------- | ------- | ---------- | ------------ | ----------- | ------------- | ----------- |\n| High | Werkzeug | 7.5 | 3.1 | CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H | v2.1.1 | false |"
-              },
-              "properties": {
-                "precision": "very-high",
-                "security-severity": "7.5",
-                "tags": [
-                  "vulnerability",
-                  "security",
-                  "High"
-                ]
-              }
-            },
-            {
               "id": "CVE-2023-23934",
               "name": "python",
               "shortDescription": {
@@ -145,6 +97,54 @@
               "help": {
                 "text": "Vulnerability CVE-2023-25577\nSeverity: High\nPackage: Werkzeug\nCVSS Score: 7.5\nCVSS Version: 3.1\nCVSS Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H\nVersion: 1.0.1\nFix Version: v2.1.1\nExploitable: false\nType: python\nLocation: /usr/local/lib/python2.7/dist-packages/Werkzeug-1.0.1.dist-info/METADATA\nURL: https://nvd.nist.gov/vuln/detail/CVE-2023-25577",
                 "markdown": "\n**Vulnerability [CVE-2023-25577](https://nvd.nist.gov/vuln/detail/CVE-2023-25577)**\n| Severity | Package | CVSS Score | CVSS Version | CVSS Vector | Fixed Version | Exploitable |\n| -------- | ------- | ---------- | ------------ | ----------- | ------------- | ----------- |\n| High | Werkzeug | 7.5 | 3.1 | CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H | v2.1.1 | false |"
+              },
+              "properties": {
+                "precision": "very-high",
+                "security-severity": "7.5",
+                "tags": [
+                  "vulnerability",
+                  "security",
+                  "High"
+                ]
+              }
+            },
+            {
+              "id": "CVE-2022-29361",
+              "name": "python",
+              "shortDescription": {
+                "text": "CVE-2022-29361 Severity: Critical Package: Werkzeug"
+              },
+              "fullDescription": {
+                "text": "CVE-2022-29361\nSeverity: Critical\nPackage: Werkzeug\nType: python\nFix: v2.1.1\nURL: https://nvd.nist.gov/vuln/detail/CVE-2022-29361"
+              },
+              "helpUri": "https://nvd.nist.gov/vuln/detail/CVE-2022-29361",
+              "help": {
+                "text": "Vulnerability CVE-2022-29361\nSeverity: Critical\nPackage: Werkzeug\nCVSS Score: 9.8\nCVSS Version: 3.1\nCVSS Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H\nVersion: 1.0.1\nFix Version: v2.1.1\nExploitable: false\nType: python\nLocation: /usr/local/lib/python2.7/dist-packages/Werkzeug-1.0.1.dist-info/METADATA\nURL: https://nvd.nist.gov/vuln/detail/CVE-2022-29361",
+                "markdown": "\n**Vulnerability [CVE-2022-29361](https://nvd.nist.gov/vuln/detail/CVE-2022-29361)**\n| Severity | Package | CVSS Score | CVSS Version | CVSS Vector | Fixed Version | Exploitable |\n| -------- | ------- | ---------- | ------------ | ----------- | ------------- | ----------- |\n| Critical | Werkzeug | 9.8 | 3.1 | CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H | v2.1.1 | false |"
+              },
+              "properties": {
+                "precision": "very-high",
+                "security-severity": "9.8",
+                "tags": [
+                  "vulnerability",
+                  "security",
+                  "Critical"
+                ]
+              }
+            },
+            {
+              "id": "CVE-2023-46136",
+              "name": "python",
+              "shortDescription": {
+                "text": "CVE-2023-46136 Severity: High Package: Werkzeug"
+              },
+              "fullDescription": {
+                "text": "CVE-2023-46136\nSeverity: High\nPackage: Werkzeug\nType: python\nFix: v2.1.1\nURL: https://nvd.nist.gov/vuln/detail/CVE-2023-46136"
+              },
+              "helpUri": "https://nvd.nist.gov/vuln/detail/CVE-2023-46136",
+              "help": {
+                "text": "Vulnerability CVE-2023-46136\nSeverity: High\nPackage: Werkzeug\nCVSS Score: 7.5\nCVSS Version: 3.1\nCVSS Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H\nVersion: 1.0.1\nFix Version: v2.1.1\nExploitable: false\nType: python\nLocation: /usr/local/lib/python2.7/dist-packages/Werkzeug-1.0.1.dist-info/METADATA\nURL: https://nvd.nist.gov/vuln/detail/CVE-2023-46136",
+                "markdown": "\n**Vulnerability [CVE-2023-46136](https://nvd.nist.gov/vuln/detail/CVE-2023-46136)**\n| Severity | Package | CVSS Score | CVSS Version | CVSS Vector | Fixed Version | Exploitable |\n| -------- | ------- | ---------- | ------------ | ----------- | ------------- | ----------- |\n| High | Werkzeug | 7.5 | 3.1 | CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H | v2.1.1 | false |"
               },
               "properties": {
                 "precision": "very-high",
@@ -197,6 +197,30 @@
               "properties": {
                 "precision": "very-high",
                 "security-severity": "5.9",
+                "tags": [
+                  "vulnerability",
+                  "security",
+                  "Medium"
+                ]
+              }
+            },
+            {
+              "id": "CVE-2021-41496",
+              "name": "python",
+              "shortDescription": {
+                "text": "CVE-2021-41496 Severity: Medium Package: numpy"
+              },
+              "fullDescription": {
+                "text": "CVE-2021-41496\nSeverity: Medium\nPackage: numpy\nType: python\nFix: v1.16.1\nURL: https://nvd.nist.gov/vuln/detail/CVE-2021-41496"
+              },
+              "helpUri": "https://nvd.nist.gov/vuln/detail/CVE-2021-41496",
+              "help": {
+                "text": "Vulnerability CVE-2021-41496\nSeverity: Medium\nPackage: numpy\nCVSS Score: 5.5\nCVSS Version: 3.1\nCVSS Vector: CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H\nVersion: 1.12.1\nFix Version: v1.16.1\nExploitable: false\nType: python\nLocation: /usr/lib/python2.7/dist-packages/numpy-1.12.1.egg-info/PKG-INFO\nURL: https://nvd.nist.gov/vuln/detail/CVE-2021-41496",
+                "markdown": "\n**Vulnerability [CVE-2021-41496](https://nvd.nist.gov/vuln/detail/CVE-2021-41496)**\n| Severity | Package | CVSS Score | CVSS Version | CVSS Vector | Fixed Version | Exploitable |\n| -------- | ------- | ---------- | ------------ | ----------- | ------------- | ----------- |\n| Medium | numpy | 5.5 | 3.1 | CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H | v1.16.1 | false |"
+              },
+              "properties": {
+                "precision": "very-high",
+                "security-severity": "5.5",
                 "tags": [
                   "vulnerability",
                   "security",
@@ -277,26 +301,26 @@
               }
             },
             {
-              "id": "CVE-2021-41496",
+              "id": "CVE-2019-20916",
               "name": "python",
               "shortDescription": {
-                "text": "CVE-2021-41496 Severity: Medium Package: numpy"
+                "text": "CVE-2019-20916 Severity: High Package: pip"
               },
               "fullDescription": {
-                "text": "CVE-2021-41496\nSeverity: Medium\nPackage: numpy\nType: python\nFix: v1.16.1\nURL: https://nvd.nist.gov/vuln/detail/CVE-2021-41496"
+                "text": "CVE-2019-20916\nSeverity: High\nPackage: pip\nType: python\nFix: v19.2.0\nURL: https://nvd.nist.gov/vuln/detail/CVE-2019-20916"
               },
-              "helpUri": "https://nvd.nist.gov/vuln/detail/CVE-2021-41496",
+              "helpUri": "https://nvd.nist.gov/vuln/detail/CVE-2019-20916",
               "help": {
-                "text": "Vulnerability CVE-2021-41496\nSeverity: Medium\nPackage: numpy\nCVSS Score: 5.5\nCVSS Version: 3.1\nCVSS Vector: CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H\nVersion: 1.12.1\nFix Version: v1.16.1\nExploitable: false\nType: python\nLocation: /usr/lib/python2.7/dist-packages/numpy-1.12.1.egg-info/PKG-INFO\nURL: https://nvd.nist.gov/vuln/detail/CVE-2021-41496",
-                "markdown": "\n**Vulnerability [CVE-2021-41496](https://nvd.nist.gov/vuln/detail/CVE-2021-41496)**\n| Severity | Package | CVSS Score | CVSS Version | CVSS Vector | Fixed Version | Exploitable |\n| -------- | ------- | ---------- | ------------ | ----------- | ------------- | ----------- |\n| Medium | numpy | 5.5 | 3.1 | CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H | v1.16.1 | false |"
+                "text": "Vulnerability CVE-2019-20916\nSeverity: High\nPackage: pip\nCVSS Score: 7.5\nCVSS Version: 3.1\nCVSS Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N\nVersion: 9.0.1\nFix Version: v19.2.0\nExploitable: false\nType: python\nLocation: /usr/lib/python2.7/dist-packages/pip-9.0.1.egg-info/PKG-INFO\nURL: https://nvd.nist.gov/vuln/detail/CVE-2019-20916",
+                "markdown": "\n**Vulnerability [CVE-2019-20916](https://nvd.nist.gov/vuln/detail/CVE-2019-20916)**\n| Severity | Package | CVSS Score | CVSS Version | CVSS Vector | Fixed Version | Exploitable |\n| -------- | ------- | ---------- | ------------ | ----------- | ------------- | ----------- |\n| High | pip | 7.5 | 3.1 | CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N | v19.2.0 | false |"
               },
               "properties": {
                 "precision": "very-high",
-                "security-severity": "5.5",
+                "security-severity": "7.5",
                 "tags": [
                   "vulnerability",
                   "security",
-                  "Medium"
+                  "High"
                 ]
               }
             },
@@ -325,30 +349,6 @@
               }
             },
             {
-              "id": "CVE-2018-20225",
-              "name": "python",
-              "shortDescription": {
-                "text": "CVE-2018-20225 Severity: High Package: pip"
-              },
-              "fullDescription": {
-                "text": "CVE-2018-20225\nSeverity: High\nPackage: pip\nType: python\nFix: v19.2.0\nURL: https://nvd.nist.gov/vuln/detail/CVE-2018-20225"
-              },
-              "helpUri": "https://nvd.nist.gov/vuln/detail/CVE-2018-20225",
-              "help": {
-                "text": "Vulnerability CVE-2018-20225\nSeverity: High\nPackage: pip\nCVSS Score: 7.8\nCVSS Version: 3.1\nCVSS Vector: CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H\nVersion: 9.0.1\nFix Version: v19.2.0\nExploitable: false\nType: python\nLocation: /usr/lib/python2.7/dist-packages/pip-9.0.1.egg-info/PKG-INFO\nURL: https://nvd.nist.gov/vuln/detail/CVE-2018-20225",
-                "markdown": "\n**Vulnerability [CVE-2018-20225](https://nvd.nist.gov/vuln/detail/CVE-2018-20225)**\n| Severity | Package | CVSS Score | CVSS Version | CVSS Vector | Fixed Version | Exploitable |\n| -------- | ------- | ---------- | ------------ | ----------- | ------------- | ----------- |\n| High | pip | 7.8 | 3.1 | CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H | v19.2.0 | false |"
-              },
-              "properties": {
-                "precision": "very-high",
-                "security-severity": "7.8",
-                "tags": [
-                  "vulnerability",
-                  "security",
-                  "High"
-                ]
-              }
-            },
-            {
               "id": "CVE-2023-5752",
               "name": "python",
               "shortDescription": {
@@ -373,22 +373,22 @@
               }
             },
             {
-              "id": "CVE-2019-20916",
+              "id": "CVE-2018-20225",
               "name": "python",
               "shortDescription": {
-                "text": "CVE-2019-20916 Severity: High Package: pip"
+                "text": "CVE-2018-20225 Severity: High Package: pip"
               },
               "fullDescription": {
-                "text": "CVE-2019-20916\nSeverity: High\nPackage: pip\nType: python\nFix: v19.2.0\nURL: https://nvd.nist.gov/vuln/detail/CVE-2019-20916"
+                "text": "CVE-2018-20225\nSeverity: High\nPackage: pip\nType: python\nFix: v19.2.0\nURL: https://nvd.nist.gov/vuln/detail/CVE-2018-20225"
               },
-              "helpUri": "https://nvd.nist.gov/vuln/detail/CVE-2019-20916",
+              "helpUri": "https://nvd.nist.gov/vuln/detail/CVE-2018-20225",
               "help": {
-                "text": "Vulnerability CVE-2019-20916\nSeverity: High\nPackage: pip\nCVSS Score: 7.5\nCVSS Version: 3.1\nCVSS Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N\nVersion: 9.0.1\nFix Version: v19.2.0\nExploitable: false\nType: python\nLocation: /usr/lib/python2.7/dist-packages/pip-9.0.1.egg-info/PKG-INFO\nURL: https://nvd.nist.gov/vuln/detail/CVE-2019-20916",
-                "markdown": "\n**Vulnerability [CVE-2019-20916](https://nvd.nist.gov/vuln/detail/CVE-2019-20916)**\n| Severity | Package | CVSS Score | CVSS Version | CVSS Vector | Fixed Version | Exploitable |\n| -------- | ------- | ---------- | ------------ | ----------- | ------------- | ----------- |\n| High | pip | 7.5 | 3.1 | CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N | v19.2.0 | false |"
+                "text": "Vulnerability CVE-2018-20225\nSeverity: High\nPackage: pip\nCVSS Score: 7.8\nCVSS Version: 3.1\nCVSS Vector: CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H\nVersion: 9.0.1\nFix Version: v19.2.0\nExploitable: false\nType: python\nLocation: /usr/lib/python2.7/dist-packages/pip-9.0.1.egg-info/PKG-INFO\nURL: https://nvd.nist.gov/vuln/detail/CVE-2018-20225",
+                "markdown": "\n**Vulnerability [CVE-2018-20225](https://nvd.nist.gov/vuln/detail/CVE-2018-20225)**\n| Severity | Package | CVSS Score | CVSS Version | CVSS Vector | Fixed Version | Exploitable |\n| -------- | ------- | ---------- | ------------ | ----------- | ------------- | ----------- |\n| High | pip | 7.8 | 3.1 | CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H | v19.2.0 | false |"
               },
               "properties": {
                 "precision": "very-high",
-                "security-severity": "7.5",
+                "security-severity": "7.8",
                 "tags": [
                   "vulnerability",
                   "security",
@@ -555,7 +555,7 @@
           "ruleId": "CVE-2023-30861",
           "level": "note",
           "message": {
-            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/overview)Package: [Flask](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/content?filter=freeText+in+(\"Flask\"))Package type: python\n  Installed Version: 1.1.2\n  Package path: /usr/local/lib/python2.7/dist-packages/Flask-1.1.2.dist-info/METADATAVulnerability: [CVE-2023-30861](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/vulnerabilities?filter=freeText+in+(\"CVE-2023-30861\"))Severity: High\n  CVSS Score: 7.5\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N\n  Fixed Version: v2.2.5\n  Exploitable: false\n  Link to NVD: [CVE-2023-30861](https://nvd.nist.gov/vuln/detail/CVE-2023-30861)"
+            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/overview)\nPackage: [Flask](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/content?filter=freeText+in+(\"Flask\"))\nPackage type: python\n  Installed Version: 1.1.2\n  Package path: /usr/local/lib/python2.7/dist-packages/Flask-1.1.2.dist-info/METADATA\nVulnerability: [CVE-2023-30861](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/vulnerabilities?filter=freeText+in+(\"CVE-2023-30861\"))\nSeverity: High\n  CVSS Score: 7.5\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N\n  Fixed Version: v2.2.5\n  Exploitable: false\n  Link to NVD: [CVE-2023-30861](https://nvd.nist.gov/vuln/detail/CVE-2023-30861)"
           },
           "locations": [
             {
@@ -575,7 +575,7 @@
           "ruleId": "CVE-2020-28493",
           "level": "note",
           "message": {
-            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/overview)Package: [Jinja2](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/content?filter=freeText+in+(\"Jinja2\"))Package type: python\n  Installed Version: 2.11.2\n  Package path: /usr/local/lib/python2.7/dist-packages/Jinja2-2.11.2.dist-info/METADATAVulnerability: [CVE-2020-28493](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/vulnerabilities?filter=freeText+in+(\"CVE-2020-28493\"))Severity: Medium\n  CVSS Score: 5.3\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L\n  Fixed Version: v2.11.3\n  Exploitable: false\n  Link to NVD: [CVE-2020-28493](https://nvd.nist.gov/vuln/detail/CVE-2020-28493)"
+            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/overview)\nPackage: [Jinja2](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/content?filter=freeText+in+(\"Jinja2\"))\nPackage type: python\n  Installed Version: 2.11.2\n  Package path: /usr/local/lib/python2.7/dist-packages/Jinja2-2.11.2.dist-info/METADATA\nVulnerability: [CVE-2020-28493](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/vulnerabilities?filter=freeText+in+(\"CVE-2020-28493\"))\nSeverity: Medium\n  CVSS Score: 5.3\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L\n  Fixed Version: v2.11.3\n  Exploitable: false\n  Link to NVD: [CVE-2020-28493](https://nvd.nist.gov/vuln/detail/CVE-2020-28493)"
           },
           "locations": [
             {
@@ -592,50 +592,10 @@
           ]
         },
         {
-          "ruleId": "CVE-2022-29361",
-          "level": "note",
-          "message": {
-            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/overview)Package: [Werkzeug](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/content?filter=freeText+in+(\"Werkzeug\"))Package type: python\n  Installed Version: 1.0.1\n  Package path: /usr/local/lib/python2.7/dist-packages/Werkzeug-1.0.1.dist-info/METADATAVulnerability: [CVE-2022-29361](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/vulnerabilities?filter=freeText+in+(\"CVE-2022-29361\"))Severity: Critical\n  CVSS Score: 9.8\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H\n  Fixed Version: v2.1.1\n  Exploitable: false\n  Link to NVD: [CVE-2022-29361](https://nvd.nist.gov/vuln/detail/CVE-2022-29361)"
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "sysdiglabs/dummy-vuln-app:latest",
-                  "uriBaseId": "ROOTPATH"
-                }
-              },
-              "message": {
-                "text": "sysdiglabs/dummy-vuln-app:latest - Werkzeug@1.0.1"
-              }
-            }
-          ]
-        },
-        {
-          "ruleId": "CVE-2023-46136",
-          "level": "note",
-          "message": {
-            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/overview)Package: [Werkzeug](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/content?filter=freeText+in+(\"Werkzeug\"))Package type: python\n  Installed Version: 1.0.1\n  Package path: /usr/local/lib/python2.7/dist-packages/Werkzeug-1.0.1.dist-info/METADATAVulnerability: [CVE-2023-46136](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/vulnerabilities?filter=freeText+in+(\"CVE-2023-46136\"))Severity: High\n  CVSS Score: 7.5\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H\n  Fixed Version: v2.3.8\n  Exploitable: false\n  Link to NVD: [CVE-2023-46136](https://nvd.nist.gov/vuln/detail/CVE-2023-46136)"
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "sysdiglabs/dummy-vuln-app:latest",
-                  "uriBaseId": "ROOTPATH"
-                }
-              },
-              "message": {
-                "text": "sysdiglabs/dummy-vuln-app:latest - Werkzeug@1.0.1"
-              }
-            }
-          ]
-        },
-        {
           "ruleId": "CVE-2023-23934",
           "level": "note",
           "message": {
-            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/overview)Package: [Werkzeug](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/content?filter=freeText+in+(\"Werkzeug\"))Package type: python\n  Installed Version: 1.0.1\n  Package path: /usr/local/lib/python2.7/dist-packages/Werkzeug-1.0.1.dist-info/METADATAVulnerability: [CVE-2023-23934](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/vulnerabilities?filter=freeText+in+(\"CVE-2023-23934\"))Severity: Low\n  CVSS Score: 3.5\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:A/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N\n  Fixed Version: v2.2.3\n  Exploitable: false\n  Link to NVD: [CVE-2023-23934](https://nvd.nist.gov/vuln/detail/CVE-2023-23934)"
+            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/overview)\nPackage: [Werkzeug](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/content?filter=freeText+in+(\"Werkzeug\"))\nPackage type: python\n  Installed Version: 1.0.1\n  Package path: /usr/local/lib/python2.7/dist-packages/Werkzeug-1.0.1.dist-info/METADATA\nVulnerability: [CVE-2023-23934](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/vulnerabilities?filter=freeText+in+(\"CVE-2023-23934\"))\nSeverity: Low\n  CVSS Score: 3.5\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:A/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N\n  Fixed Version: v2.2.3\n  Exploitable: false\n  Link to NVD: [CVE-2023-23934](https://nvd.nist.gov/vuln/detail/CVE-2023-23934)"
           },
           "locations": [
             {
@@ -655,7 +615,47 @@
           "ruleId": "CVE-2023-25577",
           "level": "note",
           "message": {
-            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/overview)Package: [Werkzeug](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/content?filter=freeText+in+(\"Werkzeug\"))Package type: python\n  Installed Version: 1.0.1\n  Package path: /usr/local/lib/python2.7/dist-packages/Werkzeug-1.0.1.dist-info/METADATAVulnerability: [CVE-2023-25577](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/vulnerabilities?filter=freeText+in+(\"CVE-2023-25577\"))Severity: High\n  CVSS Score: 7.5\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H\n  Fixed Version: v2.2.3\n  Exploitable: false\n  Link to NVD: [CVE-2023-25577](https://nvd.nist.gov/vuln/detail/CVE-2023-25577)"
+            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/overview)\nPackage: [Werkzeug](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/content?filter=freeText+in+(\"Werkzeug\"))\nPackage type: python\n  Installed Version: 1.0.1\n  Package path: /usr/local/lib/python2.7/dist-packages/Werkzeug-1.0.1.dist-info/METADATA\nVulnerability: [CVE-2023-25577](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/vulnerabilities?filter=freeText+in+(\"CVE-2023-25577\"))\nSeverity: High\n  CVSS Score: 7.5\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H\n  Fixed Version: v2.2.3\n  Exploitable: false\n  Link to NVD: [CVE-2023-25577](https://nvd.nist.gov/vuln/detail/CVE-2023-25577)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "sysdiglabs/dummy-vuln-app:latest",
+                  "uriBaseId": "ROOTPATH"
+                }
+              },
+              "message": {
+                "text": "sysdiglabs/dummy-vuln-app:latest - Werkzeug@1.0.1"
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CVE-2022-29361",
+          "level": "note",
+          "message": {
+            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/overview)\nPackage: [Werkzeug](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/content?filter=freeText+in+(\"Werkzeug\"))\nPackage type: python\n  Installed Version: 1.0.1\n  Package path: /usr/local/lib/python2.7/dist-packages/Werkzeug-1.0.1.dist-info/METADATA\nVulnerability: [CVE-2022-29361](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/vulnerabilities?filter=freeText+in+(\"CVE-2022-29361\"))\nSeverity: Critical\n  CVSS Score: 9.8\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H\n  Fixed Version: v2.1.1\n  Exploitable: false\n  Link to NVD: [CVE-2022-29361](https://nvd.nist.gov/vuln/detail/CVE-2022-29361)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "sysdiglabs/dummy-vuln-app:latest",
+                  "uriBaseId": "ROOTPATH"
+                }
+              },
+              "message": {
+                "text": "sysdiglabs/dummy-vuln-app:latest - Werkzeug@1.0.1"
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CVE-2023-46136",
+          "level": "note",
+          "message": {
+            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/overview)\nPackage: [Werkzeug](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/content?filter=freeText+in+(\"Werkzeug\"))\nPackage type: python\n  Installed Version: 1.0.1\n  Package path: /usr/local/lib/python2.7/dist-packages/Werkzeug-1.0.1.dist-info/METADATA\nVulnerability: [CVE-2023-46136](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/vulnerabilities?filter=freeText+in+(\"CVE-2023-46136\"))\nSeverity: High\n  CVSS Score: 7.5\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H\n  Fixed Version: v2.3.8\n  Exploitable: false\n  Link to NVD: [CVE-2023-46136](https://nvd.nist.gov/vuln/detail/CVE-2023-46136)"
           },
           "locations": [
             {
@@ -675,7 +675,7 @@
           "ruleId": "CVE-2023-0286",
           "level": "note",
           "message": {
-            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/overview)Package: [cryptography](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/content?filter=freeText+in+(\"cryptography\"))Package type: python\n  Installed Version: 1.7.1\n  Package path: /usr/lib/python2.7/dist-packages/cryptography-1.7.1.egg-info/PKG-INFOVulnerability: [CVE-2023-0286](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/vulnerabilities?filter=freeText+in+(\"CVE-2023-0286\"))Severity: High\n  CVSS Score: 7.4\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:H\n  Fixed Version: v39.0.1\n  Exploitable: false\n  Link to NVD: [CVE-2023-0286](https://nvd.nist.gov/vuln/detail/CVE-2023-0286)"
+            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/overview)\nPackage: [cryptography](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/content?filter=freeText+in+(\"cryptography\"))\nPackage type: python\n  Installed Version: 1.7.1\n  Package path: /usr/lib/python2.7/dist-packages/cryptography-1.7.1.egg-info/PKG-INFO\nVulnerability: [CVE-2023-0286](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/vulnerabilities?filter=freeText+in+(\"CVE-2023-0286\"))\nSeverity: High\n  CVSS Score: 7.4\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:H\n  Fixed Version: v39.0.1\n  Exploitable: false\n  Link to NVD: [CVE-2023-0286](https://nvd.nist.gov/vuln/detail/CVE-2023-0286)"
           },
           "locations": [
             {
@@ -695,7 +695,7 @@
           "ruleId": "CVE-2020-25659",
           "level": "note",
           "message": {
-            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/overview)Package: [cryptography](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/content?filter=freeText+in+(\"cryptography\"))Package type: python\n  Installed Version: 1.7.1\n  Package path: /usr/lib/python2.7/dist-packages/cryptography-1.7.1.egg-info/PKG-INFOVulnerability: [CVE-2020-25659](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/vulnerabilities?filter=freeText+in+(\"CVE-2020-25659\"))Severity: Medium\n  CVSS Score: 5.9\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N\n  Fixed Version: v3.2.1\n  Exploitable: false\n  Link to NVD: [CVE-2020-25659](https://nvd.nist.gov/vuln/detail/CVE-2020-25659)"
+            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/overview)\nPackage: [cryptography](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/content?filter=freeText+in+(\"cryptography\"))\nPackage type: python\n  Installed Version: 1.7.1\n  Package path: /usr/lib/python2.7/dist-packages/cryptography-1.7.1.egg-info/PKG-INFO\nVulnerability: [CVE-2020-25659](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/vulnerabilities?filter=freeText+in+(\"CVE-2020-25659\"))\nSeverity: Medium\n  CVSS Score: 5.9\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N\n  Fixed Version: v3.2.1\n  Exploitable: false\n  Link to NVD: [CVE-2020-25659](https://nvd.nist.gov/vuln/detail/CVE-2020-25659)"
           },
           "locations": [
             {
@@ -712,10 +712,30 @@
           ]
         },
         {
+          "ruleId": "CVE-2021-41496",
+          "level": "note",
+          "message": {
+            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/overview)\nPackage: [numpy](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/content?filter=freeText+in+(\"numpy\"))\nPackage type: python\n  Installed Version: 1.12.1\n  Package path: /usr/lib/python2.7/dist-packages/numpy-1.12.1.egg-info/PKG-INFO\nVulnerability: [CVE-2021-41496](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/vulnerabilities?filter=freeText+in+(\"CVE-2021-41496\"))\nSeverity: Medium\n  CVSS Score: 5.5\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H\n  Fixed Version: v1.19.0\n  Exploitable: false\n  Link to NVD: [CVE-2021-41496](https://nvd.nist.gov/vuln/detail/CVE-2021-41496)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "sysdiglabs/dummy-vuln-app:latest",
+                  "uriBaseId": "ROOTPATH"
+                }
+              },
+              "message": {
+                "text": "sysdiglabs/dummy-vuln-app:latest - numpy@1.12.1"
+              }
+            }
+          ]
+        },
+        {
           "ruleId": "CVE-2019-6446",
           "level": "note",
           "message": {
-            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/overview)Package: [numpy](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/content?filter=freeText+in+(\"numpy\"))Package type: python\n  Installed Version: 1.12.1\n  Package path: /usr/lib/python2.7/dist-packages/numpy-1.12.1.egg-info/PKG-INFOVulnerability: [CVE-2019-6446](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/vulnerabilities?filter=freeText+in+(\"CVE-2019-6446\"))Severity: Critical\n  CVSS Score: 9.8\n  CVSS Version: 3.0\n  CVSS Vector: CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H\n  Fixed Version: v1.16.1\n  Exploitable: false\n  Link to NVD: [CVE-2019-6446](https://nvd.nist.gov/vuln/detail/CVE-2019-6446)"
+            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/overview)\nPackage: [numpy](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/content?filter=freeText+in+(\"numpy\"))\nPackage type: python\n  Installed Version: 1.12.1\n  Package path: /usr/lib/python2.7/dist-packages/numpy-1.12.1.egg-info/PKG-INFO\nVulnerability: [CVE-2019-6446](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/vulnerabilities?filter=freeText+in+(\"CVE-2019-6446\"))\nSeverity: Critical\n  CVSS Score: 9.8\n  CVSS Version: 3.0\n  CVSS Vector: CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H\n  Fixed Version: v1.16.1\n  Exploitable: false\n  Link to NVD: [CVE-2019-6446](https://nvd.nist.gov/vuln/detail/CVE-2019-6446)"
           },
           "locations": [
             {
@@ -735,7 +755,7 @@
           "ruleId": "CVE-2017-12852",
           "level": "note",
           "message": {
-            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/overview)Package: [numpy](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/content?filter=freeText+in+(\"numpy\"))Package type: python\n  Installed Version: 1.12.1\n  Package path: /usr/lib/python2.7/dist-packages/numpy-1.12.1.egg-info/PKG-INFOVulnerability: [CVE-2017-12852](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/vulnerabilities?filter=freeText+in+(\"CVE-2017-12852\"))Severity: High\n  CVSS Score: 7.5\n  CVSS Version: 3.0\n  CVSS Vector: CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H\n  Fixed Version: v1.13.3\n  Exploitable: false\n  Link to NVD: [CVE-2017-12852](https://nvd.nist.gov/vuln/detail/CVE-2017-12852)"
+            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/overview)\nPackage: [numpy](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/content?filter=freeText+in+(\"numpy\"))\nPackage type: python\n  Installed Version: 1.12.1\n  Package path: /usr/lib/python2.7/dist-packages/numpy-1.12.1.egg-info/PKG-INFO\nVulnerability: [CVE-2017-12852](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/vulnerabilities?filter=freeText+in+(\"CVE-2017-12852\"))\nSeverity: High\n  CVSS Score: 7.5\n  CVSS Version: 3.0\n  CVSS Vector: CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H\n  Fixed Version: v1.13.3\n  Exploitable: false\n  Link to NVD: [CVE-2017-12852](https://nvd.nist.gov/vuln/detail/CVE-2017-12852)"
           },
           "locations": [
             {
@@ -755,7 +775,7 @@
           "ruleId": "CVE-2021-41495",
           "level": "note",
           "message": {
-            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/overview)Package: [numpy](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/content?filter=freeText+in+(\"numpy\"))Package type: python\n  Installed Version: 1.12.1\n  Package path: /usr/lib/python2.7/dist-packages/numpy-1.12.1.egg-info/PKG-INFOVulnerability: [CVE-2021-41495](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/vulnerabilities?filter=freeText+in+(\"CVE-2021-41495\"))Severity: Medium\n  CVSS Score: 5.3\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H\n  Fixed Version: v1.19.1\n  Exploitable: false\n  Link to NVD: [CVE-2021-41495](https://nvd.nist.gov/vuln/detail/CVE-2021-41495)"
+            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/overview)\nPackage: [numpy](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/content?filter=freeText+in+(\"numpy\"))\nPackage type: python\n  Installed Version: 1.12.1\n  Package path: /usr/lib/python2.7/dist-packages/numpy-1.12.1.egg-info/PKG-INFO\nVulnerability: [CVE-2021-41495](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/vulnerabilities?filter=freeText+in+(\"CVE-2021-41495\"))\nSeverity: Medium\n  CVSS Score: 5.3\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H\n  Fixed Version: v1.19.1\n  Exploitable: false\n  Link to NVD: [CVE-2021-41495](https://nvd.nist.gov/vuln/detail/CVE-2021-41495)"
           },
           "locations": [
             {
@@ -772,30 +792,10 @@
           ]
         },
         {
-          "ruleId": "CVE-2021-41496",
+          "ruleId": "CVE-2019-20916",
           "level": "note",
           "message": {
-            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/overview)Package: [numpy](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/content?filter=freeText+in+(\"numpy\"))Package type: python\n  Installed Version: 1.12.1\n  Package path: /usr/lib/python2.7/dist-packages/numpy-1.12.1.egg-info/PKG-INFOVulnerability: [CVE-2021-41496](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/vulnerabilities?filter=freeText+in+(\"CVE-2021-41496\"))Severity: Medium\n  CVSS Score: 5.5\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H\n  Fixed Version: v1.19.0\n  Exploitable: false\n  Link to NVD: [CVE-2021-41496](https://nvd.nist.gov/vuln/detail/CVE-2021-41496)"
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "sysdiglabs/dummy-vuln-app:latest",
-                  "uriBaseId": "ROOTPATH"
-                }
-              },
-              "message": {
-                "text": "sysdiglabs/dummy-vuln-app:latest - numpy@1.12.1"
-              }
-            }
-          ]
-        },
-        {
-          "ruleId": "CVE-2021-3572",
-          "level": "note",
-          "message": {
-            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/overview)Package: [pip](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/content?filter=freeText+in+(\"pip\"))Package type: python\n  Installed Version: 9.0.1\n  Package path: /usr/lib/python2.7/dist-packages/pip-9.0.1.egg-info/PKG-INFOVulnerability: [CVE-2021-3572](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/vulnerabilities?filter=freeText+in+(\"CVE-2021-3572\"))Severity: Medium\n  CVSS Score: 5.7\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:U/C:N/I:H/A:N\n  Fixed Version: v21.1.0\n  Exploitable: false\n  Link to NVD: [CVE-2021-3572](https://nvd.nist.gov/vuln/detail/CVE-2021-3572)"
+            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/overview)\nPackage: [pip](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/content?filter=freeText+in+(\"pip\"))\nPackage type: python\n  Installed Version: 9.0.1\n  Package path: /usr/lib/python2.7/dist-packages/pip-9.0.1.egg-info/PKG-INFO\nVulnerability: [CVE-2019-20916](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/vulnerabilities?filter=freeText+in+(\"CVE-2019-20916\"))\nSeverity: High\n  CVSS Score: 7.5\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N\n  Fixed Version: v19.2.0\n  Exploitable: false\n  Link to NVD: [CVE-2019-20916](https://nvd.nist.gov/vuln/detail/CVE-2019-20916)"
           },
           "locations": [
             {
@@ -812,10 +812,10 @@
           ]
         },
         {
-          "ruleId": "CVE-2018-20225",
+          "ruleId": "CVE-2021-3572",
           "level": "note",
           "message": {
-            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/overview)Package: [pip](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/content?filter=freeText+in+(\"pip\"))Package type: python\n  Installed Version: 9.0.1\n  Package path: /usr/lib/python2.7/dist-packages/pip-9.0.1.egg-info/PKG-INFOVulnerability: [CVE-2018-20225](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/vulnerabilities?filter=freeText+in+(\"CVE-2018-20225\"))Severity: High\n  CVSS Score: 7.8\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H\n  Fixed Version: Unknown\n  Exploitable: false\n  Link to NVD: [CVE-2018-20225](https://nvd.nist.gov/vuln/detail/CVE-2018-20225)"
+            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/overview)\nPackage: [pip](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/content?filter=freeText+in+(\"pip\"))\nPackage type: python\n  Installed Version: 9.0.1\n  Package path: /usr/lib/python2.7/dist-packages/pip-9.0.1.egg-info/PKG-INFO\nVulnerability: [CVE-2021-3572](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/vulnerabilities?filter=freeText+in+(\"CVE-2021-3572\"))\nSeverity: Medium\n  CVSS Score: 5.7\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:U/C:N/I:H/A:N\n  Fixed Version: v21.1.0\n  Exploitable: false\n  Link to NVD: [CVE-2021-3572](https://nvd.nist.gov/vuln/detail/CVE-2021-3572)"
           },
           "locations": [
             {
@@ -835,7 +835,7 @@
           "ruleId": "CVE-2023-5752",
           "level": "note",
           "message": {
-            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/overview)Package: [pip](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/content?filter=freeText+in+(\"pip\"))Package type: python\n  Installed Version: 9.0.1\n  Package path: /usr/lib/python2.7/dist-packages/pip-9.0.1.egg-info/PKG-INFOVulnerability: [CVE-2023-5752](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/vulnerabilities?filter=freeText+in+(\"CVE-2023-5752\"))Severity: Low\n  CVSS Score: 3.3\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:N\n  Fixed Version: v23.3.0\n  Exploitable: false\n  Link to NVD: [CVE-2023-5752](https://nvd.nist.gov/vuln/detail/CVE-2023-5752)"
+            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/overview)\nPackage: [pip](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/content?filter=freeText+in+(\"pip\"))\nPackage type: python\n  Installed Version: 9.0.1\n  Package path: /usr/lib/python2.7/dist-packages/pip-9.0.1.egg-info/PKG-INFO\nVulnerability: [CVE-2023-5752](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/vulnerabilities?filter=freeText+in+(\"CVE-2023-5752\"))\nSeverity: Low\n  CVSS Score: 3.3\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:N\n  Fixed Version: v23.3.0\n  Exploitable: false\n  Link to NVD: [CVE-2023-5752](https://nvd.nist.gov/vuln/detail/CVE-2023-5752)"
           },
           "locations": [
             {
@@ -852,10 +852,10 @@
           ]
         },
         {
-          "ruleId": "CVE-2019-20916",
+          "ruleId": "CVE-2018-20225",
           "level": "note",
           "message": {
-            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/overview)Package: [pip](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/content?filter=freeText+in+(\"pip\"))Package type: python\n  Installed Version: 9.0.1\n  Package path: /usr/lib/python2.7/dist-packages/pip-9.0.1.egg-info/PKG-INFOVulnerability: [CVE-2019-20916](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/vulnerabilities?filter=freeText+in+(\"CVE-2019-20916\"))Severity: High\n  CVSS Score: 7.5\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N\n  Fixed Version: v19.2.0\n  Exploitable: false\n  Link to NVD: [CVE-2019-20916](https://nvd.nist.gov/vuln/detail/CVE-2019-20916)"
+            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/overview)\nPackage: [pip](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/content?filter=freeText+in+(\"pip\"))\nPackage type: python\n  Installed Version: 9.0.1\n  Package path: /usr/lib/python2.7/dist-packages/pip-9.0.1.egg-info/PKG-INFO\nVulnerability: [CVE-2018-20225](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/vulnerabilities?filter=freeText+in+(\"CVE-2018-20225\"))\nSeverity: High\n  CVSS Score: 7.8\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H\n  Fixed Version: Unknown\n  Exploitable: false\n  Link to NVD: [CVE-2018-20225](https://nvd.nist.gov/vuln/detail/CVE-2018-20225)"
           },
           "locations": [
             {
@@ -875,7 +875,7 @@
           "ruleId": "CVE-2013-7459",
           "level": "note",
           "message": {
-            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/overview)Package: [pycrypto](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/content?filter=freeText+in+(\"pycrypto\"))Package type: python\n  Installed Version: 2.6.1\n  Package path: /usr/lib/python2.7/dist-packages/pycrypto-2.6.1.egg-infoVulnerability: [CVE-2013-7459](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/vulnerabilities?filter=freeText+in+(\"CVE-2013-7459\"))Severity: Critical\n  CVSS Score: 9.8\n  CVSS Version: 3.0\n  CVSS Vector: CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H\n  Fixed Version: Unknown\n  Exploitable: false\n  Link to NVD: [CVE-2013-7459](https://nvd.nist.gov/vuln/detail/CVE-2013-7459)"
+            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/overview)\nPackage: [pycrypto](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/content?filter=freeText+in+(\"pycrypto\"))\nPackage type: python\n  Installed Version: 2.6.1\n  Package path: /usr/lib/python2.7/dist-packages/pycrypto-2.6.1.egg-info\nVulnerability: [CVE-2013-7459](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/vulnerabilities?filter=freeText+in+(\"CVE-2013-7459\"))\nSeverity: Critical\n  CVSS Score: 9.8\n  CVSS Version: 3.0\n  CVSS Vector: CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H\n  Fixed Version: Unknown\n  Exploitable: false\n  Link to NVD: [CVE-2013-7459](https://nvd.nist.gov/vuln/detail/CVE-2013-7459)"
           },
           "locations": [
             {
@@ -895,7 +895,7 @@
           "ruleId": "CVE-2018-6594",
           "level": "note",
           "message": {
-            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/overview)Package: [pycrypto](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/content?filter=freeText+in+(\"pycrypto\"))Package type: python\n  Installed Version: 2.6.1\n  Package path: /usr/lib/python2.7/dist-packages/pycrypto-2.6.1.egg-infoVulnerability: [CVE-2018-6594](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/vulnerabilities?filter=freeText+in+(\"CVE-2018-6594\"))Severity: High\n  CVSS Score: 7.5\n  CVSS Version: 3.0\n  CVSS Vector: CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N\n  Fixed Version: Unknown\n  Exploitable: false\n  Link to NVD: [CVE-2018-6594](https://nvd.nist.gov/vuln/detail/CVE-2018-6594)"
+            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/overview)\nPackage: [pycrypto](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/content?filter=freeText+in+(\"pycrypto\"))\nPackage type: python\n  Installed Version: 2.6.1\n  Package path: /usr/lib/python2.7/dist-packages/pycrypto-2.6.1.egg-info\nVulnerability: [CVE-2018-6594](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/vulnerabilities?filter=freeText+in+(\"CVE-2018-6594\"))\nSeverity: High\n  CVSS Score: 7.5\n  CVSS Version: 3.0\n  CVSS Vector: CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N\n  Fixed Version: Unknown\n  Exploitable: false\n  Link to NVD: [CVE-2018-6594](https://nvd.nist.gov/vuln/detail/CVE-2018-6594)"
           },
           "locations": [
             {
@@ -915,7 +915,7 @@
           "ruleId": "CVE-2022-40897",
           "level": "note",
           "message": {
-            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/overview)Package: [setuptools](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/content?filter=freeText+in+(\"setuptools\"))Package type: python\n  Installed Version: 33.1.1\n  Package path: /usr/lib/python2.7/dist-packages/setuptools-33.1.1.egg-info/PKG-INFOVulnerability: [CVE-2022-40897](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/vulnerabilities?filter=freeText+in+(\"CVE-2022-40897\"))Severity: Medium\n  CVSS Score: 5.9\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H\n  Fixed Version: v65.5.1\n  Exploitable: false\n  Link to NVD: [CVE-2022-40897](https://nvd.nist.gov/vuln/detail/CVE-2022-40897)"
+            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/overview)\nPackage: [setuptools](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/content?filter=freeText+in+(\"setuptools\"))\nPackage type: python\n  Installed Version: 33.1.1\n  Package path: /usr/lib/python2.7/dist-packages/setuptools-33.1.1.egg-info/PKG-INFO\nVulnerability: [CVE-2022-40897](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/vulnerabilities?filter=freeText+in+(\"CVE-2022-40897\"))\nSeverity: Medium\n  CVSS Score: 5.9\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H\n  Fixed Version: v65.5.1\n  Exploitable: false\n  Link to NVD: [CVE-2022-40897](https://nvd.nist.gov/vuln/detail/CVE-2022-40897)"
           },
           "locations": [
             {
@@ -935,7 +935,7 @@
           "ruleId": "CVE-2022-40898",
           "level": "note",
           "message": {
-            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/overview)Package: [wheel](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/content?filter=freeText+in+(\"wheel\"))Package type: python\n  Installed Version: 0.29.0\n  Package path: /usr/lib/python2.7/dist-packages/wheel-0.29.0.egg-info/PKG-INFOVulnerability: [CVE-2022-40898](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/vulnerabilities?filter=freeText+in+(\"CVE-2022-40898\"))Severity: High\n  CVSS Score: 7.5\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H\n  Fixed Version: v0.38.1\n  Exploitable: false\n  Link to NVD: [CVE-2022-40898](https://nvd.nist.gov/vuln/detail/CVE-2022-40898)"
+            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/overview)\nPackage: [wheel](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/content?filter=freeText+in+(\"wheel\"))\nPackage type: python\n  Installed Version: 0.29.0\n  Package path: /usr/lib/python2.7/dist-packages/wheel-0.29.0.egg-info/PKG-INFO\nVulnerability: [CVE-2022-40898](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/vulnerabilities?filter=freeText+in+(\"CVE-2022-40898\"))\nSeverity: High\n  CVSS Score: 7.5\n  CVSS Version: 3.1\n  CVSS Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H\n  Fixed Version: v0.38.1\n  Exploitable: false\n  Link to NVD: [CVE-2022-40898](https://nvd.nist.gov/vuln/detail/CVE-2022-40898)"
           },
           "locations": [
             {
@@ -955,7 +955,7 @@
           "ruleId": "CVE-2014-1624",
           "level": "note",
           "message": {
-            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/overview)Package: [pyxdg](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/content?filter=freeText+in+(\"pyxdg\"))Package type: python\n  Installed Version: 0.25\n  Package path: /usr/share/pyshared/pyxdg-0.25.egg-infoVulnerability: [CVE-2014-1624](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/vulnerabilities?filter=freeText+in+(\"CVE-2014-1624\"))Severity: Low\n  CVSS Score: 3.3\n  CVSS Version: 2.0\n  CVSS Vector: AV:L/AC:M/Au:N/C:N/I:P/A:P\n  Fixed Version: v0.26.0\n  Exploitable: false\n  Link to NVD: [CVE-2014-1624](https://nvd.nist.gov/vuln/detail/CVE-2014-1624)"
+            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/overview)\nPackage: [pyxdg](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/content?filter=freeText+in+(\"pyxdg\"))\nPackage type: python\n  Installed Version: 0.25\n  Package path: /usr/share/pyshared/pyxdg-0.25.egg-info\nVulnerability: [CVE-2014-1624](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/vulnerabilities?filter=freeText+in+(\"CVE-2014-1624\"))\nSeverity: Low\n  CVSS Score: 3.3\n  CVSS Version: 2.0\n  CVSS Vector: AV:L/AC:M/Au:N/C:N/I:P/A:P\n  Fixed Version: v0.26.0\n  Exploitable: false\n  Link to NVD: [CVE-2014-1624](https://nvd.nist.gov/vuln/detail/CVE-2014-1624)"
           },
           "locations": [
             {
@@ -975,7 +975,7 @@
           "ruleId": "CVE-2019-12761",
           "level": "note",
           "message": {
-            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/overview)Package: [pyxdg](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/content?filter=freeText+in+(\"pyxdg\"))Package type: python\n  Installed Version: 0.25\n  Package path: /usr/share/pyshared/pyxdg-0.25.egg-infoVulnerability: [CVE-2019-12761](https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/vulnerabilities?filter=freeText+in+(\"CVE-2019-12761\"))Severity: High\n  CVSS Score: 7.5\n  CVSS Version: 3.0\n  CVSS Vector: CVSS:3.0/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H\n  Fixed Version: v0.26.0\n  Exploitable: false\n  Link to NVD: [CVE-2019-12761](https://nvd.nist.gov/vuln/detail/CVE-2019-12761)"
+            "text": "Full image scan results in Sysdig UI: [sysdiglabs/dummy-vuln-app:latest scan result](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/overview)\nPackage: [pyxdg](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/content?filter=freeText+in+(\"pyxdg\"))\nPackage type: python\n  Installed Version: 0.25\n  Package path: /usr/share/pyshared/pyxdg-0.25.egg-info\nVulnerability: [CVE-2019-12761](https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/vulnerabilities?filter=freeText+in+(\"CVE-2019-12761\"))\nSeverity: High\n  CVSS Score: 7.5\n  CVSS Version: 3.0\n  CVSS Vector: CVSS:3.0/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H\n  Fixed Version: v0.26.0\n  Exploitable: false\n  Link to NVD: [CVE-2019-12761](https://nvd.nist.gov/vuln/detail/CVE-2019-12761)"
           },
           "locations": [
             {
@@ -1002,8 +1002,8 @@
         "os": "linux",
         "size": 551840768,
         "layersCount": 4,
-        "resultUrl": "https://secure.sysdig.com/#/vulnerabilities/results/17ad9dc8d622ad7c3626ba87c6d95f80/overview",
-        "resultId": "17ad9dc8d622ad7c3626ba87c6d95f80"
+        "resultUrl": "https://secure.sysdig.com/#/vulnerabilities/results/17adf232f8589756931065afd58c0e70/overview",
+        "resultId": "17adf232f8589756931065afd58c0e70"
       }
     }
   ]

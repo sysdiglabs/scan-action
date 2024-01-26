@@ -499,15 +499,15 @@ URL: https://nvd.nist.gov/vuln/detail/${vuln.name}`,
 }
 
 function getSARIFReportMessage(data, vuln, pkg, baseUrl) {
-  let message = `Full image scan results in Sysdig UI: [${data.result.metadata.pullString} scan result](${data.info.resultUrl})`;
+  let message = `Full image scan results in Sysdig UI: [${data.result.metadata.pullString} scan result](${data.info.resultUrl})\n`;
 
-  if (baseUrl) message += `Package: [${pkg.name}](${baseUrl}/content?filter=freeText+in+("${pkg.name}"))`;
+  if (baseUrl) message += `Package: [${pkg.name}](${baseUrl}/content?filter=freeText+in+("${pkg.name}"))\n`;
   
   message += `Package type: ${pkg.type}
   Installed Version: ${pkg.version}
-  Package path: ${pkg.path}`;
+  Package path: ${pkg.path}\n`;
 
-  if (baseUrl) message += `Vulnerability: [${vuln.name}](${baseUrl}/vulnerabilities?filter=freeText+in+("${vuln.name}"))`;
+  if (baseUrl) message += `Vulnerability: [${vuln.name}](${baseUrl}/vulnerabilities?filter=freeText+in+("${vuln.name}"))\n`;
   
   message += `Severity: ${vuln.severity.value}
   CVSS Score: ${vuln.cvssScore.value.score}
