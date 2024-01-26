@@ -1,16 +1,55 @@
 name: 'Sysdig Secure Inline Scan'
 description: 'Perform image analysis on locally built container image and post the result of the analysis to Sysdig Secure.'
 inputs:
+  cli-scanner-url:
+    description: URL to sysdig-cli-scanner binary download
+    default: https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/1.8.1/linux/amd64/sysdig-cli-scanner
+    required: false
+  cli-scanner-version:
+    description: Custom sysdig-cli-scanner version to download
+    default: "1.8.1"
+    required: false
+  registry-user:
+    description: Registry username.
+    required: false
+  registry-password:
+    description: Registry password.
+    required: false
+  stop-on-failed-policy-eval:
+    description: Fail the job if the Policy Evaluation is Failed.
+    default: "false"
+    required: false
+  stop-on-processing-error:
+    description: Fail the job if the Scanner terminates execution with errors.
+    default: "false"
+    required: false
+  standalone:
+    description: Enable standalone mode. Do not depend on Sysdig backend for execution, avoiding the need of specifying 'sysdig-secure-token' and 'sysdig-secure-url'.
+    default: "false"
+    required: false
+  db-path:
+    description: Specify directory for database to use while scanning.
+    required: false
+  skip-upload:
+    description: Skip uploading results to Sysdig Secure.
+    default: "false"
+    required: false
+  skip-summary:
+    description: Skip generating Summary.
+    default: "false"
+    required: false 
+  use-policies:
+    description: Specify Sysdig Secure VM Policies to evaluate the image.
+    required: false
+  override-pullstring:
+    description: Custom PullString to give the image when scanning and uploading. 
+    required: false
   image-tag:
     description: Tag of the image to analyse.
     required: true
   sysdig-secure-token:
-    description: API token for Sysdig Scanning auth.
-    required: true
-  github-token:
-    description: Github App token to publish the checks. By default it will use "github.token value". See https://docs.github.com/en/free-pro-team@latest/actions/reference/authentication-in-a-workflow#about-the-github_token-secret
-    default: ${{ github.token }}
-    required: true
+    description: API token for Sysdig Scanning auth. (Required if not in Standalone mode.)
+    required: false
   sysdig-secure-url:
     description: 'Sysdig Secure URL (ex: "https://secure-sysdig.com").'
     required: false
@@ -18,48 +57,8 @@ inputs:
   sysdig-skip-tls:
     description: Skip TLS verification when calling secure endpoints.
     required: false
-  dockerfile-path:
-    description: 'Path to Dockerfile (ex: "./Dockerfile").'
-    required: false
-  ignore-failed-scan:
-    description: Don't fail the execution of this action even if the scan result is FAILED.
-    required: false
-  unique-report-by-package:
-    description: Report only once an issue with a specific package and its version. Default to false
-    required: false
-  input-type:
-    description: |
-      If specified, where should we scan the image from. Possible values:
-        pull            Pull the image from the registry.
-                        Default if not specified.
-        docker-daemon   Get the image from the Docker daemon.
-                        The docker socket must be available at /var/run/docker.sock
-        cri-o           Get the image from containers-storage (CRI-O and others).
-                        Images must be stored in /var/lib/containers
-        docker-archive  Image is provided as a Docker .tar file (from docker save).
-                        Specify path to the tar file with 'input-path'
-        oci-archive     Image is provided as a OCI image tar file.
-                        Specify path to the tar file with 'input-path'
-        oci-dir         Image is provided as a OCI image, untared.
-                        Specify path to the directory file with 'input-path'
-    default: pull
-    required: true
-  input-path:
-    description: Path to the tar file or OCI layout directory.
-    required: false  
-  run-as-user:
-    description: |
-      Run the scan container with this username or UID.
-      It might required if scanning from docker-daemon or cri-o to provide a user with permissions on the socket or storage.
-    required: false
   extra-parameters:
     description: Additional parameters added to the secure-inline-scan container execution.
-    required: false
-  extra-docker-parameters:
-    description: Additional parameters added to the docker command when executing the secure-inline-scan container execution.
-    required: false
-  severity:
-    description: Filter output annotations by severity. Default is "unknown".
     required: false
 outputs:
   scanReport:
@@ -72,5 +71,5 @@ branding:
   icon: 'shield'
   color: 'orange'
 runs:
-  using: 'node16'
+  using: 'node20'
   main: 'dist/index.js'

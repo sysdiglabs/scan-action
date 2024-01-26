@@ -1,14 +1,55 @@
 const core = require('@actions/core');
 const exec = require('@actions/exec');
-const fs = require('fs')
-const github = require('@actions/github')
-const path = require('path');
+const fs = require('fs');
 const performance = require('perf_hooks').performance;
 const process = require('process');
+const { version } = require('./package.json');
+const os = require('os');
 
-const toolVersion = "3.0.0";
-const dottedQuadToolVersion = "3.0.0.0";
-const secureInlineScanImage = "quay.io/sysdig/secure-inline-scan:2";
+const toolVersion = `${version}`;
+const dottedQuadToolVersion = `${version}.0`;
+
+function getRunArch() {
+  let arch = "unknown";
+  if (os.arch() == "x64") {
+    arch = "amd64";
+  } else if (os.arch() == "arm64") {
+    arch = "arm64";
+  }
+  return arch;
+}
+
+function getRunOS() {
+  let os_name = "unknown";
+  if (os.platform() == "linux") {
+    os_name = "linux";
+  } else if (os.platform() == "darwin") {
+    os_name = "darwin";
+  }
+  return os_name;
+}
+
+const cliScannerVersion = "1.8.1"
+const cliScannerName = "sysdig-cli-scanner"
+const cliScannerOS = getRunOS()
+const cliScannerArch = getRunArch()
+const cliScannerURLBase = "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner";
+const cliScannerURL = `${cliScannerURLBase}/${cliScannerVersion}/${cliScannerOS}/${cliScannerArch}/${cliScannerName}`
+const cliScannerResult = "scan-result.json"
+
+const defaultSecureEndpoint = "https://secure.sysdig.com/"
+
+// Sysdig to SARIF severity convertion
+const LEVELS = {
+  "error": ["High","Critical"],
+  "warning": ["Medium"],
+  "note": ["Negligible","Low"]
+}
+
+const EVALUATION = {
+  "failed": "❌",
+  "passed": "✅" 
+}
 
 class ExecutionError extends Error {
   constructor(stdout, stderr) {
@@ -18,109 +59,124 @@ class ExecutionError extends Error {
   }
 }
 
+
+
 function parseActionInputs() {
   return {
+    cliScannerURL: core.getInput('cli-scanner-url') || cliScannerURL,
+    cliScannerVersion: core.getInput('cli-scanner-version'),
+    registryUser: core.getInput('registry-user'),
+    registryPassword: core.getInput('registry-password'),
+    stopOnFailedPolicyEval: core.getInput('stop-on-failed-policy-eval') == 'true',
+    stopOnProcessingError: core.getInput('stop-on-processing-error') == 'true',
+    standalone: core.getInput('standalone') == 'true',
+    dbPath: core.getInput('db-path'),
+    skipUpload: core.getInput('skip-upload') == 'true',
+    skipSummary: core.getInput('skip-summary') == 'true',
+    usePolicies: core.getInput('use-policies'),
+    overridePullString: core.getInput('override-pullstring'),
     imageTag: core.getInput('image-tag', { required: true }),
-    sysdigSecureToken: core.getInput('sysdig-secure-token', { required: true }),
-    sysdigSecureURL: core.getInput('sysdig-secure-url'),
+    sysdigSecureToken: core.getInput('sysdig-secure-token'),
+    sysdigSecureURL: core.getInput('sysdig-secure-url') || defaultSecureEndpoint,
     sysdigSkipTLS: core.getInput('sysdig-skip-tls') == 'true',
-    dockerfilePath: core.getInput('dockerfile-path'),
-    ignoreFailedScan: core.getInput('ignore-failed-scan') == 'true',
-    inputType: core.getInput('input-type'),
-    inputPath: core.getInput('input-path'),
-    runAsUser: core.getInput('run-as-user'),
     extraParameters: core.getInput('extra-parameters'),
-
-    extraDockerParameters: core.getInput('extra-docker-parameters'),
-    inlineScanImage: core.getInput('inline-scan-image'),
   }
 }
 
 
 function printOptions(opts) {
+  if (opts.standalone) {
+    core.info(`[!] Running in Standalone Mode.`);
+  }
+
   if (opts.sysdigSecureURL) {
     core.info('Sysdig Secure URL: ' + opts.sysdigSecureURL);
   }
 
-  if (opts.inputType == "pull") {
-    core.info('Input type: pull from registry');
-  } else {
-    core.info(`Input type: ${opts.inputType}`);
+  if (opts.registryUser && opts.registryPassword) {
+    core.info(`Using specified Registry credentials.`);
   }
 
-  if (opts.inputPath) {
-    core.info(`Input path: ${opts.inputPath}`);
+  core.info(`Stop on Failed Policy Evaluation: ${opts.stopOnFailedPolicyEval}`);
+
+  core.info(`Stop on Processing Error: ${opts.stopOnProcessingError}`);
+
+  if (opts.skipUpload) {
+    core.info(`Skipping scan results upload to Sysdig Secure...`);
   }
 
-  if (opts.dockerfilePath) {
-    core.info(`Dockerfile Path: ${opts.dockerfilePath}`);
+  if (opts.dbPath) {
+    core.info(`DB Path: ${opts.dbPath}`);
   }
 
-  if (opts.runAsUser) {
-    core.info(`Running as user: ${opts.runAsUser}`);
-  }
-
-  if (opts.sysdigSkipTLS) {
-    core.info(`Sysdig skip TLS: true`);
-  }
+  core.info(`Sysdig skip TLS: ${opts.sysdigSkipTLS}`);
 
   if (opts.severity) {
     core.info(`Severity level: ${opts.severity}`);
   }
 
   core.info('Analyzing image: ' + opts.imageTag);
+
+  if (opts.overridePullString) {
+    core.info(` * Image PullString will be overwritten as ${opts.overridePullString}`);
+  }
+
+  if (opts.skipSummary) {
+    core.info("This run will NOT generate a SUMMARY.");
+  }
 }
 
 function composeFlags(opts) {
-  let dockerFlags = `--rm -e SYSDIG_API_TOKEN=${opts.sysdigSecureToken || ""}`;
-  let runFlags = `--format=JSON`;
+  let envvars = {}
+  envvars['SECURE_API_TOKEN'] = opts.sysdigSecureToken || "";
+
+  let flags = ` --json-scan-result=${cliScannerResult}`;
+
+  if (opts.registryUser) {
+    envvars['REGISTRY_USER'] = opts.registryUser;
+  }
+
+  if (opts.registryPassword) {
+    envvars['REGISTRY_PASSWORD'] = opts.registryPassword;
+  }
+
+  if (opts.standalone) {
+    flags += " --standalone";
+  }
 
   if (opts.sysdigSecureURL) {
-    runFlags += ` --sysdig-url ${opts.sysdigSecureURL}`;
+    flags += ` --apiurl ${opts.sysdigSecureURL}`;
   }
 
-  if (opts.inputType != "pull") {
-    runFlags += ` --storage-type=${opts.inputType}`;
-
-    if (opts.inputType == "docker-daemon") {
-      let dockerSocketPath = opts.inputPath || "/var/run/docker.sock";
-      dockerFlags += ` -v ${dockerSocketPath}:/var/run/docker.sock`;
-    } else if (opts.inputPath) {
-      let filename = path.basename(opts.inputPath);
-      dockerFlags += ` -v ${path.resolve(opts.inputPath)}:/tmp/${filename}`;
-      runFlags += ` --storage-path=/tmp/${filename}`;
-    }
+  if (opts.dbPath) {
+    flags += ` --dbpath=${opts.dbPath}`;
   }
 
-  if (opts.dockerfilePath) {
-    dockerFlags += ` -v ${path.resolve(opts.dockerfilePath)}:/tmp/Dockerfile`;
-    runFlags += ` --dockerfile=/tmp/Dockerfile`;
+  if (opts.skipUpload) {
+    flags += ' --skipupload';
   }
 
-  if (opts.runAsUser) {
-    dockerFlags += ` -u ${opts.runAsUser}`;
-  } else {
-    dockerFlags += ` -u ${process.getuid()}`
+  if (opts.usePolicies) {
+    flags += ` --policy=${opts.usePolicies}`;
   }
 
   if (opts.sysdigSkipTLS) {
-    runFlags += ` --sysdig-skip-tls`;
+    flags += ` --skiptlsverify`;
+  }
+
+  if (opts.overridePullString) {
+    flags += ` --override-pullstring=${opts.overridePullString}`;
   }
 
   if (opts.extraParameters) {
-    runFlags += ` ${opts.extraParameters}`;
+    flags += ` ${opts.extraParameters}`;
   }
 
-
-  if (opts.extraDockerParameters) {
-    dockerFlags += ` ${opts.extraDockerParameters}`;
-  }
-
-  runFlags += ` ${opts.imageTag || ""}`;
+  flags += ` ${opts.imageTag || ""}`;
 
   return {
-    dockerFlags: dockerFlags,
-    runFlags: runFlags
+    envvars: envvars,
+    flags: flags
   }
 }
 
@@ -132,40 +188,52 @@ function writeReport(reportData) {
 async function run() {
 
   try {
-
     let opts = parseActionInputs();
     printOptions(opts);
-    let flags = composeFlags(opts);
+    let scanFlags = composeFlags(opts);
 
-    let inlineScanImage = secureInlineScanImage;
-    if (opts.inlineScanImage) {
-      inlineScanImage = opts.inlineScanImage;
+    // If custom scanner version is specified
+    if (opts.cliScannerVersion) {
+      opts.cliScannerURL = `${cliScannerURLBase}/${opts.cliScannerVersion}/${cliScannerOS}/${cliScannerArch}/${cliScannerName}`
     }
-    await pullScanImage(inlineScanImage);
-    let scanResult = await executeInlineScan(inlineScanImage, flags.dockerFlags, flags.runFlags);
-    let success = await processScanResult(scanResult);
-    if (!(success || opts.ignoreFailedScan)) {
-      core.setFailed(`Scan was FAILED.`)
+
+    let scanResult;
+    // Download CLI Scanner from 'cliScannerURL'
+    let retCode = await pullScanner(opts.cliScannerURL);
+    if (retCode == 0) {
+      // Execute Scanner
+      scanResult = await executeScan(scanFlags.envvars, scanFlags.flags);
+
+      retCode = scanResult.ReturnCode;
+      if (retCode == 0 || retCode == 1) {
+        // Transform Scan Results to other formats such as SARIF
+        await processScanResult(scanResult, opts);
+      } else {
+        core.error("Terminating scan. Scanner couldn't be executed.")
+      }
+    } else {
+      core.error("Terminating scan. Scanner couldn't be pulled.")
     }
+
+    if (opts.stopOnFailedPolicyEval && retCode == 1) {
+      core.setFailed(`Stopping because Policy Evaluation was FAILED.`);
+    } else if (opts.standalone && retCode == 0) {
+      core.info("Policy Evaluation was OMITTED.");
+    } else if (retCode == 0) {
+      core.info("Policy Evaluation was PASSED.");
+    } else if (opts.stopOnProcessingError && retCode > 1) {
+      core.setFailed(`Stopping because the scanner terminated with an error.`);
+    } // else: Don't stop regardless the outcome.
 
   } catch (error) {
-    core.setFailed("Unexpected error");
+    if (core.getInput('stop-on-processing-error') == 'true') {
+      core.setFailed("Unexpected error");
+    }
     core.error(error);
   }
 }
 
-async function processScanResult(result) {
-  let scanResult;
-  if (result.ReturnCode == 0) {
-    scanResult = "Success";
-    core.info(`Scan was SUCCESS.`);
-  } else if (result.ReturnCode == 1) {
-    scanResult = "Failed";
-    core.info(`Scan was FAILED.`);
-  } else {
-    core.setFailed("Execution error");
-    throw new ExecutionError(result.Output, result.Error);
-  }
+async function processScanResult(result, opts) {
 
   writeReport(result.Output);
 
@@ -178,45 +246,42 @@ async function processScanResult(result) {
   }
 
   if (report) {
+    generateSARIFReport(report);
 
-    let vulnerabilities = [];
-    if (report.vulnsReport) {
-      vulnerabilities = report.vulnsReport.vulnerabilities;
+    if (!opts.skipSummary) {
+      core.info("Generating Summary...")
+      await generateSummary(opts, report);
+    } else {
+      core.info("Skipping Summary...")
     }
-
-    let evaluationResults;
-    if (report.scanReport) {
-      try {
-        let digest = Object.keys(report.scanReport[0])[0];
-        let tag = Object.keys(report.scanReport[0][digest])[0];
-        let imageId = report.scanReport[0][digest][tag][0].detail.result.image_id;
-        evaluationResults = report.scanReport[0][digest][tag][0].detail.result.result[imageId].result;
-      } catch (error) {
-        core.error("Error parsing results report: " + error);
-      }
-    }
-
-    generateSARIFReport(report.tag, vulnerabilities);
-    await generateChecks(report.tag, scanResult, evaluationResults, vulnerabilities);
   }
-
-  return result.ReturnCode == 0;
 }
 
-async function pullScanImage(scanImage) {
+async function pullScanner(scannerURL) {
   let start = performance.now();
-  core.info('Pulling inline-scanner image: ' + scanImage);
-  let cmd = `docker pull ${scanImage}`;
-  await exec.exec(cmd, null);
-  core.info("Image pull took " + Math.round(performance.now() - start) + " milliseconds.");
+  core.info('Pulling cli-scanner from: ' + scannerURL);
+  let cmd = `wget ${scannerURL} -O ./${cliScannerName}`;
+  let retCode = await exec.exec(cmd, null, {silent: true});
+
+  if (retCode == 0) {
+    cmd = `chmod u+x ./${cliScannerName}`;
+    await exec.exec(cmd, null, {silent: true});
+  } else {
+    core.error(`Falied to pull scanner using "${scannerURL}"`)
+  }
+  
+  core.info("Scanner pull took " + Math.round(performance.now() - start) + " milliseconds.");
+  return retCode;
 }
 
-async function executeInlineScan(scanImage, dockerFlags, runFlags) {
+async function executeScan(envvars, flags) {
 
   let execOutput = '';
   let errOutput = '';
 
-  const tailOptions = {
+
+  const scanOptions = {
+    env: envvars,
     silent: true,
     ignoreReturnCode: true,
     listeners: {
@@ -227,10 +292,9 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
         process.stderr.write(data);
       }
     }
+  };
 
-  }
-
-  const scanOptions = {
+  const catOptions = {
     silent: true,
     ignoreReturnCode: true,
     listeners: {
@@ -241,299 +305,333 @@ async function executeInlineScan(scanImage, dockerFlags, runFlags) {
         errOutput += data.toString();
       }
     }
-  };
-
-
-  let retCode = await exec.exec(`docker run -d --entrypoint /bin/cat -ti ${dockerFlags} ${scanImage}`, null, scanOptions);
-  if (retCode != 0) {
-    return { ReturnCode: -1, Output: execOutput, Error: errOutput };
   }
 
-  let containerId = execOutput.trim();
-  await exec.exec(`docker exec ${containerId} mkdir -p /tmp/sysdig-inline-scan/logs/`, null, {silent: true, ignoreReturnCode: true});
-  await exec.exec(`docker exec ${containerId} touch /tmp/sysdig-inline-scan/logs/info.log`, null, {silent: true, ignoreReturnCode: true});
-  let tailExec = exec.exec(`docker exec ${containerId} tail -f /tmp/sysdig-inline-scan/logs/info.log`, null, tailOptions);
-
-  execOutput = '';
   let start = performance.now();
-  let cmd = `docker exec ${containerId} /sysdig-inline-scan.sh ${runFlags}`;
+  let cmd = `./${cliScannerName} ${flags}`;
   core.debug("Executing: " + cmd);
-  retCode = await exec.exec(cmd, null, scanOptions);
+  let retCode = await exec.exec(cmd, null, scanOptions);
   core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
 
-  await function () {
-    return new Promise((resolve) => {
-      setTimeout(resolve, 1000);
-    });
-  }();
-
-  try {
-    await exec.exec(`docker stop ${containerId} -t 0`, null, {silent: true, ignoreReturnCode: true});
-    await exec.exec(`docker rm ${containerId}`, null, {silent: true, ignoreReturnCode: true});
-    await tailExec;
-  } catch (error) {
-    core.info("Error stopping container: " + error);
+  if (retCode == 0 || retCode == 1) {
+    cmd = `cat ./${cliScannerResult}`;
+    await exec.exec(cmd, null, catOptions);
   }
-
   return { ReturnCode: retCode, Output: execOutput, Error: errOutput };
 }
 
-function vulnerabilities2SARIF(tag, vulnerabilities) {
+function vulnerabilities2SARIF(data) {
+  const [rules, results] = vulnerabilities2SARIFRes(data)
+
+  if (!rules.length || !results.length) {
+    return {};
+  }
+
+  const runs = [{
+    tool: {
+      driver: {
+        name: "sysdig-cli-scanner",
+        fullName: "Sysdig Vulnerability CLI Scanner",
+        informationUri: "https://docs.sysdig.com/en/docs/installation/sysdig-secure/install-vulnerability-cli-scanner",
+        version: toolVersion,
+        semanticVersion: toolVersion,
+        dottedQuadFileVersion: dottedQuadToolVersion,
+        rules: rules //vulnerabilities2SARIFRules(data)
+      }
+    },
+    logicalLocations: [
+      {
+        name: "container-image",
+        fullyQualifiedName: "container-image",
+        kind: "namespace"
+      }
+    ],
+    results: results, //vulnerabilities2SARIFResults(data),
+    columnKind: "utf16CodeUnits",
+    properties: {
+      pullString: data.result.metadata.pullString,
+      digest: data.result.metadata.digest,
+      imageId: data.result.metadata.imageId,
+      architecture: data.result.metadata.architecture,
+      baseOs: data.result.metadata.baseOs,
+      os: data.result.metadata.os,
+      size: data.result.metadata.size,
+      layersCount: data.result.metadata.layersCount,
+      resultUrl: data.info.resultUrl || "",
+      resultId: data.info.resultId || "",
+  }
+  }];
+
 
   const sarifOutput = {
     "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
     version: "2.1.0",
-    runs: [{
-      tool: {
-        driver: {
-          name: "Sysdig Inline Scanner V2",
-          fullName: "Sysdig Inline Scanner V2",
-          version: toolVersion,
-          semanticVersion: toolVersion,
-          dottedQuadFileVersion: dottedQuadToolVersion,
-          rules: vulnerabilities2SARIFRules(vulnerabilities)
-        }
-      },
-      logicalLocations: [
-        {
-          name: "container-image",
-          fullyQualifiedName: "container-image",
-          kind: "namespace"
-        }
-      ],
-      results: vulnerabilities2SARIFResults(tag, vulnerabilities),
-      columnKind: "utf16CodeUnits"
-    }]
+    runs: runs
   };
 
   return (sarifOutput);
 }
 
-function vulnerabilities2SARIFRules(vulnerabilities) {
-  var ret = {};
-  if (vulnerabilities) {
-    ret = vulnerabilities.map(v => {
-      return {
-        id: getRuleId(v),
-        shortDescription: {
-          text: getSARIFVulnShortDescription(v),
-        },
-        fullDescription: {
-          text: getSARIFVulnFullDescription(v),
-        },
-        help: getSARIFVulnHelp(v)
-      }
+function check_level(sev_value) {
+  let level = "note";
+
+  for (let key in LEVELS) {
+    if (sev_value in LEVELS[key]) {
+      level = key
     }
-    );
   }
-  return (ret);
+
+  return level
 }
 
-function vulnerabilities2SARIFResults(tag, vulnerabilities) {
-  var ret = {};
-
-  if (vulnerabilities) {
-    ret = vulnerabilities.map((v) => {
-      return {
-        ruleId: getRuleId(v),
-        ruleIndex: 0,
-        level: "error",
-        message: {
-          text: getSARIFVulnShortDescription(v),
-          id: "default",
-        },
-        analysisTarget: {
-          uri: `Container image ${tag}`,
-          index: 0,
-        },
-        locations: [
-          {
-            physicalLocation: {
-              artifactLocation: {
-                uri: `Container image ${tag}`,
-              },
-              region: {
-                startLine: 1,
-                startColumn: 1,
-                endLine: 1,
-                endColumn: 1,
-                byteOffset: 1,
-                byteLength: 1,
-              },
+function vulnerabilities2SARIFRes(data) {
+  let results = [];
+  let rules = [];
+  let ruleIds = [];
+  let resultUrl = "";
+  let baseUrl = null;
+  
+  if (data.info && data.result) {
+    if (data.info.resultUrl) {
+      resultUrl = data.info.resultUrl;
+      baseUrl = resultUrl.slice(0,resultUrl.lastIndexOf('/'));
+    }
+  
+    data.result.packages.forEach(pkg => {
+      if (!pkg.vulns) {
+        return
+      }
+  
+      pkg.vulns.forEach(vuln =>{
+        if (!(vuln.name in ruleIds)){
+          ruleIds.push(vuln.name)
+          let rule = {
+            id: vuln.name,
+            name: pkg.type,
+            shortDescription: {
+              text: getSARIFVulnShortDescription(pkg, vuln)
             },
-            logicalLocations: [
-              {
-                fullyQualifiedName: `Container image ${tag}`,
-              },
-            ],
+            fullDescription: {
+              text: getSARIFVulnFullDescription(pkg, vuln)
+            },
+            helpUri: `https://nvd.nist.gov/vuln/detail/${vuln.name}`,
+            help: getSARIFVulnHelp(pkg, vuln),
+            properties: {
+              precision: "very-high",
+              'security-severity': `${vuln.cvssScore.value.score}`,
+              tags: [
+                  'vulnerability',
+                  'security',
+                  vuln.severity.value
+              ]
+            }
+          }
+          rules.push(rule)
+        }
+  
+        let result = {
+          ruleId: vuln.name,
+          level: check_level(vuln.severity.value),
+          message: {
+            text: getSARIFReportMessage(data, vuln, pkg, baseUrl)
           },
-        ],
-        suppressions: [
-          {
-            kind: "external",
-          },
-        ],
-        baselineState: "unchanged",
-      };
+          locations: [
+            {
+                physicalLocation: {
+                    artifactLocation: {
+                        uri: data.result.metadata.pullString,
+                        uriBaseId: "ROOTPATH"
+                    }
+                },
+                message: {
+                    text: `${data.result.metadata.pullString} - ${pkg.name}@${pkg.version}`
+                }
+            }
+          ]
+        }
+        results.push(result)
+      });
     });
   }
-  return ret;
+  
+  return [rules, results];
 }
 
-
-function getSARIFVulnShortDescription(v) {
-  return `${v.vuln} Severity: ${v.severity} Package: ${v.package}`;
+function getSARIFVulnShortDescription(pkg, vuln) {
+  return `${vuln.name} Severity: ${vuln.severity.value} Package: ${pkg.name}`;
 }
 
-function getSARIFVulnFullDescription(v) {
-  return `${v.vuln}
-Severity: ${v.severity}
-Package: ${v.package}
-Type: ${v.package_type}
-Fix: ${v.fix}
-URL: ${v.url}`;
+function getSARIFVulnFullDescription(pkg, vuln) {
+  return `${vuln.name}
+Severity: ${vuln.severity.value}
+Package: ${pkg.name}
+Type: ${pkg.type}
+Fix: ${pkg.suggestedFix || "Unknown"}
+URL: https://nvd.nist.gov/vuln/detail/${vuln.name}`;
 }
 
-function getSARIFVulnHelp(v) {
+function getSARIFVulnHelp(pkg, vuln) {
   return {
-    text: `Vulnerability ${v.vuln}
-Severity: ${v.severity}
-Package: ${v.package_name}
-Version: ${v.package_version}
-Fix Version: ${v.fix}
-Type: ${v.package_type}
-Location: ${v.package_path}
-Data Namespace: ${v.feed}, ${v.feed_group}
-URL: ${v.url}`,
+    text: `Vulnerability ${vuln.name}
+Severity: ${vuln.severity.value}
+Package: ${pkg.name}
+CVSS Score: ${vuln.cvssScore.value.score}
+CVSS Version: ${vuln.cvssScore.value.version}
+CVSS Vector: ${vuln.cvssScore.value.vector}
+Version: ${pkg.version}
+Fix Version: ${pkg.suggestedFix || "Unknown"}
+Exploitable: ${vuln.exploitable}
+Type: ${pkg.type}
+Location: ${pkg.path}
+URL: https://nvd.nist.gov/vuln/detail/${vuln.name}`,
     markdown: `
-**Vulnerability [${v.vuln}](${v.url})**
-| Severity | Package | Version | Fix Version | Type | Location | Data Namespace |
-| --- | --- | --- | --- | --- | --- | --- |
-| ${v.severity} | ${v.package_name} | ${v.package_version} | ${v.fix} | ${v.package_type} | ${v.package_path} | ${v.feed}, ${v.feed_group} |`
+**Vulnerability [${vuln.name}](https://nvd.nist.gov/vuln/detail/${vuln.name})**
+| Severity | Package | CVSS Score | CVSS Version | CVSS Vector | Fixed Version | Exploitable |
+| -------- | ------- | ---------- | ------------ | ----------- | ------------- | ----------- |
+| ${vuln.severity.value} | ${pkg.name} | ${vuln.cvssScore.value.score} | ${vuln.cvssScore.value.version} | ${vuln.cvssScore.value.vector} | ${pkg.suggestedFix || "None"} | ${vuln.exploitable} |`
   }
 }
 
-function getRuleId(v) {
-  return "VULN_" + v.vuln + "_" + v.package_type + "_" + v.package;
+function getSARIFReportMessage(data, vuln, pkg, baseUrl) {
+  let message = `Full image scan results in Sysdig UI: [${data.result.metadata.pullString} scan result](${data.info.resultUrl})`;
+
+  if (baseUrl) message += `Package: [${pkg.name}](${baseUrl}/content?filter=freeText+in+("${pkg.name}"))`;
+  
+  message += `Package type: ${pkg.type}
+  Installed Version: ${pkg.version}
+  Package path: ${pkg.path}`;
+
+  if (baseUrl) message += `Vulnerability: [${vuln.name}](${baseUrl}/vulnerabilities?filter=freeText+in+("${vuln.name}"))`;
+  
+  message += `Severity: ${vuln.severity.value}
+  CVSS Score: ${vuln.cvssScore.value.score}
+  CVSS Version: ${vuln.cvssScore.value.version}
+  CVSS Vector: ${vuln.cvssScore.value.vector}
+  Fixed Version: ${(vuln.fixedInVersion || 'Unknown')}
+  Exploitable: ${vuln.exploitable}
+  Link to NVD: [${vuln.name}](https://nvd.nist.gov/vuln/detail/${vuln.name})`;
+  
+  return message;
 }
 
-function generateSARIFReport(tag, vulnerabilities) {
-  let sarifOutput = vulnerabilities2SARIF(tag, vulnerabilities);
+function generateSARIFReport(data) {
+  let sarifOutput = vulnerabilities2SARIF(data);
   core.setOutput("sarifReport", "./sarif.json");
   fs.writeFileSync("./sarif.json", JSON.stringify(sarifOutput, null, 2));
 }
 
-async function generateChecks(tag, scanResult, evaluationResults, vulnerabilities) {
-  const githubToken = core.getInput('github-token');
-  if (!githubToken) {
-    core.warning("No github-token provided. Skipping creation of check run");
-  }
+async function generateSummary(opts, data) {
 
-  let octokit;
-  let annotations;
-  let check_run;
+  core.summary.emptyBuffer().clear();
+  core.summary.addHeading(`Scan Results for ${opts.overridePullString || opts.imageTag}`);
+  
+  addVulnTableToSummary(data);
 
-  try {
-    octokit = github.getOctokit(githubToken);
-    annotations = getReportAnnotations(evaluationResults, vulnerabilities)
-  } catch (error) {
-    core.warning("Error creating octokit: " + error);
-    return;
+  if (!opts.standalone) {
+    core.summary.addBreak()
+        .addRaw(`Policies evaluation: ${data.result.policyEvaluationsResult} ${EVALUATION[data.result.policyEvaluationsResult]}`);
+    
+    addReportToSummary(data);
   }
-
-  let conclusion = "success";
-  if (scanResult != "Success") {
-    conclusion = "failure";
-  }
-
-  try {
-    check_run = await octokit.rest.checks.create({
-      owner: github.context.repo.owner,
-      repo: github.context.repo.repo,
-      name: `Scan results for ${tag}`,
-      head_sha: github.context.sha,
-      status: "completed",
-      conclusion:  conclusion,
-      output: {
-        title: `Inline scan results for ${tag}`,
-        summary: "Scan result is " + scanResult,
-        annotations: annotations.slice(0,50)
-      }
-    });
-  } catch (error) {
-    core.warning("Error creating check run: " + error);
-  }
-
-  try {
-    for (let i = 50; i < annotations.length; i+=50) {
-      await octokit.rest.checks.update({
-        owner: github.context.repo.owner,
-        repo: github.context.repo.repo,
-        check_run_id: check_run.data.id,
-        output: {
-          title: "Inline scan results",
-          summary: "Scan result is " + scanResult,
-          annotations: annotations.slice(i, i+50)
-        }
-      });
-    }
-  } catch (error) {
-    core.warning("Error updating check run: " + error);
-  }
+  
+  await core.summary.write({overwrite: true});
 }
 
-function getReportAnnotations(evaluationResults, vulnerabilities) {
-  let actionCol = evaluationResults.header.indexOf("Gate_Action");
-  let gateCol = evaluationResults.header.indexOf("Gate");
-  let triggerCol = evaluationResults.header.indexOf("Trigger");
-  let outputCol = evaluationResults.header.indexOf("Check_Output");
-  let gates = evaluationResults.rows.map(g => {
-    let action = g[actionCol];
-    let level = "notice"
-    if (action == "warn") {
-      level = "warning";
-    } else if (action == "stop") {
-      level = "failure";
-    }
-    return {
-      path: "Dockerfile",
-      start_line: 1,
-      end_line: 1,
-      annotation_level: level,
-      message: `${g[actionCol]} ${g[gateCol]}:${g[triggerCol]}\n${g[outputCol]}`,
-      title: `${g[actionCol]} ${g[gateCol]}`
+function getRulePkgMessage(rule, packages) {
+  let table = [[ 
+    {data: 'Severity', header: true},
+    {data: 'Package', header: true},
+    {data: 'CVSS Score', header: true},
+    {data: 'CVSS Version', header: true},
+    {data: 'CVSS Vector', header: true},
+    {data: 'Fixed Version', header: true},
+    {data: 'Exploitable', header: true}]];
+
+  rule.failures.forEach(failure => {
+    let pkgIndex = failure.pkgIndex;
+    let vulnInPkgIndex = failure.vulnInPkgIndex;
+
+    let pkg = packages[pkgIndex];
+    let vuln = pkg.vulns[vulnInPkgIndex];
+    table.push([`${vuln.severity.value}`,
+      `${pkg.name}`,
+      `${vuln.cvssScore.value.score}`,
+      `${vuln.cvssScore.value.version}`,
+      `${vuln.cvssScore.value.vector}`,
+      `${pkg.suggestedFix || "Unknown"}`,
+      `${vuln.exploitable}`
+    ]);
+  });
+
+  core.summary.addTable(table);
+}
+
+function getRuleImageMessage(rule) {
+  let message = [];
+
+  rule.failures.forEach(failure => {
+    message.push(`${failure.remediation}`)
+  });
+
+  core.summary.addList(message);
+}
+
+function addVulnTableToSummary(data) {
+  let totalVuln = data.result.vulnTotalBySeverity;
+  let fixableVuln = data.result.fixableVulnTotalBySeverity;
+
+  core.summary.addBreak;
+  core.summary.addTable([
+    [{data: '', header: true}, {data: '🟣 Critical', header: true}, {data: '🔴 High', header: true}, {data: '🟠 Medium', header: true}, {data: '🟡 Low', header: true}, {data: '⚪ Negligible', header: true}],
+    [{data: '⚠️ Total Vulnerabilities', header: true}, `${totalVuln.critical}`, `${totalVuln.high}`, `${totalVuln.medium}`, `${totalVuln.low}`, `${totalVuln.negligible}`],
+    [{data: '🔧 Fixable Vulnerabilities', header: true}, `${fixableVuln.critical}`, `${fixableVuln.high}`, `${fixableVuln.medium}`, `${fixableVuln.low}`, `${fixableVuln.negligible}`],
+  ]);
+}
+
+function addReportToSummary(data) {
+  let policyEvaluations = data.result.policyEvaluations;
+  let packages = data.result.packages;
+
+  policyEvaluations.forEach(policy => {
+    core.summary.addHeading(`${EVALUATION[policy.evaluationResult]} Policy: ${policy.name}`,2)
+
+    if (policy.evaluationResult != "passed") {
+      policy.bundles.forEach(bundle => {
+        core.summary.addHeading(`Rule Bundle: ${bundle.name}`,3)
+
+        bundle.rules.forEach(rule => {
+          core.summary.addHeading(`${EVALUATION[rule.evaluationResult]} Rule: ${rule.description}`,5)
+
+          if (rule.evaluationResult != "passed") {
+            if (rule.failureType == "pkgVulnFailure") {
+              getRulePkgMessage(rule, packages)
+            } else {
+              getRuleImageMessage(rule)
+            }
+          }
+          core.summary.addBreak()
+        });
+      });
     }
   });
-  let severities = {"critical":0,"high":1, "medium":2, "low":3, "negligible":4,"unknown":5}
-  let severity =  core.getInput('severity') || "unknown";
-  let uniqueReportByPackage = core.getInput('unique-report-by-package') === 'true' || false;
-  let _vulns = vulnerabilities
-  if(uniqueReportByPackage) {
-    const key = 'package'; // Show only one issue by package, avoiding flood of annotations
-    let _sortedVulns = _vulns.sort((a, b) => severities[b.severity.toLowerCase()] - severities[a.severity.toLowerCase()]);
-    _vulns = [...new Map(_sortedVulns.map(item => [item[key], item])).values()];
-  }
-  let vulns = _vulns.filter(v => severities[v.severity.toLowerCase()] <=  severities[severity.toLowerCase()]).map(v => {
-    return {
-      path: "Dockerfile",
-      start_line: 1,
-      end_line: 1,
-      annotation_level: "warning", //Convert v.severity to notice, warning, or failure?
-      message: `${v.vuln} Severity=${v.severity} Package=${v.package} Type=${v.package_type} Fix=${v.fix} Url=${v.url}`,
-      title: `Vulnerability found: ${v.vuln}`
-    }
-  });
-  return gates.concat(vulns);
 }
 
 module.exports = {
   ExecutionError,
   parseActionInputs,
   composeFlags,
-  pullScanImage,
-  executeInlineScan,
+  pullScanner,
+  executeScan,
   processScanResult,
-  run
+  run,
+  cliScannerName,
+  cliScannerResult,
+  cliScannerVersion,
+  cliScannerArch,
+  cliScannerOS,
+  cliScannerURLBase,
+  cliScannerURL,
+  defaultSecureEndpoint
 };
 
 if (require.main === module) {

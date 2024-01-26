@@ -16,8 +16,8 @@ function cleanupTemporaryDir(tmpDir) {
     process.chdir(tmpDir.cwd);
 }
 
-const exampleReport = JSON.stringify(require("./fixtures/report.json"));
-const exampleLongReport = JSON.stringify(require("./fixtures/longreport.json"));
+const exampleReport = JSON.stringify(require("./fixtures/report-test.json"));
+const exampleSarif = JSON.stringify(require("./fixtures/sarif-test.json"),null,2);
 
 describe("input parsing", () => {
     let oldEnv;
@@ -35,10 +35,6 @@ describe("input parsing", () => {
         process.env = oldEnv; // restore old env
     });
 
-    it("raises error if no token provided", () => {
-        process.env['INPUT_IMAGE-TAG'] = "image:tag";
-        expect(() => index.parseActionInputs()).toThrow("Input required and not supplied: sysdig-secure-token");
-    })
 
     it("raises error if no image tag provided", () => {
         process.env['INPUT_SYSDIG-SECURE-TOKEN'] = "token";
@@ -51,114 +47,75 @@ describe("input parsing", () => {
         let opts = index.parseActionInputs()
 
         expect(opts).toEqual({
+            "cliScannerURL": `${index.cliScannerURL}`,
+            "cliScannerVersion": "",
+            "registryUser": "",
+            "registryPassword": "",
+            "stopOnFailedPolicyEval": false,
+            "stopOnProcessingError": false,
+            "standalone": false,
+            "dbPath": "",
+            "skipUpload": false,
+            "skipSummary": false,
+            "usePolicies": "",
+            "overridePullString": "",
             "imageTag": "image:tag",
             "sysdigSecureToken": "token",
-            "dockerfilePath": "",
-            "extraDockerParameters": "",
-            "extraParameters": "",
-            "ignoreFailedScan": false,
-            "inputPath": "",
-            "inputType": "",
-            "runAsUser": "",
-            "sysdigSecureURL": "",
+            "sysdigSecureURL": `${index.defaultSecureEndpoint}`,
             "sysdigSkipTLS": false,
-            "inlineScanImage": "",
+            "extraParameters": ""
         })
     })
 
     it("parses all inputs", () => {
-        process.env['INPUT_SYSDIG-SECURE-TOKEN'] = 'token';
-        process.env['INPUT_IMAGE-TAG'] = 'image:tag';
-        process.env['INPUT_DOCKERFILE-PATH'] = '/Dockerfile';
-        process.env['INPUT_EXTRA-DOCKER-PARAMETERS'] = '-docker -params';
-        process.env['INPUT_EXTRA-PARAMETERS'] = '-extra -params';
-        process.env['INPUT_IGNORE-FAILED-SCAN'] = "true";
-        process.env['INPUT_INPUT-PATH'] = "/input-path";
-        process.env['INPUT_INPUT-TYPE'] = "foo-type";
-        process.env['INPUT_RUN-AS-USER'] = "user";
+        process.env['INPUT_CLI-SCANNER-URL'] = "https://foo";
+        process.env['INPUT_CLI-SCANNER-VERSION'] = "1.0.0";
+        process.env['INPUT_REGISTRY-USER'] = "user";
+        process.env['INPUT_REGISTRY-PASSWORD'] = "pass";
+        process.env['INPUT_STOP-ON-FAILED-POLICY-EVAL'] = "true";
+        process.env['INPUT_STOP-ON-PROCESSING-ERROR'] = "true";
+        process.env['INPUT_STANDALONE'] = "true";
+        process.env['INPUT_DB-PATH'] = "/dbpath";
+        process.env['INPUT_SKIP-UPLOAD'] = "true";
+        process.env['INPUT_SKIP-SUMMARY'] = "true";
+        process.env['INPUT_USE-POLICIES'] = "abcxyz";
+        process.env['INPUT_OVERRIDE-PULLSTRING'] = "my-image";
+        process.env['INPUT_IMAGE-TAG'] = "image:tag";
+        process.env['INPUT_SYSDIG-SECURE-TOKEN'] = "token";
         process.env['INPUT_SYSDIG-SECURE-URL'] = "https://foo";
         process.env['INPUT_SYSDIG-SKIP-TLS'] = "true";
-        process.env['INPUT_INLINE-SCAN-IMAGE'] = "my-custom-image:latest";
+        process.env['INPUT_EXTRA-PARAMETERS'] = "--extra-param";
         let opts = index.parseActionInputs()
 
         expect(opts).toEqual({
+            "cliScannerURL": "https://foo",
+            "cliScannerVersion": "1.0.0",
+            "registryUser": "user",
+            "registryPassword": "pass",
+            "stopOnFailedPolicyEval": true,
+            "stopOnProcessingError": true,
+            "standalone": true,
+            "dbPath": "/dbpath",
+            "skipUpload": true,
+            "skipSummary": true,
+            "usePolicies": "abcxyz",
+            "overridePullString": "my-image",
             "imageTag": "image:tag",
             "sysdigSecureToken": "token",
-            "dockerfilePath": "/Dockerfile",
-            "extraDockerParameters": "-docker -params",
-            "extraParameters": "-extra -params",
-            "ignoreFailedScan": true,
-            "inputPath": "/input-path",
-            "inputType": "foo-type",
-            "runAsUser": "user",
             "sysdigSecureURL": "https://foo",
             "sysdigSkipTLS": true,
-            "inlineScanImage": "my-custom-image:latest",
+            "extraParameters": "--extra-param"
         })
     })
 
-})
-
-describe("docker flags", () => {
-
-    it("uses default docker flags", () => {
-        let flags = index.composeFlags({});
-        expect(flags.dockerFlags).toMatch(/(^| )--rm($| )/)
-        expect(flags.dockerFlags).toMatch(new RegExp(`(^| )-u ${process.getuid()}($| )`));
-    })
-
-    it("mounts the input file", () => {
-        let flags = index.composeFlags({
-            inputPath: "/myfolder/myfile.tar",
-            inputType: "docker-archive"
-        });
-        expect(flags.dockerFlags).toMatch(new RegExp(`(^| )-v /myfolder/myfile.tar:/tmp/myfile.tar($| )`));
-    })
-
-    it("mounts the docker socket", () => {
-        let flags = index.composeFlags({
-            inputType: "docker-daemon",
-            inputPath: "/var/lib/run/docker/docker.sock",
-        });
-        expect(flags.dockerFlags).toMatch(new RegExp(`(^| )-v /var/lib/run/docker/docker.sock:/var/run/docker.sock($| )`));
-    })
-
-    it("mounts the Dockerfile", () => {
-        let flags = index.composeFlags({
-            dockerfilePath: "/my/Dockerfile",
-        });
-        expect(flags.dockerFlags).toMatch(new RegExp(`(^| )-v /my/Dockerfile:/tmp/Dockerfile($| )`));
-    })
-
-    it("runs as specified user", () => {
-        let flags = index.composeFlags({
-            runAsUser: "foo",
-        });
-        expect(flags.dockerFlags).toMatch(/(^| )-u foo($| )/);
-    })
-
-    it("adds extra docker flags", () => {
-        let flags = index.composeFlags({
-            extraDockerParameters: "--extra-param"
-        });
-        expect(flags.dockerFlags).toMatch(/(^| )--extra-param($| )/);
-    })
-
-    it("adds the token as environment", () => {
-        let flags = index.composeFlags({
-            sysdigSecureToken: "foo-token",
-        });
-        expect(flags.dockerFlags).toMatch(/(^| )-e SYSDIG_API_TOKEN[ =]foo-token($| )/)
-
-    })
 })
 
 describe("execution flags", () => {
 
     it("uses default flags", () => {
         let flags = index.composeFlags({ sysdigSecureToken: "foo-token", imageTag: "image:tag" });
-        expect(flags.runFlags).toMatch(/(^| )--format[ =]JSON($| )/);
-        expect(flags.runFlags).toMatch(/(^| )image:tag($| )/);
+        expect(flags.envvars.SECURE_API_TOKEN).toMatch("foo-token");
+        expect(flags.flags).toMatch(/(^| )image:tag($| )/);
     })
 
     it("adds secure URL flag", () => {
@@ -166,42 +123,64 @@ describe("execution flags", () => {
             sysdigSecureToken: "foo-token",
             sysdigSecureURL: "https://foo"
         });
-        expect(flags.runFlags).toMatch(/(^| )--sysdig-url[ =]https:\/\/foo($| )/)
+        expect(flags.flags).toMatch(/(^| )--apiurl[ =]https:\/\/foo($| )/)
     })
 
-    it("uses storage-type flags", () => {
+    it("uses standalone mode", () => {
         let flags = index.composeFlags({
             sysdigSecureToken: "foo-token",
-            inputType: "foo-input",
+            standalone: true,
         });
-        expect(flags.runFlags).toMatch(/(^| )--storage-type[ =]foo-input($| )/)
+        expect(flags.flags).toMatch(/(^| )--standalone($| )/)
     })
 
-    it("uses storage-path flags", () => {
+    it("uses registry credentials", () => {
         let flags = index.composeFlags({
             sysdigSecureToken: "foo-token",
-            inputType: "foo-input",
-            inputPath: "/myPath"
+            registryUser: "user",
+            registryPassword: "pass"
         });
-        expect(flags.runFlags).toMatch(/(^| )--storage-path[ =]\/tmp\/myPath($| )/)
+        expect(flags.envvars.REGISTRY_USER).toMatch('user')
+        expect(flags.envvars.REGISTRY_PASSWORD).toMatch('pass')
     })
 
-    it("uses dockerfile flag", () => {
+    it("uses custom db path", () => {
         let flags = index.composeFlags({
-            dockerfilePath: "/my/Dockerfile",
+            dbPath: "/mypath",
         });
-        expect(flags.runFlags).toMatch(new RegExp(/(^| )--dockerfile[ =]\/tmp\/Dockerfile($| )/));
+        expect(flags.flags).toMatch(new RegExp(/(^| )--dbpath[ =]\/mypath($| )/));
+    })
+
+    it("uses skip upload flag", () => {
+        let flags = index.composeFlags({
+            skipUpload: true,
+        });
+        expect(flags.flags).toMatch(new RegExp(/(^| )--skipupload($| )/));
+    })
+
+    it("uses custom policies flag", () => {
+        let flags = index.composeFlags({
+            usePolicies: "abcxyz",
+        });
+        expect(flags.flags).toMatch(new RegExp(/(^| )--policy[ =]abcxyz($| )/));
     })
 
     it("uses --skip-tls flag", () => {
         let flags = index.composeFlags({
             sysdigSkipTLS: true,
         });
-        expect(flags.runFlags).toMatch(new RegExp(/(^| )--sysdig-skip-tls($| )/));
+        expect(flags.flags).toMatch(new RegExp(/(^| )--skiptlsverify($| )/));
+    })
+
+    it("uses override pullstring flag", () => {
+        let flags = index.composeFlags({
+            overridePullString: "my-image",
+        });
+        expect(flags.flags).toMatch(new RegExp(/(^| )--override-pullstring[ =]my-image($| )/));
     })
 })
 
-describe("image pulling", () => {
+describe("scanner pulling", () => {
     let exec;
 
     beforeEach(() => {
@@ -215,15 +194,15 @@ describe("image pulling", () => {
         index = require("..");
     })
 
-    it("pulls the configured scan image", async () => {
+    it("pulls the configured scanner", async () => {
         exec.exec = jest.fn();
-        await index.pullScanImage("dummy-image:tag");
+        await index.pullScanner("https://foo");
         expect(exec.exec).toBeCalledTimes(1);
-        expect(exec.exec).toBeCalledWith("docker pull dummy-image:tag", null);
+        expect(exec.exec.mock.calls[0][0]).toMatch(`wget https://foo -O ./${index.cliScannerName}`, null);
     })
 })
 
-describe("inline-scan execution", () => {
+describe("scanner execution", () => {
     let tmpDir;
     let exec;
 
@@ -250,20 +229,16 @@ describe("inline-scan execution", () => {
             return Promise.resolve(0);
         });
 
-        await index.executeInlineScan("inline-scan:tag", "--docker1 --docker2", "--run1 --run2 image-to-scan");
+        await index.executeScan({SECURE_API_TOKEN: "token"}, "--run1 --run2 image-to-scan");
 
-        expect(exec.exec).toBeCalledTimes(7);
-        expect(exec.exec.mock.calls[0][0]).toMatch(/docker run -d --entrypoint \/bin\/cat -ti --docker1 --docker2 inline-scan:tag/);
-        expect(exec.exec.mock.calls[4][0]).toMatch(/docker exec foo-id \/sysdig-inline-scan.sh --run1 --run2 image-to-scan/);
+        expect(exec.exec).toBeCalledTimes(2);
+        expect(exec.exec.mock.calls[0][0]).toMatch(`${index.cliScannerName} --run1 --run2 image-to-scan`);
+        expect(exec.exec.mock.calls[1][0]).toMatch(`cat ./${index.cliScannerResult}`);
     })
 
     it("returns the execution return code", async () => {
-        exec.exec.mockResolvedValueOnce(0);
-        exec.exec.mockResolvedValueOnce(0);
-        exec.exec.mockResolvedValueOnce(0);
-        exec.exec.mockResolvedValueOnce(0);
         exec.exec.mockResolvedValueOnce(123);
-        let result = await index.executeInlineScan("inline-scan:tag");
+        let result = await index.executeScan({SECURE_API_TOKEN: "token"}, "image-to-scan");
         expect(result.ReturnCode).toBe(123);
     })
 
@@ -274,7 +249,7 @@ describe("inline-scan execution", () => {
             return Promise.resolve(0);
         });
 
-        let result = await index.executeInlineScan("inline-scan:tag");
+        let result = await index.executeScan({SECURE_API_TOKEN: "token"}, "image-to-scan");
         expect(result.Output).toBe("foo-output");
     })
 })
@@ -282,49 +257,18 @@ describe("inline-scan execution", () => {
 describe("process scan results", () => {
     let fs;
     let core;
-    let github;
 
     beforeEach(() => {
         jest.resetAllMocks()
 
         core = require("@actions/core");
         fs = require("fs");
-        github = require("@actions/github");
         index = require("..");
     })
 
     afterEach(() => {
         jest.resetModules() // most important - it clears the cache
         index = require("..");
-    })
-
-    it("returns true if success", async () => {
-        let scanResult = {
-            ReturnCode: 0,
-            Output: "{}",
-            Error: ""
-        };
-        let success = await index.processScanResult(scanResult);
-        expect(success).toBe(true);
-    })
-
-    it("returns false if not success", async () => {
-        let scanResult = {
-            ReturnCode: 1,
-            Output: "{}",
-            Error: ""
-        };
-        let success = await index.processScanResult(scanResult);
-        expect(success).toBe(false);
-    })
-
-    it("throws an error on failed execution", async () => {
-        let scanResult = {
-            ReturnCode: 3,
-            Output: "Some output",
-            Error: "Some error"
-        };
-        return expect(index.processScanResult(scanResult)).rejects.toThrow(new index.ExecutionError('Some output', 'Some error'));
     })
 
     it("handles error on invalid JSON", async () => {
@@ -336,7 +280,12 @@ describe("process scan results", () => {
             Error: ""
         };
 
-        await expect(index.processScanResult(scanResult)).rejects.toThrow(new index.ExecutionError('invalid JSON', ''));
+        let opts = {
+            skipSummary: true,
+            standalone: false,
+            overridePullString: null
+        }
+        await expect(index.processScanResult(scanResult, opts)).rejects.toThrow(new index.ExecutionError('invalid JSON', ''));
         expect(core.error).toBeCalledTimes(1);
         expect(core.error.mock.calls[0][0]).toMatch(/Error parsing analysis JSON report/)
     })
@@ -352,183 +301,15 @@ describe("process scan results", () => {
             Error: ""
         };
 
-        await index.processScanResult(scanResult);
+        let opts = {
+            skipSummary: true,
+            standalone: false,
+            overridePullString: null
+        }
+
+        await index.processScanResult(scanResult, opts);
         expect(fs.writeFileSync).toBeCalledWith("./report.json", reportData);
         fs.writeFileSync = realWriteFileSync;
-    })
-
-    it("generates a check run with vulnerability annotations", async () => {
-        let data;
-        github.context = { repo: { repo: "foo-repo", owner: "foo-owner" } };
-
-        core.getInput = jest.fn();
-        core.getInput.mockReturnValueOnce("foo");
-
-        github.getOctokit = jest.fn(() => {
-            return {
-                rest: {
-                    checks: {
-                        create: async function (receivedData) {
-                            data = receivedData;
-                        }
-                    }
-                }
-            }
-        });
-
-        let scanResult = {
-            ReturnCode: 0,
-            Output: exampleReport,
-            Error: ""
-        };
-        await index.processScanResult(scanResult);
-        expect(github.getOctokit).toBeCalledWith("foo");
-        expect(data).not.toBeUndefined();
-        expect(data.name).toBe("Scan results for myimage:mytag");
-        expect(data.output.annotations).toContainEqual({ "annotation_level": "warning", "end_line": 1, "message": "CVE-2019-14697 Severity=High Package=musl-1.1.18-r3 Type=APKG Fix=1.1.18-r4 Url=https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-14697", "path": "Dockerfile", "start_line": 1, "title": "Vulnerability found: CVE-2019-14697" });
-        expect(data.output.annotations).toContainEqual({"path": "Dockerfile", "start_line": 1, "end_line": 1, "annotation_level": "warning", "message": "CVE-2011-3374 Severity=Negligible Package=apt-1.0 Type=APKG Fix=null Url=https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2011-3374", "title": "Vulnerability found: CVE-2011-3374"});
-    })
-
-    it("generates a check run with vulnerability annotations, at least medium severity", async () => {
-        let data;
-        github.context = { repo: { repo: "foo-repo", owner: "foo-owner" } };
-
-        core.getInput = jest.fn();
-        core.getInput.mockReturnValueOnce("foo");
-
-        github.getOctokit = jest.fn(() => {
-            return {
-                rest: {
-                    checks: {
-                        create: async function (receivedData) {
-                            data = receivedData;
-                        }
-                    }
-                }
-            }
-        });
-
-        let scanResult = {
-            ReturnCode: 0,
-            Output: exampleReport,
-            Error: ""
-        };
-        core.getInput.mockReturnValueOnce("medium")
-
-        await index.processScanResult(scanResult);
-        expect(github.getOctokit).toBeCalledWith("foo");
-        expect(data).not.toBeUndefined();
-        expect(data.name).toBe("Scan results for myimage:mytag");
-        expect(data.output.annotations).toContainEqual({ "annotation_level": "warning", "end_line": 1, "message": "CVE-2019-14697 Severity=High Package=musl-1.1.18-r3 Type=APKG Fix=1.1.18-r4 Url=https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-14697", "path": "Dockerfile", "start_line": 1, "title": "Vulnerability found: CVE-2019-14697" });
-        expect(data.output.annotations).not.toContainEqual({"path": "Dockerfile", "start_line": 1, "end_line": 1, "annotation_level": "warning", "message": "CVE-2011-3374 Severity=Negligible Package=apt-1.0 Type=APKG Fix=null Url=https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2011-3374", "title": "Vulnerability found: CVE-2011-3374"});
-        expect(data.output.annotations).toContainEqual({"path": "Dockerfile", "start_line": 1, "end_line": 1, "annotation_level": "warning", "message": "CVE-2019-14697 Severity=High Package=musl-utils-1.1.18-r3 Type=APKG Fix=1.1.18-r4 Url=https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-14697", "title": "Vulnerability found: CVE-2019-14697"});
-        expect(data.output.annotations).toContainEqual({"path": "Dockerfile", "start_line": 1, "end_line": 1, "annotation_level": "warning", "message": "CVE-2019-14698 Severity=Medium Package=musl-utils-1.1.18-r3 Type=APKG Fix=1.1.18-r4 Url=https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-14698", "title": "Vulnerability found: CVE-2019-14698"});
-    })
-
-    it("generates a check run with unique vulnerability annotations", async () => {
-        let data;
-        github.context = { repo: { repo: "foo-repo", owner: "foo-owner" } };
-
-        core.getInput = jest.fn();
-        core.getInput.mockReturnValueOnce("foo");
-
-
-        github.getOctokit = jest.fn(() => {
-            return {
-                rest: {
-                    checks: {
-                        create: async function (receivedData) {
-                            data = receivedData;
-                        }
-                    }
-                }
-            }
-        });
-
-        let scanResult = {
-            ReturnCode: 0,
-            Output: exampleReport,
-            Error: ""
-        };
-        core.getInput.mockReturnValueOnce("medium")
-        core.getInput.mockReturnValueOnce("true")
-
-        await index.processScanResult(scanResult);
-        expect(github.getOctokit).toBeCalledWith("foo");
-        expect(data).not.toBeUndefined();
-        expect(data.name).toBe("Scan results for myimage:mytag");
-        //Should display the vulnerability with the highest severity
-        expect(data.output.annotations).toContainEqual({"path": "Dockerfile", "start_line": 1, "end_line": 1, "annotation_level": "warning", "message": "CVE-2019-14697 Severity=High Package=musl-utils-1.1.18-r3 Type=APKG Fix=1.1.18-r4 Url=https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-14697", "title": "Vulnerability found: CVE-2019-14697"});
-        expect(data.output.annotations).not.toContainEqual({"path": "Dockerfile", "start_line": 1, "end_line": 1, "annotation_level": "warning", "message": "CVE-2019-14698 Severity=Medium Package=musl-utils-1.1.18-r3 Type=APKG Fix=1.1.18-r4 Url=https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-14698", "title": "Vulnerability found: CVE-2019-14698"});
-
-    })
-
-    it("generates a check run with gate annotations", async () => {
-        let data;
-        github.context = { repo: { repo: "foo-repo", owner: "foo-owner" } };
-
-        core.getInput = jest.fn();
-        core.getInput.mockReturnValueOnce("foo");
-
-        github.getOctokit = jest.fn(() => {
-            return {
-                rest: {
-                        checks: {
-                        create: async function (receivedData) {
-                            data = receivedData;
-                        }
-                    }
-                }
-            }
-        });
-
-        let scanResult = {
-            ReturnCode: 0,
-            Output: exampleReport,
-            Error: ""
-        };
-
-        await index.processScanResult(scanResult);
-        expect(github.getOctokit).toBeCalledWith("foo");
-        expect(data).not.toBeUndefined();
-        expect(data.name).toBe("Scan results for myimage:mytag");
-        expect(data.output.annotations).toContainEqual({ "annotation_level": "warning", "end_line": 1, "message": "warn dockerfile:instruction\nDockerfile directive 'HEALTHCHECK' not found, matching condition 'not_exists' check", "path": "Dockerfile", "start_line": 1, "title": "warn dockerfile" });
-        expect(data.output.annotations).toContainEqual({ "annotation_level": "failure", "end_line": 1, "message": "stop dockerfile:instruction\nDockerfile directive 'USER' not found, matching condition 'not_exists' check", "path": "Dockerfile", "start_line": 1, "title": "stop dockerfile" });
-    })
-
-    it("generates a check run and then updates it if more than 50 entries", async () => {
-        let createData;
-        let updateData
-        github.context = { repo: { repo: "foo-repo", owner: "foo-owner" } };
-
-        core.getInput = jest.fn();
-        core.getInput.mockReturnValueOnce("foo");
-
-        github.getOctokit = jest.fn(() => {
-            return {
-                rest: {
-                    checks: {
-                        create: async function (receivedData) {
-                            createData = receivedData;
-                            return { data: {id: 1 } };
-                        },
-                        update: async function (receivedData) {
-                            updateData = receivedData;
-                        }
-                    }
-                }
-            }
-        });
-
-        let scanResult = {
-            ReturnCode: 0,
-            Output: exampleLongReport,
-            Error: ""
-        };
-
-        await index.processScanResult(scanResult);
-        expect(createData.output.annotations).not.toContainEqual({ "annotation_level": "failure", "end_line": 1, "message": "stop dockerfile:instruction\nDockerfile directive 'USER' not found, matching condition 'not_exists' check", "path": "Dockerfile", "start_line": 1, "title": "stop dockerfile" });
-        expect(updateData.output.annotations).toContainEqual({ "annotation_level": "failure", "end_line": 1, "message": "stop dockerfile:instruction\nDockerfile directive 'USER' not found, matching condition 'not_exists' check", "path": "Dockerfile", "start_line": 1, "title": "stop dockerfile" });
     })
 
     it("generates SARIF report with vulnerabilities", async () => {
@@ -540,15 +321,15 @@ describe("process scan results", () => {
             Output: exampleReport,
             Error: ""
         };
-        await index.processScanResult(scanResult);
-        expect(fs.writeFileSync).toBeCalledWith("./sarif.json", expect.stringMatching(/"version": "2.1.0"/));
-        expect(fs.writeFileSync).toBeCalledWith("./sarif.json", expect.stringMatching(/"id": "VULN_CVE-2019-14697_APKG_musl-1.1.18-r3/));
-        expect(fs.writeFileSync).toBeCalledWith("./sarif.json", expect.stringMatching(/"ruleId": "VULN_CVE-2019-14697_APKG_musl-1.1.18-r3/));
-        fs.writeFileSync = realWriteFileSync;
-    })
 
-    xit("generates SARIF report with gates", async () => {
-        //TODO: Gates are not included in SARIF report
+        let opts = {
+            skipSummary: true,
+            standalone: false,
+            overridePullString: null
+        }
+        await index.processScanResult(scanResult, opts);
+        expect(fs.writeFileSync).toBeCalledWith("./sarif.json", exampleSarif);
+        fs.writeFileSync = realWriteFileSync;
     })
 })
 
@@ -563,7 +344,6 @@ describe("run the full action", () => {
 
         process.env['INPUT_IMAGE-TAG'] = "image:tag";
         process.env['INPUT_SYSDIG-SECURE-TOKEN'] = "footoken";
-        process.env['INPUT_INPUT-TYPE'] = "pull";
 
         tmpDir = prepareTemporaryDir();
 
@@ -584,17 +364,6 @@ describe("run the full action", () => {
             return Promise.resolve(0);
         });
 
-        exec.exec.mockImplementationOnce((cmdline, args, options) => {
-            return Promise.resolve(0);
-        });
-
-        exec.exec.mockImplementationOnce((cmdline, args, options) => {
-            return Promise.resolve(0);
-        });
-
-        exec.exec.mockImplementationOnce((_cmdline, _args, options) => {
-            return Promise.resolve(0);
-        });
         /* eslint-enable no-unused-vars */
     }
 
@@ -613,6 +382,10 @@ describe("run the full action", () => {
 
         setupExecMocks();
         /* eslint-disable no-unused-vars */
+        exec.exec.mockImplementationOnce((_cmdline, _args, options) => {
+            return Promise.resolve(0);
+        });
+
         exec.exec.mockImplementationOnce((cmdline, args, options) => {
             options.listeners.stdout(exampleReport);
             return Promise.resolve(0);
@@ -629,6 +402,10 @@ describe("run the full action", () => {
 
         setupExecMocks();
         /* eslint-disable no-unused-vars */
+        exec.exec.mockImplementationOnce((_cmdline, _args, options) => {
+            return Promise.resolve(0);
+        });
+
         exec.exec.mockImplementationOnce((cmdline, args, options) => {
             options.listeners.stdout(exampleReport);
             return Promise.resolve(0);
@@ -639,7 +416,7 @@ describe("run the full action", () => {
 
         expect(core.setOutput).toBeCalledWith("scanReport", "./report.json");
         let report = JSON.parse(fs.readFileSync("./report.json"));
-        expect(report.status).not.toBeUndefined();
+        expect(report.result).not.toBeUndefined();
     })
 
     it("writes scan report on fail", async () => {
@@ -648,9 +425,13 @@ describe("run the full action", () => {
 
         setupExecMocks();
         /* eslint-disable no-unused-vars */
+        exec.exec.mockImplementationOnce((_cmdline, _args, options) => {
+            return Promise.resolve(1);
+        });
+
         exec.exec.mockImplementationOnce((cmdline, args, options) => {
             options.listeners.stdout(exampleReport);
-            return Promise.resolve(1);
+            return Promise.resolve(0);
         });
         /* eslint-enable no-unused-vars */
 
@@ -658,7 +439,7 @@ describe("run the full action", () => {
 
         expect(core.setOutput).toBeCalledWith("scanReport", "./report.json");
         let report = JSON.parse(fs.readFileSync("./report.json"));
-        expect(report.status).not.toBeUndefined();
+        expect(report.result).not.toBeUndefined();
     })
 
     it("writes sarif report on pass", async () => {
@@ -666,6 +447,10 @@ describe("run the full action", () => {
 
         setupExecMocks();
         /* eslint-disable no-unused-vars */
+        exec.exec.mockImplementationOnce((_cmdline, _args, options) => {
+            return Promise.resolve(0);
+        });
+
         exec.exec.mockImplementationOnce((cmdline, args, options) => {
             options.listeners.stdout(exampleReport);
             return Promise.resolve(0);
@@ -677,8 +462,8 @@ describe("run the full action", () => {
         expect(core.setOutput).toBeCalledWith("sarifReport", "./sarif.json");
         let sarif = JSON.parse(fs.readFileSync("./sarif.json"));
         expect(sarif.version).toBe("2.1.0");
-        expect(sarif.runs[0].tool.driver.rules[0].id).toBe("VULN_CVE-2019-14697_APKG_musl-1.1.18-r3");
-        expect(sarif.runs[0].results[0].ruleId).toBe("VULN_CVE-2019-14697_APKG_musl-1.1.18-r3");
+        expect(sarif.runs[0].tool.driver.rules[0].id).toBe("CVE-2023-30861");
+        expect(sarif.runs[0].results[0].ruleId).toBe("CVE-2023-30861");
     })
 
     it("writes scan report on fail", async () => {
@@ -687,9 +472,13 @@ describe("run the full action", () => {
 
         setupExecMocks();
         /* eslint-disable no-unused-vars */
+        exec.exec.mockImplementationOnce((_cmdline, _args, options) => {
+            return Promise.resolve(1);
+        });
+
         exec.exec.mockImplementationOnce((cmdline, args, options) => {
             options.listeners.stdout(exampleReport);
-            return Promise.resolve(1);
+            return Promise.resolve(0);
         });
         /* eslint-enable no-unused-vars */
 
@@ -703,14 +492,20 @@ describe("run the full action", () => {
     })
 
     it("fails if scan fails", async () => {
+        process.env['INPUT_STOP-ON-FAILED-POLICY-EVAL'] = "true";
+
         core.setFailed = jest.fn();
 
         setupExecMocks();
 
         /* eslint-disable no-unused-vars */
+        exec.exec.mockImplementationOnce((_cmdline, _args, options) => {
+            return Promise.resolve(1);
+        });
+
         exec.exec.mockImplementationOnce((cmdline, args, options) => {
             options.listeners.stdout(exampleReport);
-            return Promise.resolve(1);
+            return Promise.resolve(0);
         });
         /* eslint-enable no-unused-vars */
 
@@ -719,36 +514,37 @@ describe("run the full action", () => {
         expect(core.setFailed).toBeCalled();
     })
 
-    it("ends ok if scan fails but ignoreFailedScan is true", async () => {
-        process.env['INPUT_IGNORE-FAILED-SCAN'] = "true";
+    it("ends ok if scan fails but stopOnFailedPolicyEval is false", async () => {
+        process.env['INPUT_STOP-ON-FAILED-POLICY-EVAL'] = "false";
 
         core.setFailed = jest.fn();
 
         setupExecMocks();
 
-        exec.exec.mockImplementationOnce((cmdline, args, options) => {
-            options.listeners.stdout(exampleReport);
+        /* eslint-disable no-unused-vars */
+        exec.exec.mockImplementationOnce((_cmdline, _args, options) => {
             return Promise.resolve(1);
         });
+
+        exec.exec.mockImplementationOnce((cmdline, args, options) => {
+            options.listeners.stdout(exampleReport);
+            return Promise.resolve(0);
+        });
+        /* eslint-enable no-unused-vars */
 
         await index.run();
 
         expect(core.setFailed).not.toBeCalled();
     })
 
-    it("fails if container creation fails", async () => {
-        process.env['INPUT_IGNORE-FAILED-SCAN'] = "true";
+    it("fails if scanner has wrong parameters and stopOnProcessingError is true", async () => {
+        process.env['INPUT_STOP-ON-PROCESSING-ERROR'] = "true";
 
         core.setFailed = jest.fn();
 
         /* eslint-disable no-unused-vars */
         exec.exec.mockImplementationOnce((cmdline, args, options) => {
-            return Promise.resolve(0);
-        });
-
-        exec.exec.mockImplementationOnce((cmdline, args, options) => {
-            options.listeners.stderr("some-error");
-            return Promise.resolve(1);
+            return Promise.resolve(2);
         });
         /* eslint-enable no-unused-vars */
 
@@ -757,16 +553,18 @@ describe("run the full action", () => {
         expect(core.setFailed).toBeCalled();
     })
 
-    it("fails on unexpected error", async () => {
-        process.env['INPUT_IGNORE-FAILED-SCAN'] = "true";
+    it("fails on unexpected error  and stopOnProcessingError is true", async () => {
+        process.env['INPUT_STOP-ON-PROCESSING-ERROR'] = "true";
 
         core.setFailed = jest.fn();
         setupExecMocks();
 
+        /* eslint-disable no-unused-vars */
         exec.exec.mockImplementationOnce((cmdline, args, options) => {
             options.listeners.stdout(exampleReport);
-            return Promise.resolve(2);
+            return Promise.resolve(123);
         });
+        /* eslint-enable no-unused-vars */
 
         await index.run();
 
@@ -774,17 +572,39 @@ describe("run the full action", () => {
     })
 
 
+    it("ends ok if scan fails but stopOnProcessingError is false", async () => {
+        process.env['INPUT_STOP-ON-PROCESSING-ERROR'] = "false";
+
+        core.setFailed = jest.fn();
+
+        setupExecMocks();
+
+        /* eslint-disable no-unused-vars */
+        exec.exec.mockImplementationOnce((_cmdline, _args, options) => {
+            return Promise.resolve(123);
+        });
+
+        exec.exec.mockImplementationOnce((cmdline, args, options) => {
+            options.listeners.stdout(exampleReport);
+            return Promise.resolve(0);
+        });
+        /* eslint-enable no-unused-vars */
+
+        await index.run();
+
+        expect(core.setFailed).not.toBeCalled();
+    })
+
     it("allows override of inline-scan image", async () => {
-        process.env['INPUT_INLINE-SCAN-IMAGE'] = "my-custom-image:latest";
+        process.env['INPUT_OVERRIDE-PULLSTRING'] = "my-custom-image:latest";
 
         exec.exec = jest.fn(() => {
             return Promise.resolve(0);
         });
 
         await index.run();
-        expect(exec.exec).toBeCalledTimes(8);
-        expect(exec.exec).toBeCalledWith("docker pull my-custom-image:latest", null);
-        expect(exec.exec).toBeCalledWith(expect.stringMatching(/docker run .* my-custom-image:latest/), null, expect.anything());
+        expect(exec.exec).toBeCalledTimes(4);
+        expect(exec.exec.mock.calls[2][0]).toMatch(`${index.cliScannerName}  --json-scan-result=scan-result.json --apiurl https://secure.sysdig.com/ --override-pullstring=my-custom-image:latest image:tag`);
     })
 
 })
