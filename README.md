@@ -1,89 +1,93 @@
 
 # Sysdig Secure Inline Scan Action
 
-This action performs analysis on locally built container image and posts the result to Sysdig Secure. For more information about Secure Inline Scan, see [Sysdig Secure documentation](https://docs.sysdig.com/en/integrate-with-ci-cd-tools.html).
+> 🚧 **Warning**: To use the Legacy Scanning Engine Action, please use version v3.* and visit the [previous README](./README.v3.md).
+
+This action performs analysis on a specific container image and posts the result to Sysdig Secure. For more information about Sysdig CLI Scanner, see [Sysdig Secure documentation](https://docs.sysdig.com/en/docs/installation/sysdig-secure/install-vulnerability-cli-scanner/running-in-vm-mode/).
 
 ## Inputs
 
+### `cli-scanner-url`
+
+URL to `sysdig-cli-scanner` binary download. The action will detect the runner OS and architecture. The version of the CLI Scanner is set to `1.8.1` by default (to specify another version see `cli-scanner-version`).
+
+For more info about the Sysdig CLI Scanner download visit [the official documentation](https://docs.sysdig.com/en/docs/installation/sysdig-secure/install-vulnerability-cli-scanner/).
+
+### `cli-scanner-version`
+
+Custom sysdig-cli-scanner version to download. It is set to `1.8.1` by default.
+
+> Please note that the Action has only been tested with `1.8.x` versions and it is not guaranteed that it will work as expected with other versions.
+
+### `registry-user`
+
+Registry username to authenticate to while pulling the image to scan.
+
+### `registry-password`
+
+Registry password to authenticate to while pulling the image to scan.
+
+### `stop-on-failed-policy-eval`
+
+Fail the job if the Policy Evaluation is Failed.
+
+### `stop-on-processing-error`
+
+Fail the job if the Scanner terminates execution with errors.
+
+### `standalone`
+
+Enable standalone mode. Do not depend on Sysdig backend for 
+execution, avoiding the need of specifying 
+'sysdig-secure-token' and 'sysdig-secure-url'. 
+
+Recommended when using runners with no access to the internet. May require to specify custom `cli-scanner-url` and `db-path`.
+
+### `db-path`
+
+Specify the directory for the vulnerabilities database to use while scanning.
+
+Useful when running in standalone mode.
+
+### `skip-upload`
+
+Skip uploading scanning results to Sysdig Secure.
+
+### `skip-summary`
+
+Skip generating Summary.
+
+### `use-policies`
+
+Specify Sysdig Secure VM Policies to evaluate the image.
+
+### `override-pullstring`
+
+Custom PullString to give the image when scanning and 
+uploading. 
+
+Useful when building images in a pipeline with temporary names. The custom PullString will be used to identify the scanned image in Sysdig Secure.
+
 ### `image-tag`
 
-**Required** The tag of the local image to scan. Example: `"sysdiglabs/dummy-vuln-app:latest"`.
+Tag of the image to analyse.
 
 ### `sysdig-secure-token`
 
-**Required** API token for Sysdig Scanning auth. Example: `"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"`.
-
-Directly specifying the API token in the action configuration is not recommended. A better approach is to [store it in GitHub secrets](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets), and reference `${{ secrets.MY_SECRET_NAME }}` instead.
+API token for Sysdig Scanning authentication. (Required if not in 
+Standalone mode.)
 
 ### `sysdig-secure-url`
 
-Sysdig Secure URL. Example: `https://secure-sysdig.svc.cluster.local`
-
-If not specified, it will default to Sysdig Secure SaaS URL (https://secure.sysdig.com).
-
-For SaaS, eee [SaaS Regions and IP Ranges](https://docs.sysdig.com/en/saas-regions-and-ip-ranges.html).
+Sysdig Secure Endpoint URL. Defaults to `https://secure-sysdig.com`. Please, visit the [official documentation](https://docs.sysdig.com/en/docs/administration/saas-regions-and-ip-ranges/) for more details on endpoints and regions.
 
 ### `sysdig-skip-tls`
 
-Skip TLS verification when calling secure endpoints.
-
-### `dockerfile-path`
-
-Path to Dockerfile. Example: `"./Dockerfile"`.
-
-### `ignore-failed-scan`
-
-Don't fail the execution of this action even if the scan result is FAILED.
-
-### `input-type`
-
-If specified, where should we scan the image from. Possible values:
-* **pull**: Pull the image from the registry. Default if not specified.
-* **docker-daemon**: Get the image from the Docker daemon. The Docker socket must be available at `/var/run/docker.sock`
-* **cri-o**: Get the image from containers-storage (CRI-O and others). Images must be stored in `/var/lib/containers`
-* docker-archive: Image is provided as a Docker .tar file (from Docker save). Specify the path to the tar file with `input-path` parameter.
-* **oci-archive**: Image is provided as a OCI image tar file. Specify the path to the tar file with `input-path` parameter.
-* **oci-dir**: Image is provided as a OCI image, untared. Specify the path to the directory file with `input-path` parameter.
-
-### `input-path`
-
-Path to the tar file or OCI layout directory, or the Docker daemon when using `input-type: docker-daemon`, in case the `docker.sock` file is not in the default path `/var/run/docker.sock`.
-
-### `run-as-user`
-
-Run the scan container with this username or UID.
-It might be required when scanning from docker-daemon or cri-o to provide a user with permissions on the socket or storage.
+Skip TLS verification when calling Sysdig Secure endpoints.
 
 ### `extra-parameters`
 
-Additional parameters added to the secure-inline-scan container execution.
-
-### `extra-docker-parameters`
-
-Additional parameters added to the `docker` command when executing the secure-inline-scan container execution.
-
-### `severity`
-
-Filter output annotations by severity. Default is "unknown".
-Possible values:
-- critical
-- high
-- medium
-- negligible
-- unknown
-
-### `unique-report-by-package`
-
-Only one annotation by package name/version will be displayed in the build output. 
-The last highest (by severity) vulnerability will be displayed by package.
-It increases the readability of the output, avoiding duplicates for the same package.
-Default to false.
-
-
-### `inline-scan-image`
-
-The image `quay.io/sysdig/secure-inline-scan:2`, which points to the latest 2.x version of the Sysdig Secure inline scanner is used by default.
-This parameter allows overriding the default image, to use a specific version or for air-gapped environments.
+Additional parameters to be added to the CLI Scanner. Note that these may not be supported with the current Action.
 
 ## SARIF Report
 
@@ -96,22 +100,23 @@ You need to assign an ID to the Sysdig Scan Action step, like:
 
     - name: Scan image
       id: scan
-      uses: sysdiglabs/scan-action@v3
+      uses: sysdiglabs/scan-action@v4
       with:
         ...
 ```
 
-and then add another step for uploading the SARIF report, providing the path in the `sarifReport` output:
+and then add another step for uploading the SARIF report, providing the path in the `sarif_file` parameter:
 
 ```yaml
     ...
-      - uses: github/codeql-action/upload-sarif@v1
+      - name: Upload SARIF file
+        if: success() || failure() 
+        uses: github/codeql-action/upload-sarif@v3
         with:
-          if: always()
-          sarif_file: ${{ steps.scan.outputs.sarifReport }}
+          sarif_file: ${{ github.workspace }}/sarif.json
 ```
 
-The `if: always()` option makes sure the SARIF report is uploaded even if the scan fails and interrupts the workflow.
+The `if: success() || failure()` option makes sure the SARIF report is uploaded even if the scan fails and interrupts the workflow. (Q: Why not `always()`? A: That would allow for canceled jobs as well.)
 
 ## Example usages
 
@@ -126,17 +131,16 @@ The `if: always()` option makes sure the SARIF report is uploaded even if the sc
 
     - name: Scan image
       id: scan
-      uses: sysdiglabs/scan-action@v3
+      uses: sysdiglabs/scan-action@v4
       with:
-        image-tag: "sysdiglabs/dummy-vuln-app:latest"
-        sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
-        input-type: docker-daemon
-        run-as-user: root
+          image-tag: sysdiglabs/dummy-vuln-app:latest
+          sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
 
-      - uses: github/codeql-action/upload-sarif@v1
-        if: always()
+      - name: Upload SARIF file
+        if: success() || failure() 
+        uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: ${{ steps.scan.outputs.sarifReport }}
+          sarif_file: ${{ github.workspace }}/sarif.json
 
 ```
 
@@ -146,13 +150,13 @@ The `if: always()` option makes sure the SARIF report is uploaded even if the sc
     ...
 
     - name: Scan image
-      uses: sysdiglabs/scan-action@v3
+      uses: sysdiglabs/scan-action@v4
       with:
         image-tag: "sysdiglabs/dummy-vuln-app:latest"
         sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
 ```
 
-### Scan a Docker archive image
+### Fail pipeline when Policy Evaluation is failed or scanner fails to run
 
 
 ```yaml
@@ -163,6 +167,6 @@ The `if: always()` option makes sure the SARIF report is uploaded even if the sc
       with:
         image-tag: "sysdiglabs/dummy-vuln-app:latest"
         sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
-        input-type: docker-archive
-        input-path: artifacts/my-image.tar
+        stop-on-failed-policy-eval: true
+        stop-on-processing-error: true
 ```

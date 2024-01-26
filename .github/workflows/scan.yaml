@@ -8,34 +8,87 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # This step checks out a copy of your repository.
+      - name: Check out repository
+        uses: actions/checkout@v4
+
       - name: Scan dummy-vuln-app from registry
         id: scan
-        uses: sysdiglabs/scan-action@master
+        uses: ./
         with:
           # Tag of the image to analyse
           image-tag: sysdiglabs/dummy-vuln-app:latest
           # API token for Sysdig Scanning auth
           sysdig-secure-token: ${{ secrets.KUBELAB_SECURE_API_TOKEN }}
-          ignore-failed-scan: true
+          stop-on-failed-policy-eval: true
+          stop-on-processing-error: true
 
-  scan-from-docker-archive:
-    runs-on: ubuntu-latest
+      - name: Upload SARIF file
+        if: success() || failure() # Upload results regardless previous step fails
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ github.workspace }}/sarif.json
+
+  macos-scan-from-registry:
+    runs-on: macos-latest
+
     steps:
+      # This step checks out a copy of your repository.
+      - name: Check out repository
+        uses: actions/checkout@v4
 
-      - name: Pull image
-        id: pull-and-save
-        run: |
-          docker pull sysdiglabs/dummy-vuln-app:latest
-          docker save sysdiglabs/dummy-vuln-app:latest -o image.tar
-
-      - name: Scan dummy-vuln-app from archive
+      - name: Scan dummy-vuln-app from registry
         id: scan
-        uses: sysdiglabs/scan-action@master
+        uses: ./
         with:
           # Tag of the image to analyse
           image-tag: sysdiglabs/dummy-vuln-app:latest
           # API token for Sysdig Scanning auth
           sysdig-secure-token: ${{ secrets.KUBELAB_SECURE_API_TOKEN }}
-          input-type: docker-archive
-          input-path: ${{ github.workspace }}/image.tar
-          ignore-failed-scan: true
+          stop-on-failed-policy-eval: true
+          stop-on-processing-error: true
+
+      - name: Upload SARIF file
+        if: success() || failure() # Upload results regardless previous step fails
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ github.workspace }}/sarif.json
+
+
+  standalone-scan-from-registry:
+    runs-on: ubuntu-latest
+
+    steps:
+      # This step checks out a copy of your repository.
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Donate MainDB from scan
+        id: donnor-scan
+        uses: ./
+        with:
+          # Tag of the image to analyse
+          image-tag: sysdiglabs/dummy-vuln-app:latest
+          # API token for Sysdig Scanning auth
+          sysdig-secure-token: ${{ secrets.KUBELAB_SECURE_API_TOKEN }}
+          stop-on-failed-policy-eval: false
+          stop-on-processing-error: true
+          skip-summary: true
+
+      - name: Scan dummy-vuln-app from registry
+        id: scan
+        uses: ./
+        with:
+          # Tag of the image to analyse
+          image-tag: sysdiglabs/dummy-vuln-app:latest
+          # API token for Sysdig Scanning auth
+          #sysdig-secure-token: ${{ secrets.KUBELAB_SECURE_API_TOKEN }}
+          stop-on-failed-policy-eval: true
+          stop-on-processing-error: true
+          standalone: true
+
+      - name: Upload SARIF file
+        if: success() || failure() # Upload results regardless previous step fails
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ github.workspace }}/sarif.json
