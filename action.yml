@@ -44,6 +44,14 @@ inputs:
   override-pullstring:
     description: Custom PullString to give the image when scanning and uploading. 
     required: false
+  severity-at-least:
+    description: Filtering option to only report vulnerabilities with at least the specified severity. Can take [critical|high|medium|low|negligible|any]. Default value "any" for no filtering.
+    default: any
+    required: false
+  group-by-package:
+    description: Enable grouping the vulnerabilities in the SARIF report by package.
+    default: "false"
+    required: false
   image-tag:
     description: Tag of the image to analyse.
     required: true
