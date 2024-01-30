@@ -35,6 +35,18 @@ Fail the job if the Policy Evaluation is Failed.
 
 Fail the job if the Scanner terminates execution with errors.
 
+### `severity-at-least`
+
+Filtering option to only report vulnerabilities with at least the specified severity. Can take [`critical`|`high`|`medium`|`low`|`negligible`|`any`]. Default value "any" for no filtering.
+
+For example, if `severity-at-least` is set to `medium`, only Medium, High or Critical vulnerabilities will be reported.
+
+### `group-by-package`
+
+Enable grouping the vulnerabilities in the SARIF report by package.
+
+Useful if you want to manage security per package or condense the number of findings.
+
 ### `standalone`
 
 Enable standalone mode. Do not depend on Sysdig backend for 
@@ -79,7 +91,7 @@ Standalone mode.)
 
 ### `sysdig-secure-url`
 
-Sysdig Secure Endpoint URL. Defaults to `https://secure-sysdig.com`. Please, visit the [official documentation](https://docs.sysdig.com/en/docs/administration/saas-regions-and-ip-ranges/) for more details on endpoints and regions.
+Sysdig Secure Endpoint URL. Defaults to `https://secure.sysdig.com`. Please, visit the [official documentation](https://docs.sysdig.com/en/docs/administration/saas-regions-and-ip-ranges/) for more details on endpoints and regions.
 
 ### `sysdig-skip-tls`
 

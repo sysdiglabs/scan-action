@@ -8,9 +8,9 @@
           "name": "sysdig-cli-scanner",
           "fullName": "Sysdig Vulnerability CLI Scanner",
           "informationUri": "https://docs.sysdig.com/en/docs/installation/sysdig-secure/install-vulnerability-cli-scanner",
-          "version": "4.0.0",
-          "semanticVersion": "4.0.0",
-          "dottedQuadFileVersion": "4.0.0.0",
+          "version": "4.1.0",
+          "semanticVersion": "4.1.0",
+          "dottedQuadFileVersion": "4.1.0.0",
           "rules": [
             {
               "id": "CVE-2023-30861",

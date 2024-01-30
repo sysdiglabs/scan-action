@@ -52,6 +52,14 @@ const LEVELS = {
   "note": ["Negligible","Low"]
 }
 
+const PRIORITY = {
+  "critical": 0,
+  "high": 1,
+  "medium": 2,
+  "low": 3,
+  "negligible": 4
+}
+
 const EVALUATION = {
   "failed": "❌",
   "passed": "✅" 
@@ -64,7 +72,6 @@ class ExecutionError extends Error {
     this.stderr = stderr;
   }
 }
-
 
 
 function parseActionInputs() {
@@ -85,6 +92,8 @@ function parseActionInputs() {
     sysdigSecureToken: core.getInput('sysdig-secure-token'),
     sysdigSecureURL: core.getInput('sysdig-secure-url') || defaultSecureEndpoint,
     sysdigSkipTLS: core.getInput('sysdig-skip-tls') == 'true',
+    severityAtLeast: core.getInput('severity-at-least') || 'any',
+    groupByPackage: core.getInput('group-by-package') == 'true',
     extraParameters: core.getInput('extra-parameters'),
   }
 }
@@ -117,8 +126,8 @@ function printOptions(opts) {
 
   core.info(`Sysdig skip TLS: ${opts.sysdigSkipTLS}`);
 
-  if (opts.severity) {
-    core.info(`Severity level: ${opts.severity}`);
+  if (opts.severityAtLeast != 'any') {
+    core.info(`Severity level: ${opts.severityAtLeast}`);
   }
 
   core.info('Analyzing image: ' + opts.imageTag);
@@ -199,7 +208,7 @@ async function run() {
     let scanFlags = composeFlags(opts);
 
     // If custom scanner version is specified
-    if (opts.cliScannerVersion) {
+    if (opts.cliScannerVersion && opts.cliScannerURL == cliScannerURL) {
       opts.cliScannerURL = `${cliScannerURLBase}/${opts.cliScannerVersion}/${cliScannerOS}/${cliScannerArch}/${cliScannerName}`
     }
 
@@ -239,8 +248,16 @@ async function run() {
   }
 }
 
-async function processScanResult(result, opts) {
+function filterResult(report, severity) {
+  let filter_num = PRIORITY[severity.toLowerCase()];
 
+  report.result.packages.forEach(pkg => {
+    if (pkg.vulns) pkg.vulns = pkg.vulns.filter((vuln) => PRIORITY[vuln.severity.value.toLowerCase()] <= filter_num);
+  });
+  return report;
+}
+
+async function processScanResult(result, opts) {
   writeReport(result.Output);
 
   let report;
@@ -252,11 +269,17 @@ async function processScanResult(result, opts) {
   }
 
   if (report) {
-    generateSARIFReport(report);
+    if (opts.severityAtLeast && opts.severityAtLeast != 'any') {
+      report = filterResult(report, opts.severityAtLeast);
+    }
+
+    generateSARIFReport(report, opts.groupByPackage);
 
     if (!opts.skipSummary) {
       core.info("Generating Summary...")
+
       await generateSummary(opts, report);
+
     } else {
       core.info("Skipping Summary...")
     }
@@ -326,8 +349,15 @@ async function executeScan(envvars, flags) {
   return { ReturnCode: retCode, Output: execOutput, Error: errOutput };
 }
 
-function vulnerabilities2SARIF(data) {
-  const [rules, results] = vulnerabilities2SARIFRes(data)
+function vulnerabilities2SARIF(data, groupByPackage) {
+  let rules = [];
+  let results = [];
+
+  if (groupByPackage) {
+    [rules, results] = vulnerabilities2SARIFResByPackage(data)
+  } else {
+    [rules, results] = vulnerabilities2SARIFRes(data)
+  }
 
   if (!rules.length || !results.length) {
     return {};
@@ -342,7 +372,7 @@ function vulnerabilities2SARIF(data) {
         version: toolVersion,
         semanticVersion: toolVersion,
         dottedQuadFileVersion: dottedQuadToolVersion,
-        rules: rules //vulnerabilities2SARIFRules(data)
+        rules: rules 
       }
     },
     logicalLocations: [
@@ -352,7 +382,7 @@ function vulnerabilities2SARIF(data) {
         kind: "namespace"
       }
     ],
-    results: results, //vulnerabilities2SARIFResults(data),
+    results: results,
     columnKind: "utf16CodeUnits",
     properties: {
       pullString: data.result.metadata.pullString,
@@ -390,6 +420,95 @@ function check_level(sev_value) {
   return level
 }
 
+
+function vulnerabilities2SARIFResByPackage(data) {
+  let results = [];
+  let rules = [];
+  let ruleIds = [];
+  let resultUrl = "";
+  let baseUrl = null;
+  
+  if (data.info && data.result) {
+    if (data.info.resultUrl) {
+      resultUrl = data.info.resultUrl;
+      baseUrl = resultUrl.slice(0,resultUrl.lastIndexOf('/'));
+    }
+  
+    data.result.packages.forEach(pkg => {
+      if (!pkg.vulns) {
+        return
+      }
+
+      let helpUri = "";
+      let fullDescription = "";
+      let severity_level = "";
+      let severity_num = 5;
+      let score = 0.0;
+      pkg.vulns.forEach(vuln => {
+        fullDescription += `${getSARIFVulnFullDescription(pkg, vuln)}\n\n\n`;
+
+        if (PRIORITY[vuln.severity.value.toLowerCase()] < severity_num) {
+          severity_level = vuln.severity.value.toLowerCase();
+          severity_num = PRIORITY[severity_level];
+        }
+
+        if (vuln.cvssScore.value.score > score) {
+          score = vuln.cvssScore.value.score;
+        }
+      });
+      if (baseUrl) helpUri = `${baseUrl}/content?filter=freeText+in+("${pkg.name}")`;
+
+
+      let rule = {
+        id: pkg.name,
+        name: pkg.name,
+        shortDescription: {
+          text: `Vulnerable package: ${pkg.name}`
+        },
+        fullDescription: {
+          text: fullDescription
+        },
+        helpUri: helpUri,
+        help: getSARIFPkgHelp(pkg),
+        properties: {
+          precision: "very-high",
+          'security-severity': `${score}`,
+          tags: [
+              'vulnerability',
+              'security',
+              severity_level
+          ]
+        }
+      }
+      rules.push(rule);
+      
+      let result = {
+        ruleId: pkg.name,
+        level: check_level(severity_level),
+        message: {
+          text: getSARIFReportMessageByPackage(data, pkg, baseUrl)
+        },
+        locations: [
+          {
+              physicalLocation: {
+                  artifactLocation: {
+                      uri: data.result.metadata.pullString,
+                      uriBaseId: "ROOTPATH"
+                  }
+              },
+              message: {
+                  text: `${data.result.metadata.pullString} - ${pkg.name}@${pkg.version}`
+              }
+          }
+        ]
+      }
+      results.push(result)
+    });
+  }
+  
+  return [rules, results];
+}
+
 function vulnerabilities2SARIFRes(data) {
   let results = [];
   let rules = [];
@@ -407,7 +526,7 @@ function vulnerabilities2SARIFRes(data) {
       if (!pkg.vulns) {
         return
       }
-  
+
       pkg.vulns.forEach(vuln =>{
         if (!(vuln.name in ruleIds)){
           ruleIds.push(vuln.name)
@@ -476,6 +595,33 @@ Fix: ${pkg.suggestedFix || "Unknown"}
 URL: https://nvd.nist.gov/vuln/detail/${vuln.name}`;
 }
 
+function getSARIFPkgHelp(pkg) {
+  let text = "";
+  pkg.vulns.forEach(vuln => {text +=`Vulnerability ${vuln.name}
+  Severity: ${vuln.severity.value}
+  Package: ${pkg.name}
+  CVSS Score: ${vuln.cvssScore.value.score}
+  CVSS Version: ${vuln.cvssScore.value.version}
+  CVSS Vector: ${vuln.cvssScore.value.vector}
+  Version: ${pkg.version}
+  Fix Version: ${pkg.suggestedFix || "Unknown"}
+  Exploitable: ${vuln.exploitable}
+  Type: ${pkg.type}
+  Location: ${pkg.path}
+  URL: https://nvd.nist.gov/vuln/detail/${vuln.name}\n\n\n`
+  });
+
+  let markdown = `| Vulnerability | Severity | CVSS Score | CVSS Version | CVSS Vector | Exploitable |
+  | -------- | ------- | ---------- | ------------ | -----------  | ----------- |\n`;
+
+  pkg.vulns.forEach(vuln => {markdown += `| ${vuln.name} | ${vuln.severity.value} | ${vuln.cvssScore.value.score} | ${vuln.cvssScore.value.version} | ${vuln.cvssScore.value.vector} | ${vuln.exploitable} |\n` });
+  
+  return {
+    text: text,
+    markdown: markdown
+  };
+}
+
 function getSARIFVulnHelp(pkg, vuln) {
   return {
     text: `Vulnerability ${vuln.name}
@@ -498,17 +644,59 @@ URL: https://nvd.nist.gov/vuln/detail/${vuln.name}`,
   }
 }
 
-function getSARIFReportMessage(data, vuln, pkg, baseUrl) {
+function getSARIFReportMessageByPackage(data, pkg, baseUrl) {
   let message = `Full image scan results in Sysdig UI: [${data.result.metadata.pullString} scan result](${data.info.resultUrl})\n`;
 
-  if (baseUrl) message += `Package: [${pkg.name}](${baseUrl}/content?filter=freeText+in+("${pkg.name}"))\n`;
+  if (baseUrl) {
+    message += `Package: [${pkg.name}](${baseUrl}/content?filter=freeText+in+("${pkg.name}"))\n`;
+  } else {
+    message += `Package: ${pkg.name}\n`;
+  }
   
   message += `Package type: ${pkg.type}
   Installed Version: ${pkg.version}
   Package path: ${pkg.path}\n`;
 
-  if (baseUrl) message += `Vulnerability: [${vuln.name}](${baseUrl}/vulnerabilities?filter=freeText+in+("${vuln.name}"))\n`;
+  pkg.vulns.forEach(vuln => {
+    message += `.\n`;
+
+    if (baseUrl) {
+      message += `Vulnerability: [${vuln.name}](${baseUrl}/vulnerabilities?filter=freeText+in+("${vuln.name}"))\n`;
+    } else {
+      message += `Vulnerability: ${vuln.name}\n`;
+    }
+    
+    message += `Severity: ${vuln.severity.value}
+    CVSS Score: ${vuln.cvssScore.value.score}
+    CVSS Version: ${vuln.cvssScore.value.version}
+    CVSS Vector: ${vuln.cvssScore.value.vector}
+    Fixed Version: ${(vuln.fixedInVersion || 'Unknown')}
+    Exploitable: ${vuln.exploitable}
+    Link to NVD: [${vuln.name}](https://nvd.nist.gov/vuln/detail/${vuln.name})\n`;
+  });
+
   
+  return message;
+}
+
+function getSARIFReportMessage(data, vuln, pkg, baseUrl) {
+  let message = `Full image scan results in Sysdig UI: [${data.result.metadata.pullString} scan result](${data.info.resultUrl})\n`;
+
+  if (baseUrl) {
+    message += `Package: [${pkg.name}](${baseUrl}/content?filter=freeText+in+("${pkg.name}"))\n`;
+  } else {
+    message += `Package: ${pkg.name}\n`;
+  }
+  
+  message += `Package type: ${pkg.type}
+  Installed Version: ${pkg.version}
+  Package path: ${pkg.path}\n`;
+
+  if (baseUrl) {
+    message += `Vulnerability: [${vuln.name}](${baseUrl}/vulnerabilities?filter=freeText+in+("${vuln.name}"))\n`;
+  } else {
+    message += `Vulnerability: ${vuln.name}\n`;
+  }
   message += `Severity: ${vuln.severity.value}
   CVSS Score: ${vuln.cvssScore.value.score}
   CVSS Version: ${vuln.cvssScore.value.version}
@@ -520,8 +708,8 @@ function getSARIFReportMessage(data, vuln, pkg, baseUrl) {
   return message;
 }
 
-function generateSARIFReport(data) {
-  let sarifOutput = vulnerabilities2SARIF(data);
+function generateSARIFReport(data, groupByPackage) {
+  let sarifOutput = vulnerabilities2SARIF(data, groupByPackage);
   core.setOutput("sarifReport", "./sarif.json");
   fs.writeFileSync("./sarif.json", JSON.stringify(sarifOutput, null, 2));
 }
@@ -559,14 +747,17 @@ function getRulePkgMessage(rule, packages) {
 
     let pkg = packages[pkgIndex];
     let vuln = pkg.vulns[vulnInPkgIndex];
-    table.push([`${vuln.severity.value}`,
+
+    if (vuln) {
+      table.push([`${vuln.severity.value}`,
       `${pkg.name}`,
       `${vuln.cvssScore.value.score}`,
       `${vuln.cvssScore.value.version}`,
       `${vuln.cvssScore.value.vector}`,
       `${pkg.suggestedFix || "Unknown"}`,
       `${vuln.exploitable}`
-    ]);
+      ]);
+    }
   });
 
   core.summary.addTable(table);
@@ -620,6 +811,7 @@ function addReportToSummary(data) {
       });
     }
   });
+
 }
 
 module.exports = {
@@ -4733,7 +4925,7 @@ module.exports = require("util");
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"4.0.0","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint .","prepare":"ncc build index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^5.0.0"},"devDependencies":{"@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^27.0.6","tmp":"^0.2.1"}}');
+module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"4.1.0","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint .","prepare":"ncc build index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^5.0.0"},"devDependencies":{"@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^27.0.6","tmp":"^0.2.1"}}');
 
 /***/ })
 
