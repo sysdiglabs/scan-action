@@ -8,6 +8,8 @@ const os = require('os');
 
 const toolVersion = `${version}`;
 const dottedQuadToolVersion = `${version}.0`;
+const vmMode = "vm"
+const iacMode = "iac"
 
 function getRunArch() {
   let arch = "unknown";
@@ -89,6 +91,10 @@ function parseActionInputs() {
     severityAtLeast: core.getInput('severity-at-least') || 'any',
     groupByPackage: core.getInput('group-by-package') == 'true',
     extraParameters: core.getInput('extra-parameters'),
+    mode: core.GetInput('mode') || vmMode,
+    recursive: core.GetInput('recursive') || false,
+    minimumSeverity: core.GetInput('minimum-severity'),
+    iacScanPath: core.GetInput('iac-scan-path') || './'
   }
 }
 
@@ -180,8 +186,25 @@ function composeFlags(opts) {
   if (opts.extraParameters) {
     flags += ` ${opts.extraParameters}`;
   }
+  if (opts.mode && opts.mode == vmMode) {
+    flags += ` ${opts.imageTag || ""}`;
+  }
 
-  flags += ` ${opts.imageTag || ""}`;
+  if (opts.mode && opts.mode == iacMode) {
+    flags += `--iac`;
+  }
+
+  if (opts.recursive) {
+    flags += `-r`;
+  }
+
+  if (opts.minimumSeverity) {
+    flags += `-f=${opts.minimumSeverity}`;
+  }
+
+  if (opts.mode && opts.mode == iacMode) {
+    flags += `${opts.iacScanPath }`;
+  }
 
   return {
     envvars: envvars,
