@@ -91,10 +91,10 @@ function parseActionInputs() {
     severityAtLeast: core.getInput('severity-at-least') || 'any',
     groupByPackage: core.getInput('group-by-package') == 'true',
     extraParameters: core.getInput('extra-parameters'),
-    mode: core.GetInput('mode') || vmMode,
-    recursive: core.GetInput('recursive') || false,
-    minimumSeverity: core.GetInput('minimum-severity'),
-    iacScanPath: core.GetInput('iac-scan-path') || './'
+    mode: core.getInput('mode') || vmMode,
+    recursive: core.getInput('recursive') || false,
+    minimumSeverity: core.getInput('minimum-severity'),
+    iacScanPath: core.getInput('iac-scan-path') || './'
   }
 }
 
@@ -217,10 +217,25 @@ function writeReport(reportData) {
   core.setOutput("scanReport", "./report.json");
 }
 
+function validateInput(opts) {
+  if (!opts.standalone && !opts.sysdigSecureToken) {
+    core.setFailed("Sysdig Secure Token is required for standard execution, please set your token or remove the standalone input.");
+  }
+
+  if (opts.mode && opts.mode == vmMode && !opts.imageTag) {
+    core.setFailed("Image Tag is required for VM mode.");
+  }
+
+  if (opts.mode && opts.mode == iacMode && opts.iacScanPath == "") {
+    core.setFailed("IaC Scan Path can't be empty, please specify the path you want to scan your manifest resources.");
+  }
+}
+
 async function run() {
 
   try {
     let opts = parseActionInputs();
+    validateInput(opts)
     printOptions(opts);
     let scanFlags = composeFlags(opts);
 
