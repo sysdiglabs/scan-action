@@ -76,11 +76,11 @@ inputs:
     description: 'Recursively scan all folders within the folder specified in the iacScanPath.'
     required: false
     default: "false"
-  minimumSeverity:
+  minimum-severity:
     description: 'Minimum severity to fail when scanning in IaC mode'
     required: false
     default: "high"
-  iacScanPath:
+  iac-scan-path:
     description: 'Path to the IaC files to scan.'
     required: false
     default: "./"
