@@ -90,7 +90,7 @@ function parseActionInputs() {
     skipSummary: core.getInput('skip-summary') == 'true',
     usePolicies: core.getInput('use-policies'),
     overridePullString: core.getInput('override-pullstring'),
-    imageTag: core.getInput('image-tag', { required: true }),
+    imageTag: core.getInput('image-tag'),
     sysdigSecureToken: core.getInput('sysdig-secure-token'),
     sysdigSecureURL: core.getInput('sysdig-secure-url') || defaultSecureEndpoint,
     sysdigSkipTLS: core.getInput('sysdig-skip-tls') == 'true',
