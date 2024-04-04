@@ -191,19 +191,19 @@ function composeFlags(opts) {
   }
 
   if (opts.mode && opts.mode == iacMode) {
-    flags += `--iac`;
+    flags += ` --iac`;
   }
 
   if (opts.recursive) {
-    flags += `-r`;
+    flags += ` -r`;
   }
 
   if (opts.minimumSeverity) {
-    flags += `-f=${opts.minimumSeverity}`;
+    flags += ` -f=${opts.minimumSeverity}`;
   }
 
   if (opts.mode && opts.mode == iacMode) {
-    flags += `${opts.iacScanPath }`;
+    flags += ` ${opts.iacScanPath }`;
   }
 
   return {
