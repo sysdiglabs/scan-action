@@ -192,24 +192,25 @@ function composeFlags(opts) {
   if (opts.extraParameters) {
     flags += ` ${opts.extraParameters}`;
   }
-  if (opts.mode && opts.mode == vmMode) {
-    flags += ` ${opts.imageTag || ""}`;
-  }
 
   if (opts.mode && opts.mode == iacMode) {
-    flags += `--iac`;
+    flags += ` --iac`;
   }
-
+  
   if (opts.recursive) {
-    flags += `-r`;
+    flags += ` -r`;
+  }
+  
+  if (opts.minimumSeverity) {
+    flags += ` -f=${opts.minimumSeverity}`;
   }
 
-  if (opts.minimumSeverity) {
-    flags += `-f=${opts.minimumSeverity}`;
+  if (opts.mode && opts.mode == vmMode) {
+    flags += ` ${opts.imageTag}`;
   }
 
   if (opts.mode && opts.mode == iacMode) {
-    flags += `${opts.iacScanPath }`;
+    flags += ` ${opts.iacScanPath}`;
   }
 
   return {
@@ -376,7 +377,7 @@ async function executeScan(envvars, flags) {
 
   let start = performance.now();
   let cmd = `./${cliScannerName} ${flags}`;
-  core.debug("Executing: " + cmd);
+  core.info("Executing: " + cmd);
   let retCode = await exec.exec(cmd, null, scanOptions);
   core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
 
