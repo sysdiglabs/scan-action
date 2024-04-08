@@ -145,7 +145,7 @@ function composeFlags(opts) {
   let envvars = {}
   envvars['SECURE_API_TOKEN'] = opts.sysdigSecureToken || "";
 
-  let flags = ` --json-scan-result=${cliScannerResult}`;
+  let flags = ""
 
   if (opts.registryUser) {
     envvars['REGISTRY_USER'] = opts.registryUser;

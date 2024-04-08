@@ -629,7 +629,7 @@ describe("run the full action", () => {
 
         await index.run();
         expect(exec.exec).toBeCalledTimes(4);
-        expect(exec.exec.mock.calls[2][0]).toMatch(`${index.cliScannerName}  --json-scan-result=scan-result.json --apiurl https://secure.sysdig.com/ --override-pullstring=my-custom-image:latest image:tag`);
+        expect(exec.exec.mock.calls[2][0]).toMatch(`${index.cliScannerName}  --apiurl https://secure.sysdig.com/ --override-pullstring=my-custom-image:latest --json-scan-result=scan-result.json image:tag`);
     })
 
 })
