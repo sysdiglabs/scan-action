@@ -98,7 +98,7 @@ function parseActionInputs() {
     groupByPackage: core.getInput('group-by-package') == 'true',
     extraParameters: core.getInput('extra-parameters'),
     mode: core.getInput('mode') || vmMode,
-    recursive: core.getInput('recursive') || false,
+    recursive: core.getInput('recursive') == 'true',
     minimumSeverity: core.getInput('minimum-severity'),
     iacScanPath: core.getInput('iac-scan-path') || './'
   }
@@ -206,6 +206,7 @@ function composeFlags(opts) {
   }
 
   if (opts.mode && opts.mode == vmMode) {
+    flags += ` --json-scan-result=${cliScannerResult}`
     flags += ` ${opts.imageTag}`;
   }
 
@@ -227,14 +228,17 @@ function writeReport(reportData) {
 function validateInput(opts) {
   if (!opts.standalone && !opts.sysdigSecureToken) {
     core.setFailed("Sysdig Secure Token is required for standard execution, please set your token or remove the standalone input.");
+    throw new Error("Sysdig Secure Token is required for standard execution, please set your token or remove the standalone input.");
   }
 
   if (opts.mode && opts.mode == vmMode && !opts.imageTag) {
-    core.setFailed("Image Tag is required for VM mode.");
+    core.setFailed("image-tag is required for VM mode.");
+    throw new Error("image-tag is required for VM mode.");
   }
 
   if (opts.mode && opts.mode == iacMode && opts.iacScanPath == "") {
-    core.setFailed("IaC Scan Path can't be empty, please specify the path you want to scan your manifest resources.");
+    core.setFailed("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
+    throw new Error("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
   }
 }
 
@@ -861,6 +865,7 @@ module.exports = {
   executeScan,
   processScanResult,
   run,
+  validateInput,
   cliScannerName,
   cliScannerResult,
   cliScannerVersion,

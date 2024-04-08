@@ -38,7 +38,8 @@ describe("input parsing", () => {
 
     it("raises error if no image tag provided", () => {
         process.env['INPUT_SYSDIG-SECURE-TOKEN'] = "token";
-        expect(() => index.parseActionInputs()).toThrow("Input required and not supplied: image-tag");
+        let opts = index.parseActionInputs()
+        expect(() => index.validateInput(opts)).toThrow("image-tag is required for VM mode.");
     })
 
     it("sets default for inputs", () => {
@@ -65,7 +66,11 @@ describe("input parsing", () => {
             "sysdigSkipTLS": false,
             "severityAtLeast": "any",
             "groupByPackage": false,
-            "extraParameters": ""
+            "extraParameters": "",
+            "iacScanPath": "./",
+            "recursive": false,
+            "minimumSeverity": "",
+            "mode": "vm"
         })
     })
 
@@ -89,6 +94,10 @@ describe("input parsing", () => {
         process.env['INPUT_SEVERITY-AT-LEAST'] = "medium";
         process.env['INPUT_GROUP-BY-PACKAGE'] = 'true';
         process.env['INPUT_EXTRA-PARAMETERS'] = "--extra-param";
+        process.env['INPUT_IAC-SCAN-PATH'] = "./";
+        process.env['INPUT_RECURSIVE'] = "true";
+        process.env['INPUT_MINIMUM-SEVERITY'] = "high";
+        process.env['INPUT_MODE'] = "vm";
         let opts = index.parseActionInputs()
 
         expect(opts).toEqual({
@@ -110,7 +119,11 @@ describe("input parsing", () => {
             "sysdigSkipTLS": true,
             "severityAtLeast": "medium",
             "groupByPackage": true,
-            "extraParameters": "--extra-param"
+            "extraParameters": "--extra-param",
+            "iacScanPath": "./",
+            "recursive": true,
+            "minimumSeverity": "high",
+            "mode": "vm"
         })
     })
 
@@ -118,10 +131,16 @@ describe("input parsing", () => {
 
 describe("execution flags", () => {
 
-    it("uses default flags", () => {
-        let flags = index.composeFlags({ sysdigSecureToken: "foo-token", imageTag: "image:tag" });
+    it("uses default flags for VM mode", () => {
+        let flags = index.composeFlags({ sysdigSecureToken: "foo-token", imageTag: "image:tag", mode: "vm" });
         expect(flags.envvars.SECURE_API_TOKEN).toMatch("foo-token");
         expect(flags.flags).toMatch(/(^| )image:tag($| )/);
+    })
+
+    it("uses default flags for IaC mode", () => {
+        let flags = index.composeFlags({ sysdigSecureToken: "foo-token", mode: "iac", iacScanPath: "/my-special-path" });
+        expect(flags.envvars.SECURE_API_TOKEN).toMatch("foo-token");
+        expect(flags.flags).toMatch(/(^| )--iac \/my-special-path($| )/);
     })
 
     it("adds secure URL flag", () => {
