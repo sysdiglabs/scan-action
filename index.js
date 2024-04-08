@@ -259,7 +259,9 @@ async function run() {
       retCode = scanResult.ReturnCode;
       if (retCode == 0 || retCode == 1) {
         // Transform Scan Results to other formats such as SARIF
-        await processScanResult(scanResult, opts);
+        if (opts.mode && opts.mode == vmMode) {
+          await processScanResult(scanResult, opts);
+        }
       } else {
         core.error("Terminating scan. Scanner couldn't be executed.")
       }
