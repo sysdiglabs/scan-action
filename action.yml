@@ -71,7 +71,7 @@ inputs:
   mode:
     description: 'Mode of operation. Can be "vm" or "iac".'
     required: false
-    default: image
+    default: vm
   recursive:
     description: 'Recursively scan all folders within the folder specified in the iacScanPath.'
     required: false
