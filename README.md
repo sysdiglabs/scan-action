@@ -129,7 +129,7 @@ You need to assign an ID to the Sysdig Scan Action step, like:
 
     - name: Scan image
       id: scan
-      uses: sysdiglabs/scan-action@v4
+      uses: sysdiglabs/scan-action@v5
       with:
         ...
 ```
@@ -160,7 +160,7 @@ The `if: success() || failure()` option makes sure the SARIF report is uploaded 
 
     - name: Scan image
       id: scan
-      uses: sysdiglabs/scan-action@v4
+      uses: sysdiglabs/scan-action@v5
       with:
           image-tag: sysdiglabs/dummy-vuln-app:latest
           sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
@@ -179,7 +179,7 @@ The `if: success() || failure()` option makes sure the SARIF report is uploaded 
     ...
 
     - name: Scan image
-      uses: sysdiglabs/scan-action@v4
+      uses: sysdiglabs/scan-action@v5
       with:
         image-tag: "sysdiglabs/dummy-vuln-app:latest"
         sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
@@ -191,7 +191,7 @@ The `if: success() || failure()` option makes sure the SARIF report is uploaded 
     ...
 
     - name: Scan infrastructure
-      uses: sysdiglabs/scan-action@v4
+      uses: sysdiglabs/scan-action@v5
       with:
         sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
         cli-scanner-version: 1.9.0
