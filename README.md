@@ -22,7 +22,7 @@ Mode of operation. Can be "vm" or "iac". Default is **vm**.
 Custom sysdig-cli-scanner version to download. It is set to `1.8.1` by default.
 
 > If using iac mode, minimum required version is 1.9.0.
-> Please note that the Action has only been tested with `1.8.x` versions and it is not guaranteed that it will work as expected with other versions.
+> Please note that for VM mode the Action has only been tested with `1.8.x` versions and it is not guaranteed that it will work as expected with other versions.
 
 ### `registry-user`
 
@@ -190,7 +190,7 @@ The `if: success() || failure()` option makes sure the SARIF report is uploaded 
 ```yaml
     ...
 
-    - name: Scan image
+    - name: Scan infrastructure
       uses: sysdiglabs/scan-action@v4
       with:
         sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
