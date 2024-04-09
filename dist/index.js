@@ -14,6 +14,8 @@ const os = __nccwpck_require__(37);
 
 const toolVersion = `${version}`;
 const dottedQuadToolVersion = `${version}.0`;
+const vmMode = "vm"
+const iacMode = "iac"
 
 function getRunArch() {
   let arch = "unknown";
@@ -88,13 +90,17 @@ function parseActionInputs() {
     skipSummary: core.getInput('skip-summary') == 'true',
     usePolicies: core.getInput('use-policies'),
     overridePullString: core.getInput('override-pullstring'),
-    imageTag: core.getInput('image-tag', { required: true }),
+    imageTag: core.getInput('image-tag'),
     sysdigSecureToken: core.getInput('sysdig-secure-token'),
     sysdigSecureURL: core.getInput('sysdig-secure-url') || defaultSecureEndpoint,
     sysdigSkipTLS: core.getInput('sysdig-skip-tls') == 'true',
     severityAtLeast: core.getInput('severity-at-least') || 'any',
     groupByPackage: core.getInput('group-by-package') == 'true',
     extraParameters: core.getInput('extra-parameters'),
+    mode: core.getInput('mode') || vmMode,
+    recursive: core.getInput('recursive') == 'true',
+    minimumSeverity: core.getInput('minimum-severity'),
+    iacScanPath: core.getInput('iac-scan-path') || './'
   }
 }
 
@@ -145,7 +151,7 @@ function composeFlags(opts) {
   let envvars = {}
   envvars['SECURE_API_TOKEN'] = opts.sysdigSecureToken || "";
 
-  let flags = ` --json-scan-result=${cliScannerResult}`;
+  let flags = ""
 
   if (opts.registryUser) {
     envvars['REGISTRY_USER'] = opts.registryUser;
@@ -187,7 +193,26 @@ function composeFlags(opts) {
     flags += ` ${opts.extraParameters}`;
   }
 
-  flags += ` ${opts.imageTag || ""}`;
+  if (opts.mode && opts.mode == iacMode) {
+    flags += ` --iac`;
+  }
+  
+  if (opts.recursive) {
+    flags += ` -r`;
+  }
+  
+  if (opts.minimumSeverity) {
+    flags += ` -f=${opts.minimumSeverity}`;
+  }
+
+  if (opts.mode && opts.mode == vmMode) {
+    flags += ` --json-scan-result=${cliScannerResult}`
+    flags += ` ${opts.imageTag}`;
+  }
+
+  if (opts.mode && opts.mode == iacMode) {
+    flags += ` ${opts.iacScanPath}`;
+  }
 
   return {
     envvars: envvars,
@@ -200,10 +225,28 @@ function writeReport(reportData) {
   core.setOutput("scanReport", "./report.json");
 }
 
+function validateInput(opts) {
+  if (!opts.standalone && !opts.sysdigSecureToken) {
+    core.setFailed("Sysdig Secure Token is required for standard execution, please set your token or remove the standalone input.");
+    throw new Error("Sysdig Secure Token is required for standard execution, please set your token or remove the standalone input.");
+  }
+
+  if (opts.mode && opts.mode == vmMode && !opts.imageTag) {
+    core.setFailed("image-tag is required for VM mode.");
+    throw new Error("image-tag is required for VM mode.");
+  }
+
+  if (opts.mode && opts.mode == iacMode && opts.iacScanPath == "") {
+    core.setFailed("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
+    throw new Error("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
+  }
+}
+
 async function run() {
 
   try {
     let opts = parseActionInputs();
+    validateInput(opts)
     printOptions(opts);
     let scanFlags = composeFlags(opts);
 
@@ -222,7 +265,9 @@ async function run() {
       retCode = scanResult.ReturnCode;
       if (retCode == 0 || retCode == 1) {
         // Transform Scan Results to other formats such as SARIF
-        await processScanResult(scanResult, opts);
+        if (opts.mode && opts.mode == vmMode) {
+          await processScanResult(scanResult, opts);
+        }
       } else {
         core.error("Terminating scan. Scanner couldn't be executed.")
       }
@@ -338,7 +383,7 @@ async function executeScan(envvars, flags) {
 
   let start = performance.now();
   let cmd = `./${cliScannerName} ${flags}`;
-  core.debug("Executing: " + cmd);
+  core.info("Executing: " + cmd);
   let retCode = await exec.exec(cmd, null, scanOptions);
   core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
 
@@ -822,6 +867,7 @@ module.exports = {
   executeScan,
   processScanResult,
   run,
+  validateInput,
   cliScannerName,
   cliScannerResult,
   cliScannerVersion,

@@ -53,8 +53,8 @@ inputs:
     default: "false"
     required: false
   image-tag:
-    description: Tag of the image to analyse.
-    required: true
+    description: Tag of the image to analyse. (Required if not in IaC mode.)
+    required: false
   sysdig-secure-token:
     description: API token for Sysdig Scanning auth. (Required if not in Standalone mode.)
     required: false
@@ -68,6 +68,22 @@ inputs:
   extra-parameters:
     description: Additional parameters added to the secure-inline-scan container execution.
     required: false
+  mode:
+    description: 'Mode of operation. Can be "vm" or "iac".'
+    required: false
+    default: vm
+  recursive:
+    description: 'Recursively scan all folders within the folder specified in the iacScanPath.'
+    required: false
+    default: "false"
+  minimum-severity:
+    description: 'Minimum severity to fail when scanning in IaC mode'
+    required: false
+    default: "high"
+  iac-scan-path:
+    description: 'Path to the IaC files to scan.'
+    required: false
+    default: "./"
 outputs:
   scanReport:
     description: Path to a JSON file containing the report results, failed evaluation gates, and found vulnerabilities.

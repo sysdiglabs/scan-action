@@ -13,11 +13,16 @@ URL to `sysdig-cli-scanner` binary download. The action will detect the runner O
 
 For more info about the Sysdig CLI Scanner download visit [the official documentation](https://docs.sysdig.com/en/docs/installation/sysdig-secure/install-vulnerability-cli-scanner/).
 
+### `mode`
+
+Mode of operation. Can be "vm" or "iac". Default is **vm**.
+
 ### `cli-scanner-version`
 
 Custom sysdig-cli-scanner version to download. It is set to `1.8.1` by default.
 
-> Please note that the Action has only been tested with `1.8.x` versions and it is not guaranteed that it will work as expected with other versions.
+> If using iac mode, minimum required version is 1.9.0.
+> Please note that for VM mode the Action has only been tested with `1.8.x` versions and it is not guaranteed that it will work as expected with other versions.
 
 ### `registry-user`
 
@@ -101,6 +106,18 @@ Skip TLS verification when calling Sysdig Secure endpoints.
 
 Additional parameters to be added to the CLI Scanner. Note that these may not be supported with the current Action.
 
+### `recursive`
+
+Recursively scan all folders within the folder specified in the iacScanPath
+
+### `minimum-severity`
+
+Minimum severity to fail when scanning in IaC mode
+
+### `iac-scan-path`
+
+Path to the IaC files to scan
+
 ## SARIF Report
 
 The action generates a SARIF report that can be uploaded using the `codeql-action/upload-sarif` action.
@@ -166,6 +183,20 @@ The `if: success() || failure()` option makes sure the SARIF report is uploaded 
       with:
         image-tag: "sysdiglabs/dummy-vuln-app:latest"
         sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+```
+
+### Scan infrastructure using IaC scan
+
+```yaml
+    ...
+
+    - name: Scan infrastructure
+      uses: sysdiglabs/scan-action@v4
+      with:
+        sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+        cli-scanner-version: 1.9.0
+        mode: iac
+        iac-scan-path: ./terraform
 ```
 
 ### Fail pipeline when Policy Evaluation is failed or scanner fails to run
