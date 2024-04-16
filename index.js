@@ -191,11 +191,11 @@ function composeFlags(opts) {
     flags += ` --iac`;
   }
   
-  if (opts.recursive) {
+  if (opts.recursive && opts.mode == iacMode) {
     flags += ` -r`;
   }
   
-  if (opts.minimumSeverity) {
+  if (opts.minimumSeverity && opts.mode == iacMode) {
     flags += ` -f=${opts.minimumSeverity}`;
   }
 
