@@ -17,7 +17,7 @@ function cleanupTemporaryDir(tmpDir) {
 }
 
 const exampleReport = JSON.stringify(require("./fixtures/report-test.json"));
-const exampleSarif = JSON.stringify(require("./fixtures/sarif-test.json"),null,2);
+//const exampleSarif = JSON.stringify(require("./fixtures/sarif-test.json"),null,2);
 
 describe("input parsing", () => {
     let oldEnv;
