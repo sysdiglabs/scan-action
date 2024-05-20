@@ -463,7 +463,6 @@ function check_level(sev_value) {
 function vulnerabilities2SARIFResByPackage(data) {
   let results = [];
   let rules = [];
-  let ruleIds = [];
   let resultUrl = "";
   let baseUrl = null;
   
@@ -630,7 +629,7 @@ function getSARIFVulnFullDescription(pkg, vuln) {
 Severity: ${vuln.severity.value}
 Package: ${pkg.name}
 Type: ${pkg.type}
-Fix: ${pkg.suggestedFix || "Unknown"}
+Fix: ${pkg.suggestedFix || "No fix available"}
 URL: https://nvd.nist.gov/vuln/detail/${vuln.name}`;
 }
 
@@ -643,7 +642,7 @@ function getSARIFPkgHelp(pkg) {
   CVSS Version: ${vuln.cvssScore.value.version}
   CVSS Vector: ${vuln.cvssScore.value.vector}
   Version: ${pkg.version}
-  Fix Version: ${pkg.suggestedFix || "Unknown"}
+  Fix Version: ${pkg.suggestedFix || "No fix available"}
   Exploitable: ${vuln.exploitable}
   Type: ${pkg.type}
   Location: ${pkg.path}
@@ -670,7 +669,7 @@ CVSS Score: ${vuln.cvssScore.value.score}
 CVSS Version: ${vuln.cvssScore.value.version}
 CVSS Vector: ${vuln.cvssScore.value.vector}
 Version: ${pkg.version}
-Fix Version: ${pkg.suggestedFix || "Unknown"}
+Fix Version: ${pkg.suggestedFix || "No fix available"}
 Exploitable: ${vuln.exploitable}
 Type: ${pkg.type}
 Location: ${pkg.path}
@@ -709,7 +708,7 @@ function getSARIFReportMessageByPackage(data, pkg, baseUrl) {
     CVSS Score: ${vuln.cvssScore.value.score}
     CVSS Version: ${vuln.cvssScore.value.version}
     CVSS Vector: ${vuln.cvssScore.value.vector}
-    Fixed Version: ${(vuln.fixedInVersion || 'Unknown')}
+    Fixed Version: ${(vuln.fixedInVersion || 'No fix available')}
     Exploitable: ${vuln.exploitable}
     Link to NVD: [${vuln.name}](https://nvd.nist.gov/vuln/detail/${vuln.name})\n`;
   });
@@ -740,7 +739,7 @@ function getSARIFReportMessage(data, vuln, pkg, baseUrl) {
   CVSS Score: ${vuln.cvssScore.value.score}
   CVSS Version: ${vuln.cvssScore.value.version}
   CVSS Vector: ${vuln.cvssScore.value.vector}
-  Fixed Version: ${(vuln.fixedInVersion || 'Unknown')}
+  Fixed Version: ${(vuln.fixedInVersion || 'No fix available')}
   Exploitable: ${vuln.exploitable}
   Link to NVD: [${vuln.name}](https://nvd.nist.gov/vuln/detail/${vuln.name})`;
   
@@ -793,7 +792,7 @@ function getRulePkgMessage(rule, packages) {
       `${vuln.cvssScore.value.score}`,
       `${vuln.cvssScore.value.version}`,
       `${vuln.cvssScore.value.vector}`,
-      `${pkg.suggestedFix || "Unknown"}`,
+      `${pkg.suggestedFix || "No fix available"}`,
       `${vuln.exploitable}`
       ]);
     }

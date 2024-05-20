@@ -469,7 +469,6 @@ function check_level(sev_value) {
 function vulnerabilities2SARIFResByPackage(data) {
   let results = [];
   let rules = [];
-  let ruleIds = [];
   let resultUrl = "";
   let baseUrl = null;
   
@@ -636,7 +635,7 @@ function getSARIFVulnFullDescription(pkg, vuln) {
 Severity: ${vuln.severity.value}
 Package: ${pkg.name}
 Type: ${pkg.type}
-Fix: ${pkg.suggestedFix || "Unknown"}
+Fix: ${pkg.suggestedFix || "No fix available"}
 URL: https://nvd.nist.gov/vuln/detail/${vuln.name}`;
 }
 
@@ -649,7 +648,7 @@ function getSARIFPkgHelp(pkg) {
   CVSS Version: ${vuln.cvssScore.value.version}
   CVSS Vector: ${vuln.cvssScore.value.vector}
   Version: ${pkg.version}
-  Fix Version: ${pkg.suggestedFix || "Unknown"}
+  Fix Version: ${pkg.suggestedFix || "No fix available"}
   Exploitable: ${vuln.exploitable}
   Type: ${pkg.type}
   Location: ${pkg.path}
@@ -676,7 +675,7 @@ CVSS Score: ${vuln.cvssScore.value.score}
 CVSS Version: ${vuln.cvssScore.value.version}
 CVSS Vector: ${vuln.cvssScore.value.vector}
 Version: ${pkg.version}
-Fix Version: ${pkg.suggestedFix || "Unknown"}
+Fix Version: ${pkg.suggestedFix || "No fix available"}
 Exploitable: ${vuln.exploitable}
 Type: ${pkg.type}
 Location: ${pkg.path}
@@ -715,7 +714,7 @@ function getSARIFReportMessageByPackage(data, pkg, baseUrl) {
     CVSS Score: ${vuln.cvssScore.value.score}
     CVSS Version: ${vuln.cvssScore.value.version}
     CVSS Vector: ${vuln.cvssScore.value.vector}
-    Fixed Version: ${(vuln.fixedInVersion || 'Unknown')}
+    Fixed Version: ${(vuln.fixedInVersion || 'No fix available')}
     Exploitable: ${vuln.exploitable}
     Link to NVD: [${vuln.name}](https://nvd.nist.gov/vuln/detail/${vuln.name})\n`;
   });
@@ -746,7 +745,7 @@ function getSARIFReportMessage(data, vuln, pkg, baseUrl) {
   CVSS Score: ${vuln.cvssScore.value.score}
   CVSS Version: ${vuln.cvssScore.value.version}
   CVSS Vector: ${vuln.cvssScore.value.vector}
-  Fixed Version: ${(vuln.fixedInVersion || 'Unknown')}
+  Fixed Version: ${(vuln.fixedInVersion || 'No fix available')}
   Exploitable: ${vuln.exploitable}
   Link to NVD: [${vuln.name}](https://nvd.nist.gov/vuln/detail/${vuln.name})`;
   
@@ -799,7 +798,7 @@ function getRulePkgMessage(rule, packages) {
       `${vuln.cvssScore.value.score}`,
       `${vuln.cvssScore.value.version}`,
       `${vuln.cvssScore.value.vector}`,
-      `${pkg.suggestedFix || "Unknown"}`,
+      `${pkg.suggestedFix || "No fix available"}`,
       `${vuln.exploitable}`
       ]);
     }
@@ -4971,7 +4970,7 @@ module.exports = require("util");
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"4.1.0","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint .","prepare":"ncc build index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^5.0.0"},"devDependencies":{"@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^27.0.6","tmp":"^0.2.1"}}');
+module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"5.1.0","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint .","prepare":"ncc build index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^5.0.0"},"devDependencies":{"@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^27.0.6","tmp":"^0.2.1"}}');
 
 /***/ })
 
