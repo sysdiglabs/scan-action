@@ -530,7 +530,7 @@ function vulnerabilities2SARIFResByPackage(data) {
           {
               physicalLocation: {
                   artifactLocation: {
-                      uri: data.result.metadata.pullString,
+                      uri: `file:///${data.result.metadata.pullString}`,
                       uriBaseId: "ROOTPATH"
                   }
               },
