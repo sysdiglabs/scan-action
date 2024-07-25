@@ -22,8 +22,9 @@ const exampleReport = JSON.stringify(require("./fixtures/report-test.json"));
 describe("input parsing", () => {
     let oldEnv;
 
-    beforeAll(() => {
+    beforeAll(async () => {
         oldEnv = process.env;
+        await createReportFileIfNotExists();
     })
 
     beforeEach(() => {
@@ -633,3 +634,20 @@ describe("run the full action", () => {
     })
 
 })
+
+async function createReportFileIfNotExists() {
+    const summary_file = process.env.GITHUB_STEP_SUMMARY || "/tmp/github_summary.html";
+    const promise = new Promise((resolve, reject) => {
+        if (fs.existsSync(summary_file)) {
+           return resolve();
+        }
+        fs.writeFile(summary_file, "", (err) => {
+            if (err == null) {
+                return resolve();
+            }
+            return reject(err);
+        });
+    });
+
+    return promise;
+}
