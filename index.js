@@ -31,7 +31,7 @@ function getRunOS() {
   return os_name;
 }
 
-const cliScannerVersion = "1.8.1"
+const cliScannerVersion = "1.13.0"
 const cliScannerName = "sysdig-cli-scanner"
 const cliScannerOS = getRunOS()
 const cliScannerArch = getRunArch()
