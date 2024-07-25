@@ -43,9 +43,9 @@ const defaultSecureEndpoint = "https://secure.sysdig.com/"
 
 // Sysdig to SARIF severity convertion
 const LEVELS = {
-  "error": ["High","Critical"],
+  "error": ["High", "Critical"],
   "warning": ["Medium"],
-  "note": ["Negligible","Low"]
+  "note": ["Negligible", "Low"]
 }
 
 const PRIORITY = {
@@ -58,7 +58,7 @@ const PRIORITY = {
 
 const EVALUATION = {
   "failed": "❌",
-  "passed": "✅" 
+  "passed": "✅"
 }
 
 class ExecutionError extends Error {
@@ -190,11 +190,11 @@ function composeFlags(opts) {
   if (opts.mode && opts.mode == iacMode) {
     flags += ` --iac`;
   }
-  
+
   if (opts.recursive && opts.mode == iacMode) {
     flags += ` -r`;
   }
-  
+
   if (opts.minimumSeverity && opts.mode == iacMode) {
     flags += ` -f=${opts.minimumSeverity}`;
   }
@@ -329,15 +329,15 @@ async function pullScanner(scannerURL) {
   let start = performance.now();
   core.info('Pulling cli-scanner from: ' + scannerURL);
   let cmd = `wget ${scannerURL} -O ./${cliScannerName}`;
-  let retCode = await exec.exec(cmd, null, {silent: true});
+  let retCode = await exec.exec(cmd, null, { silent: true });
 
   if (retCode == 0) {
     cmd = `chmod u+x ./${cliScannerName}`;
-    await exec.exec(cmd, null, {silent: true});
+    await exec.exec(cmd, null, { silent: true });
   } else {
     core.error(`Falied to pull scanner using "${scannerURL}"`)
   }
-  
+
   core.info("Scanner pull took " + Math.round(performance.now() - start) + " milliseconds.");
   return retCode;
 }
@@ -411,7 +411,7 @@ function vulnerabilities2SARIF(data, groupByPackage) {
         version: toolVersion,
         semanticVersion: toolVersion,
         dottedQuadFileVersion: dottedQuadToolVersion,
-        rules: rules 
+        rules: rules
       }
     },
     logicalLocations: [
@@ -434,7 +434,7 @@ function vulnerabilities2SARIF(data, groupByPackage) {
       layersCount: data.result.metadata.layersCount,
       resultUrl: data.info.resultUrl || "",
       resultId: data.info.resultId || "",
-  }
+    }
   }];
 
 
@@ -465,13 +465,13 @@ function vulnerabilities2SARIFResByPackage(data) {
   let rules = [];
   let resultUrl = "";
   let baseUrl = null;
-  
+
   if (data.info && data.result) {
     if (data.info.resultUrl) {
       resultUrl = data.info.resultUrl;
-      baseUrl = resultUrl.slice(0,resultUrl.lastIndexOf('/'));
+      baseUrl = resultUrl.slice(0, resultUrl.lastIndexOf('/'));
     }
-  
+
     data.result.packages.forEach(pkg => {
       if (!pkg.vulns) {
         return
@@ -512,14 +512,14 @@ function vulnerabilities2SARIFResByPackage(data) {
           precision: "very-high",
           'security-severity': `${score}`,
           tags: [
-              'vulnerability',
-              'security',
-              severity_level
+            'vulnerability',
+            'security',
+            severity_level
           ]
         }
       }
       rules.push(rule);
-      
+
       let result = {
         ruleId: pkg.name,
         level: check_level(severity_level),
@@ -528,22 +528,22 @@ function vulnerabilities2SARIFResByPackage(data) {
         },
         locations: [
           {
-              physicalLocation: {
-                  artifactLocation: {
-                      uri: `file:///${data.result.metadata.pullString}`,
-                      uriBaseId: "ROOTPATH"
-                  }
-              },
-              message: {
-                  text: `${data.result.metadata.pullString} - ${pkg.name}@${pkg.version}`
+            physicalLocation: {
+              artifactLocation: {
+                uri: `file:///${data.result.metadata.pullString}`,
+                uriBaseId: "ROOTPATH"
               }
+            },
+            message: {
+              text: `${data.result.metadata.pullString} - ${pkg.name}@${pkg.version}`
+            }
           }
         ]
       }
       results.push(result)
     });
   }
-  
+
   return [rules, results];
 }
 
@@ -553,20 +553,20 @@ function vulnerabilities2SARIFRes(data) {
   let ruleIds = [];
   let resultUrl = "";
   let baseUrl = null;
-  
+
   if (data.info && data.result) {
     if (data.info.resultUrl) {
       resultUrl = data.info.resultUrl;
-      baseUrl = resultUrl.slice(0,resultUrl.lastIndexOf('/'));
+      baseUrl = resultUrl.slice(0, resultUrl.lastIndexOf('/'));
     }
-  
+
     data.result.packages.forEach(pkg => {
       if (!pkg.vulns) {
         return
       }
 
-      pkg.vulns.forEach(vuln =>{
-        if (!(vuln.name in ruleIds)){
+      pkg.vulns.forEach(vuln => {
+        if (!(vuln.name in ruleIds)) {
           ruleIds.push(vuln.name)
           let rule = {
             id: vuln.name,
@@ -583,15 +583,15 @@ function vulnerabilities2SARIFRes(data) {
               precision: "very-high",
               'security-severity': `${vuln.cvssScore.value.score}`,
               tags: [
-                  'vulnerability',
-                  'security',
-                  vuln.severity.value
+                'vulnerability',
+                'security',
+                vuln.severity.value
               ]
             }
           }
           rules.push(rule)
         }
-  
+
         let result = {
           ruleId: vuln.name,
           level: check_level(vuln.severity.value),
@@ -600,15 +600,15 @@ function vulnerabilities2SARIFRes(data) {
           },
           locations: [
             {
-                physicalLocation: {
-                    artifactLocation: {
-                        uri: data.result.metadata.pullString,
-                        uriBaseId: "ROOTPATH"
-                    }
-                },
-                message: {
-                    text: `${data.result.metadata.pullString} - ${pkg.name}@${pkg.version}`
+              physicalLocation: {
+                artifactLocation: {
+                  uri: data.result.metadata.pullString,
+                  uriBaseId: "ROOTPATH"
                 }
+              },
+              message: {
+                text: `${data.result.metadata.pullString} - ${pkg.name}@${pkg.version}`
+              }
             }
           ]
         }
@@ -616,7 +616,7 @@ function vulnerabilities2SARIFRes(data) {
       });
     });
   }
-  
+
   return [rules, results];
 }
 
@@ -635,7 +635,8 @@ URL: https://nvd.nist.gov/vuln/detail/${vuln.name}`;
 
 function getSARIFPkgHelp(pkg) {
   let text = "";
-  pkg.vulns.forEach(vuln => {text +=`Vulnerability ${vuln.name}
+  pkg.vulns.forEach(vuln => {
+    text += `Vulnerability ${vuln.name}
   Severity: ${vuln.severity.value}
   Package: ${pkg.name}
   CVSS Score: ${vuln.cvssScore.value.score}
@@ -652,8 +653,8 @@ function getSARIFPkgHelp(pkg) {
   let markdown = `| Vulnerability | Severity | CVSS Score | CVSS Version | CVSS Vector | Exploitable |
   | -------- | ------- | ---------- | ------------ | -----------  | ----------- |\n`;
 
-  pkg.vulns.forEach(vuln => {markdown += `| ${vuln.name} | ${vuln.severity.value} | ${vuln.cvssScore.value.score} | ${vuln.cvssScore.value.version} | ${vuln.cvssScore.value.vector} | ${vuln.exploitable} |\n` });
-  
+  pkg.vulns.forEach(vuln => { markdown += `| ${vuln.name} | ${vuln.severity.value} | ${vuln.cvssScore.value.score} | ${vuln.cvssScore.value.version} | ${vuln.cvssScore.value.vector} | ${vuln.exploitable} |\n` });
+
   return {
     text: text,
     markdown: markdown
@@ -690,7 +691,7 @@ function getSARIFReportMessageByPackage(data, pkg, baseUrl) {
   } else {
     message += `Package: ${pkg.name}\n`;
   }
-  
+
   message += `Package type: ${pkg.type}
   Installed Version: ${pkg.version}
   Package path: ${pkg.path}\n`;
@@ -703,7 +704,7 @@ function getSARIFReportMessageByPackage(data, pkg, baseUrl) {
     } else {
       message += `Vulnerability: ${vuln.name}\n`;
     }
-    
+
     message += `Severity: ${vuln.severity.value}
     CVSS Score: ${vuln.cvssScore.value.score}
     CVSS Version: ${vuln.cvssScore.value.version}
@@ -713,7 +714,7 @@ function getSARIFReportMessageByPackage(data, pkg, baseUrl) {
     Link to NVD: [${vuln.name}](https://nvd.nist.gov/vuln/detail/${vuln.name})\n`;
   });
 
-  
+
   return message;
 }
 
@@ -725,7 +726,7 @@ function getSARIFReportMessage(data, vuln, pkg, baseUrl) {
   } else {
     message += `Package: ${pkg.name}\n`;
   }
-  
+
   message += `Package type: ${pkg.type}
   Installed Version: ${pkg.version}
   Package path: ${pkg.path}\n`;
@@ -742,7 +743,7 @@ function getSARIFReportMessage(data, vuln, pkg, baseUrl) {
   Fixed Version: ${(vuln.fixedInVersion || 'No fix available')}
   Exploitable: ${vuln.exploitable}
   Link to NVD: [${vuln.name}](https://nvd.nist.gov/vuln/detail/${vuln.name})`;
-  
+
   return message;
 }
 
@@ -756,28 +757,28 @@ async function generateSummary(opts, data) {
 
   core.summary.emptyBuffer().clear();
   core.summary.addHeading(`Scan Results for ${opts.overridePullString || opts.imageTag}`);
-  
+
   addVulnTableToSummary(data);
 
   if (!opts.standalone) {
     core.summary.addBreak()
-        .addRaw(`Policies evaluation: ${data.result.policyEvaluationsResult} ${EVALUATION[data.result.policyEvaluationsResult]}`);
-    
+      .addRaw(`Policies evaluation: ${data.result.policyEvaluationsResult} ${EVALUATION[data.result.policyEvaluationsResult]}`);
+
     addReportToSummary(data);
   }
-  
-  await core.summary.write({overwrite: true});
+
+  await core.summary.write({ overwrite: true });
 }
 
 function getRulePkgMessage(rule, packages) {
-  let table = [[ 
-    {data: 'Severity', header: true},
-    {data: 'Package', header: true},
-    {data: 'CVSS Score', header: true},
-    {data: 'CVSS Version', header: true},
-    {data: 'CVSS Vector', header: true},
-    {data: 'Fixed Version', header: true},
-    {data: 'Exploitable', header: true}]];
+  let table = [[
+    { data: 'Severity', header: true },
+    { data: 'Package', header: true },
+    { data: 'CVSS Score', header: true },
+    { data: 'CVSS Version', header: true },
+    { data: 'CVSS Vector', header: true },
+    { data: 'Fixed Version', header: true },
+    { data: 'Exploitable', header: true }]];
 
   rule.failures.forEach(failure => {
     let pkgIndex = failure.pkgIndex;
@@ -817,9 +818,9 @@ function addVulnTableToSummary(data) {
 
   core.summary.addBreak;
   core.summary.addTable([
-    [{data: '', header: true}, {data: '🟣 Critical', header: true}, {data: '🔴 High', header: true}, {data: '🟠 Medium', header: true}, {data: '🟡 Low', header: true}, {data: '⚪ Negligible', header: true}],
-    [{data: '⚠️ Total Vulnerabilities', header: true}, `${totalVuln.critical}`, `${totalVuln.high}`, `${totalVuln.medium}`, `${totalVuln.low}`, `${totalVuln.negligible}`],
-    [{data: '🔧 Fixable Vulnerabilities', header: true}, `${fixableVuln.critical}`, `${fixableVuln.high}`, `${fixableVuln.medium}`, `${fixableVuln.low}`, `${fixableVuln.negligible}`],
+    [{ data: '', header: true }, { data: '🟣 Critical', header: true }, { data: '🔴 High', header: true }, { data: '🟠 Medium', header: true }, { data: '🟡 Low', header: true }, { data: '⚪ Negligible', header: true }],
+    [{ data: '⚠️ Total Vulnerabilities', header: true }, `${totalVuln.critical}`, `${totalVuln.high}`, `${totalVuln.medium}`, `${totalVuln.low}`, `${totalVuln.negligible}`],
+    [{ data: '🔧 Fixable Vulnerabilities', header: true }, `${fixableVuln.critical}`, `${fixableVuln.high}`, `${fixableVuln.medium}`, `${fixableVuln.low}`, `${fixableVuln.negligible}`],
   ]);
 }
 
@@ -828,14 +829,14 @@ function addReportToSummary(data) {
   let packages = data.result.packages;
 
   policyEvaluations.forEach(policy => {
-    core.summary.addHeading(`${EVALUATION[policy.evaluationResult]} Policy: ${policy.name}`,2)
+    core.summary.addHeading(`${EVALUATION[policy.evaluationResult]} Policy: ${policy.name}`, 2)
 
     if (policy.evaluationResult != "passed") {
       policy.bundles.forEach(bundle => {
-        core.summary.addHeading(`Rule Bundle: ${bundle.name}`,3)
+        core.summary.addHeading(`Rule Bundle: ${bundle.name}`, 3)
 
         bundle.rules.forEach(rule => {
-          core.summary.addHeading(`${EVALUATION[rule.evaluationResult]} Rule: ${rule.description}`,5)
+          core.summary.addHeading(`${EVALUATION[rule.evaluationResult]} Rule: ${rule.description}`, 5)
 
           if (rule.evaluationResult != "passed") {
             if (rule.failureType == "pkgVulnFailure") {
