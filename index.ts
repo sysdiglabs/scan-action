@@ -1,10 +1,11 @@
-const core = require('@actions/core');
-const exec = require('@actions/exec');
-const fs = require('fs');
+import * as core from '@actions/core';
+import * as exec from '@actions/exec';
+import fs from 'fs';
 const performance = require('perf_hooks').performance;
-const process = require('process');
-const { version } = require('./package.json');
-const os = require('os');
+import process from 'process';
+import { version }  from './package.json';
+import os from 'os';
+import { Package, Report, Rule, SeverityValue, Vuln } from './report'; 
 
 const toolVersion = `${version}`;
 const dottedQuadToolVersion = `${version}.0`;
@@ -32,23 +33,23 @@ function getRunOS() {
 }
 
 const cliScannerVersion = "1.13.0"
-const cliScannerName = "sysdig-cli-scanner"
+export const cliScannerName = "sysdig-cli-scanner"
 const cliScannerOS = getRunOS()
 const cliScannerArch = getRunArch()
 const cliScannerURLBase = "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner";
-const cliScannerURL = `${cliScannerURLBase}/${cliScannerVersion}/${cliScannerOS}/${cliScannerArch}/${cliScannerName}`
-const cliScannerResult = "scan-result.json"
+export const cliScannerURL = `${cliScannerURLBase}/${cliScannerVersion}/${cliScannerOS}/${cliScannerArch}/${cliScannerName}`
+export const cliScannerResult = "scan-result.json"
 
-const defaultSecureEndpoint = "https://secure.sysdig.com/"
+export const defaultSecureEndpoint = "https://secure.sysdig.com/"
 
 // Sysdig to SARIF severity convertion
-const LEVELS = {
+const LEVELS: any = {
   "error": ["High", "Critical"],
   "warning": ["Medium"],
   "note": ["Negligible", "Low"]
 }
 
-const PRIORITY = {
+const PRIORITY: any = {
   "critical": 0,
   "high": 1,
   "medium": 2,
@@ -56,21 +57,44 @@ const PRIORITY = {
   "negligible": 4
 }
 
-const EVALUATION = {
+const EVALUATION: any = {
   "failed": "❌",
   "passed": "✅"
 }
 
-class ExecutionError extends Error {
-  constructor(stdout, stderr) {
+export class ExecutionError extends Error {
+  constructor(stdout: string, stderr: string) {
     super("execution error\n\nstdout: " + stdout + "\n\nstderr: " + stderr);
-    this.stdout = stdout;
-    this.stderr = stderr;
   }
 }
 
+export interface ActionInputs {
+  cliScannerURL: string;
+  cliScannerVersion: string;
+  registryUser: string;
+  registryPassword: string;
+  stopOnFailedPolicyEval: boolean;
+  stopOnProcessingError: boolean;
+  standalone: boolean;
+  dbPath: string;
+  skipUpload: boolean;
+  skipSummary: boolean;
+  usePolicies: string;
+  overridePullString: string;
+  imageTag: string;
+  sysdigSecureToken: string;
+  sysdigSecureURL: string;
+  sysdigSkipTLS: boolean;
+  severityAtLeast?: SeverityValue;
+  groupByPackage: boolean;
+  extraParameters: string;
+  mode: string;
+  recursive: boolean;
+  minimumSeverity: string;
+  iacScanPath: string;
+}
 
-function parseActionInputs() {
+export function parseActionInputs() : ActionInputs {
   return {
     cliScannerURL: core.getInput('cli-scanner-url') || cliScannerURL,
     cliScannerVersion: core.getInput('cli-scanner-version'),
@@ -88,7 +112,7 @@ function parseActionInputs() {
     sysdigSecureToken: core.getInput('sysdig-secure-token'),
     sysdigSecureURL: core.getInput('sysdig-secure-url') || defaultSecureEndpoint,
     sysdigSkipTLS: core.getInput('sysdig-skip-tls') == 'true',
-    severityAtLeast: core.getInput('severity-at-least') || 'any',
+    severityAtLeast: core.getInput('severity-at-least') as SeverityValue || undefined,
     groupByPackage: core.getInput('group-by-package') == 'true',
     extraParameters: core.getInput('extra-parameters'),
     mode: core.getInput('mode') || vmMode,
@@ -99,7 +123,7 @@ function parseActionInputs() {
 }
 
 
-function printOptions(opts) {
+function printOptions(opts: ActionInputs) {
   if (opts.standalone) {
     core.info(`[!] Running in Standalone Mode.`);
   }
@@ -126,7 +150,7 @@ function printOptions(opts) {
 
   core.info(`Sysdig skip TLS: ${opts.sysdigSkipTLS}`);
 
-  if (opts.severityAtLeast != 'any') {
+  if (opts.severityAtLeast) {
     core.info(`Severity level: ${opts.severityAtLeast}`);
   }
 
@@ -141,8 +165,15 @@ function printOptions(opts) {
   }
 }
 
-function composeFlags(opts) {
-  let envvars = {}
+interface ComposeFlags {
+    envvars: {
+        [key: string]: string;
+    };
+    flags: string;
+}
+
+export function composeFlags(opts: ActionInputs): ComposeFlags {
+  let envvars: { [key: string]: string } = {}
   envvars['SECURE_API_TOKEN'] = opts.sysdigSecureToken || "";
 
   let flags = ""
@@ -214,12 +245,12 @@ function composeFlags(opts) {
   }
 }
 
-function writeReport(reportData) {
+function writeReport(reportData: string) {
   fs.writeFileSync("./report.json", reportData);
   core.setOutput("scanReport", "./report.json");
 }
 
-function validateInput(opts) {
+export function validateInput(opts: ActionInputs) {
   if (!opts.standalone && !opts.sysdigSecureToken) {
     core.setFailed("Sysdig Secure Token is required for standard execution, please set your token or remove the standalone input.");
     throw new Error("Sysdig Secure Token is required for standard execution, please set your token or remove the standalone input.");
@@ -236,7 +267,7 @@ function validateInput(opts) {
   }
 }
 
-async function run() {
+export async function run() {
 
   try {
     let opts = parseActionInputs();
@@ -249,12 +280,12 @@ async function run() {
       opts.cliScannerURL = `${cliScannerURLBase}/${opts.cliScannerVersion}/${cliScannerOS}/${cliScannerArch}/${cliScannerName}`
     }
 
-    let scanResult;
+    let scanResult: ScanExecutionResult;
     // Download CLI Scanner from 'cliScannerURL'
     let retCode = await pullScanner(opts.cliScannerURL);
     if (retCode == 0) {
       // Execute Scanner
-      scanResult = await executeScan(scanFlags.envvars, scanFlags.flags);
+      scanResult = await executeScan(scanFlags);
 
       retCode = scanResult.ReturnCode;
       if (retCode == 0 || retCode == 1) {
@@ -283,12 +314,13 @@ async function run() {
     if (core.getInput('stop-on-processing-error') == 'true') {
       core.setFailed("Unexpected error");
     }
-    core.error(error);
+    core.error(error as string);
   }
 }
 
-function filterResult(report, severity) {
-  let filter_num = PRIORITY[severity.toLowerCase()];
+
+function filterResult(report: Report, severity: SeverityValue) {
+  let filter_num: number = PRIORITY[severity.toLowerCase()];
 
   report.result.packages.forEach(pkg => {
     if (pkg.vulns) pkg.vulns = pkg.vulns.filter((vuln) => PRIORITY[vuln.severity.value.toLowerCase()] <= filter_num);
@@ -296,19 +328,19 @@ function filterResult(report, severity) {
   return report;
 }
 
-async function processScanResult(result, opts) {
+export async function processScanResult(result: ScanExecutionResult, opts: ActionInputs) {
   writeReport(result.Output);
 
-  let report;
+  let report: Report;
   try {
     report = JSON.parse(result.Output);
   } catch (error) {
-    core.error("Error parsing analysis JSON report: " + error + ". Output was: " + result.output);
+    core.error("Error parsing analysis JSON report: " + error + ". Output was: " + result.Output);
     throw new ExecutionError(result.Output, result.Error);
   }
 
   if (report) {
-    if (opts.severityAtLeast && opts.severityAtLeast != 'any') {
+    if (opts.severityAtLeast) {
       report = filterResult(report, opts.severityAtLeast);
     }
 
@@ -325,15 +357,15 @@ async function processScanResult(result, opts) {
   }
 }
 
-async function pullScanner(scannerURL) {
+export async function pullScanner(scannerURL: string) {
   let start = performance.now();
   core.info('Pulling cli-scanner from: ' + scannerURL);
   let cmd = `wget ${scannerURL} -O ./${cliScannerName}`;
-  let retCode = await exec.exec(cmd, null, { silent: true });
+  let retCode = await exec.exec(cmd, undefined, { silent: true });
 
   if (retCode == 0) {
     cmd = `chmod u+x ./${cliScannerName}`;
-    await exec.exec(cmd, null, { silent: true });
+    await exec.exec(cmd, undefined, { silent: true });
   } else {
     core.error(`Falied to pull scanner using "${scannerURL}"`)
   }
@@ -342,27 +374,33 @@ async function pullScanner(scannerURL) {
   return retCode;
 }
 
-async function executeScan(envvars, flags) {
+interface ScanExecutionResult {
+    ReturnCode: number;
+    Output: string;
+    Error: string;
+}
 
+export async function executeScan(scanFlags: ComposeFlags): Promise<ScanExecutionResult> {
+  let {envvars, flags} = scanFlags;
   let execOutput = '';
   let errOutput = '';
 
 
-  const scanOptions = {
+  const scanOptions: exec.ExecOptions = {
     env: envvars,
     silent: true,
     ignoreReturnCode: true,
     listeners: {
-      stdout: (data) => {
+      stdout: (data: Buffer) => {
         process.stdout.write(data);
       },
-      stderr: (data) => {
+      stderr: (data: Buffer) => {
         process.stderr.write(data);
       }
     }
   };
 
-  const catOptions = {
+  const catOptions: exec.ExecOptions = {
     silent: true,
     ignoreReturnCode: true,
     listeners: {
@@ -378,19 +416,19 @@ async function executeScan(envvars, flags) {
   let start = performance.now();
   let cmd = `./${cliScannerName} ${flags}`;
   core.info("Executing: " + cmd);
-  let retCode = await exec.exec(cmd, null, scanOptions);
+  let retCode = await exec.exec(cmd, undefined, scanOptions);
   core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
 
   if (retCode == 0 || retCode == 1) {
     cmd = `cat ./${cliScannerResult}`;
-    await exec.exec(cmd, null, catOptions);
+    await exec.exec(cmd, undefined, catOptions);
   }
   return { ReturnCode: retCode, Output: execOutput, Error: errOutput };
 }
 
-function vulnerabilities2SARIF(data, groupByPackage) {
-  let rules = [];
-  let results = [];
+function vulnerabilities2SARIF(data: Report, groupByPackage: boolean) {
+  let rules: SARIFRule[] = [];
+  let results: SARIFResult[] = [];
 
   if (groupByPackage) {
     [rules, results] = vulnerabilities2SARIFResByPackage(data)
@@ -447,7 +485,7 @@ function vulnerabilities2SARIF(data, groupByPackage) {
   return (sarifOutput);
 }
 
-function check_level(sev_value) {
+function check_level(sev_value: string) {
   let level = "note";
 
   for (let key in LEVELS) {
@@ -459,12 +497,51 @@ function check_level(sev_value) {
   return level
 }
 
+interface SARIFResult {
+    ruleId: string;
+    level: string;
+    message: {
+        text: string;
+    };
+    locations: {
+        physicalLocation: {
+            artifactLocation: {
+                uri: string;
+                uriBaseId: string;
+            };
+        };
+        message: {
+            text: string;
+        };
+    }[];
+}
 
-function vulnerabilities2SARIFResByPackage(data) {
-  let results = [];
-  let rules = [];
+interface SARIFRule {
+    id: string;
+    name: string;
+    shortDescription: {
+        text: string;
+    };
+    fullDescription: {
+        text: string;
+    };
+    helpUri: string;
+    help: {
+        text: string;
+        markdown: string;
+    };
+    properties: {
+        precision: string;
+        'security-severity': string;
+        tags: string[];
+    };
+}
+
+function vulnerabilities2SARIFResByPackage(data: Report): [SARIFRule[], SARIFResult[]] {
+  let rules: SARIFRule[] = [];
+  let results: SARIFResult[] = [];
   let resultUrl = "";
-  let baseUrl = null;
+  let baseUrl: string | undefined;
 
   if (data.info && data.result) {
     if (data.info.resultUrl) {
@@ -497,7 +574,7 @@ function vulnerabilities2SARIFResByPackage(data) {
       if (baseUrl) helpUri = `${baseUrl}/content?filter=freeText+in+("${pkg.name}")`;
 
 
-      let rule = {
+      let rule: SARIFRule = {
         id: pkg.name,
         name: pkg.name,
         shortDescription: {
@@ -520,7 +597,7 @@ function vulnerabilities2SARIFResByPackage(data) {
       }
       rules.push(rule);
 
-      let result = {
+      let result : SARIFResult = {
         ruleId: pkg.name,
         level: check_level(severity_level),
         message: {
@@ -547,12 +624,12 @@ function vulnerabilities2SARIFResByPackage(data) {
   return [rules, results];
 }
 
-function vulnerabilities2SARIFRes(data) {
-  let results = [];
-  let rules = [];
-  let ruleIds = [];
+function vulnerabilities2SARIFRes(data: Report): [SARIFRule[], SARIFResult[]] {
+  let results: SARIFResult[] = [];
+  let rules : SARIFRule[]= [];
+  let ruleIds: string[] = [];
   let resultUrl = "";
-  let baseUrl = null;
+  let baseUrl: string | undefined;
 
   if (data.info && data.result) {
     if (data.info.resultUrl) {
@@ -620,11 +697,11 @@ function vulnerabilities2SARIFRes(data) {
   return [rules, results];
 }
 
-function getSARIFVulnShortDescription(pkg, vuln) {
+function getSARIFVulnShortDescription(pkg: Package, vuln: Vuln) {
   return `${vuln.name} Severity: ${vuln.severity.value} Package: ${pkg.name}`;
 }
 
-function getSARIFVulnFullDescription(pkg, vuln) {
+function getSARIFVulnFullDescription(pkg: Package, vuln: Vuln) {
   return `${vuln.name}
 Severity: ${vuln.severity.value}
 Package: ${pkg.name}
@@ -633,9 +710,9 @@ Fix: ${pkg.suggestedFix || "No fix available"}
 URL: https://nvd.nist.gov/vuln/detail/${vuln.name}`;
 }
 
-function getSARIFPkgHelp(pkg) {
+function getSARIFPkgHelp(pkg: Package) {
   let text = "";
-  pkg.vulns.forEach(vuln => {
+  pkg.vulns?.forEach(vuln => {
     text += `Vulnerability ${vuln.name}
   Severity: ${vuln.severity.value}
   Package: ${pkg.name}
@@ -653,7 +730,7 @@ function getSARIFPkgHelp(pkg) {
   let markdown = `| Vulnerability | Severity | CVSS Score | CVSS Version | CVSS Vector | Exploitable |
   | -------- | ------- | ---------- | ------------ | -----------  | ----------- |\n`;
 
-  pkg.vulns.forEach(vuln => { markdown += `| ${vuln.name} | ${vuln.severity.value} | ${vuln.cvssScore.value.score} | ${vuln.cvssScore.value.version} | ${vuln.cvssScore.value.vector} | ${vuln.exploitable} |\n` });
+  pkg.vulns?.forEach(vuln => { markdown += `| ${vuln.name} | ${vuln.severity.value} | ${vuln.cvssScore.value.score} | ${vuln.cvssScore.value.version} | ${vuln.cvssScore.value.vector} | ${vuln.exploitable} |\n` });
 
   return {
     text: text,
@@ -661,7 +738,7 @@ function getSARIFPkgHelp(pkg) {
   };
 }
 
-function getSARIFVulnHelp(pkg, vuln) {
+function getSARIFVulnHelp(pkg: Package, vuln: Vuln) {
   return {
     text: `Vulnerability ${vuln.name}
 Severity: ${vuln.severity.value}
@@ -683,7 +760,7 @@ URL: https://nvd.nist.gov/vuln/detail/${vuln.name}`,
   }
 }
 
-function getSARIFReportMessageByPackage(data, pkg, baseUrl) {
+function getSARIFReportMessageByPackage(data: Report, pkg: Package, baseUrl?: string) {
   let message = `Full image scan results in Sysdig UI: [${data.result.metadata.pullString} scan result](${data.info.resultUrl})\n`;
 
   if (baseUrl) {
@@ -696,7 +773,7 @@ function getSARIFReportMessageByPackage(data, pkg, baseUrl) {
   Installed Version: ${pkg.version}
   Package path: ${pkg.path}\n`;
 
-  pkg.vulns.forEach(vuln => {
+  pkg.vulns?.forEach(vuln => {
     message += `.\n`;
 
     if (baseUrl) {
@@ -718,7 +795,7 @@ function getSARIFReportMessageByPackage(data, pkg, baseUrl) {
   return message;
 }
 
-function getSARIFReportMessage(data, vuln, pkg, baseUrl) {
+function getSARIFReportMessage(data: Report, vuln: Vuln, pkg: Package, baseUrl: string | undefined) {
   let message = `Full image scan results in Sysdig UI: [${data.result.metadata.pullString} scan result](${data.info.resultUrl})\n`;
 
   if (baseUrl) {
@@ -747,13 +824,13 @@ function getSARIFReportMessage(data, vuln, pkg, baseUrl) {
   return message;
 }
 
-function generateSARIFReport(data, groupByPackage) {
+function generateSARIFReport(data: Report, groupByPackage: boolean) {
   let sarifOutput = vulnerabilities2SARIF(data, groupByPackage);
   core.setOutput("sarifReport", "./sarif.json");
   fs.writeFileSync("./sarif.json", JSON.stringify(sarifOutput, null, 2));
 }
 
-async function generateSummary(opts, data) {
+async function generateSummary(opts: ActionInputs, data: Report) {
 
   core.summary.emptyBuffer().clear();
   core.summary.addHeading(`Scan Results for ${opts.overridePullString || opts.imageTag}`);
@@ -770,8 +847,8 @@ async function generateSummary(opts, data) {
   await core.summary.write({ overwrite: true });
 }
 
-function getRulePkgMessage(rule, packages) {
-  let table = [[
+function getRulePkgMessage(rule: Rule, packages: Package[]) {
+  let table : { data: string, header?: boolean}[][] = [[
     { data: 'Severity', header: true },
     { data: 'Package', header: true },
     { data: 'CVSS Score', header: true },
@@ -780,39 +857,42 @@ function getRulePkgMessage(rule, packages) {
     { data: 'Fixed Version', header: true },
     { data: 'Exploitable', header: true }]];
 
-  rule.failures.forEach(failure => {
-    let pkgIndex = failure.pkgIndex;
-    let vulnInPkgIndex = failure.vulnInPkgIndex;
+  rule.failures?.forEach(failure => {
+    let pkgIndex = failure.pkgIndex ?? 0;
+    let vulnInPkgIndex = failure.vulnInPkgIndex ?? 0;
 
     let pkg = packages[pkgIndex];
-    let vuln = pkg.vulns[vulnInPkgIndex];
+    let vuln = pkg.vulns?.at(vulnInPkgIndex);
 
     if (vuln) {
-      table.push([`${vuln.severity.value}`,
-      `${pkg.name}`,
-      `${vuln.cvssScore.value.score}`,
-      `${vuln.cvssScore.value.version}`,
-      `${vuln.cvssScore.value.vector}`,
-      `${pkg.suggestedFix || "No fix available"}`,
-      `${vuln.exploitable}`
-      ]);
+      table.push([
+        { data: `${vuln.severity.value.toString()}` },
+      { data: `${pkg.name}`},
+      { data: `${vuln.cvssScore.value.score}` },
+      { data: `${vuln.cvssScore.value.version}` },
+      { data: `${vuln.cvssScore.value.vector}` },
+      { data: `${pkg.suggestedFix || "No fix available"}` },
+      { data: `${vuln.exploitable}` },
+    ]);
     }
   });
 
   core.summary.addTable(table);
 }
 
-function getRuleImageMessage(rule) {
-  let message = [];
+function getRuleImageMessage(rule: Rule) {
+  let message: string[] = [];
 
-  rule.failures.forEach(failure => {
+
+  rule.failures?.map(failure => failure.remediation);
+  rule.failures?.forEach(failure => {
     message.push(`${failure.remediation}`)
   });
 
   core.summary.addList(message);
 }
 
-function addVulnTableToSummary(data) {
+function addVulnTableToSummary(data: Report) {
   let totalVuln = data.result.vulnTotalBySeverity;
   let fixableVuln = data.result.fixableVulnTotalBySeverity;
 
@@ -824,7 +904,7 @@ function addVulnTableToSummary(data) {
   ]);
 }
 
-function addReportToSummary(data) {
+function addReportToSummary(data: Report) {
   let policyEvaluations = data.result.policyEvaluations;
   let packages = data.result.packages;
 
