@@ -5,7 +5,7 @@ const performance = require('perf_hooks').performance;
 import process from 'process';
 import { version }  from './package.json';
 import os from 'os';
-import { Package, Report, Rule, SeverityValue, Vuln } from './report'; 
+import { Package, Report, Rule, SeverityValue, Vuln } from './src/report'; 
 
 const toolVersion = `${version}`;
 const dottedQuadToolVersion = `${version}.0`;
