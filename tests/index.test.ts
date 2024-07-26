@@ -314,8 +314,6 @@ describe("process scan results", () => {
   });
 
   it("handles error on invalid JSON", async () => {
-    // core.error = jest.fn();
-
     let scanResult = {
       ReturnCode: 0,
       Output: 'invalid JSON',

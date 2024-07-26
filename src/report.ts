@@ -76,11 +76,12 @@ export interface Vuln {
 }
 
 export enum Priority {
-  Critical,
-  High,
-  Medium,
-  Low,
-  Negligible,
+  critical,
+  high,
+  medium,
+  low,
+  negligible,
+  any
 }
 
 export type SeverityValue = keyof typeof Priority;
