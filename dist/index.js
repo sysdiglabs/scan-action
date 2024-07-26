@@ -2,7 +2,7 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
 /***/ 1667:
-/***/ (function(module, exports, __nccwpck_require__) {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
@@ -60,10 +60,7 @@ const action_1 = __nccwpck_require__(3761);
 Object.defineProperty(exports, "defaultSecureEndpoint", ({ enumerable: true, get: function () { return action_1.defaultSecureEndpoint; } }));
 Object.defineProperty(exports, "parseActionInputs", ({ enumerable: true, get: function () { return action_1.parseActionInputs; } }));
 Object.defineProperty(exports, "validateInput", ({ enumerable: true, get: function () { return action_1.validateInput; } }));
-const EVALUATION = {
-    "failed": "❌",
-    "passed": "✅"
-};
+const summary_1 = __nccwpck_require__(5389);
 class ExecutionError extends Error {
     constructor(stdout, stderr) {
         super("execution error\n\nstdout: " + stdout + "\n\nstderr: " + stderr);
@@ -80,12 +77,12 @@ function run() {
             let opts = (0, action_1.parseActionInputs)();
             (0, action_1.validateInput)(opts);
             (0, action_1.printOptions)(opts);
+            let scanFlags = (0, scanner_1.composeFlags)(opts); // FIXME(fede) this also modifies the opts.cliScannerURL, which is something we don't want
             let scanResult;
             // Download CLI Scanner from 'cliScannerURL'
             let retCode = yield (0, scanner_1.pullScanner)(opts.cliScannerURL);
             if (retCode == 0) {
                 // Execute Scanner
-                let scanFlags = (0, scanner_1.composeFlags)(opts);
                 scanResult = yield (0, scanner_1.executeScan)(scanFlags);
                 retCode = scanResult.ReturnCode;
                 if (retCode == 0 || retCode == 1) {
@@ -148,7 +145,7 @@ function processScanResult(result, opts) {
             (0, sarif_1.generateSARIFReport)(report, opts.groupByPackage);
             if (!opts.skipSummary) {
                 core.info("Generating Summary...");
-                yield generateSummary(opts, report);
+                yield (0, summary_1.generateSummary)(opts, report);
             }
             else {
                 core.info("Skipping Summary...");
@@ -156,103 +153,6 @@ function processScanResult(result, opts) {
         }
     });
 }
-function generateSummary(opts, data) {
-    return __awaiter(this, void 0, void 0, function* () {
-        core.summary.emptyBuffer().clear();
-        core.summary.addHeading(`Scan Results for ${opts.overridePullString || opts.imageTag}`);
-        addVulnTableToSummary(data);
-        if (!opts.standalone) {
-            core.summary.addBreak()
-                .addRaw(`Policies evaluation: ${data.result.policyEvaluationsResult} ${EVALUATION[data.result.policyEvaluationsResult]}`);
-            addReportToSummary(data);
-        }
-        yield core.summary.write({ overwrite: true });
-    });
-}
-function getRulePkgMessage(rule, packages) {
-    var _a;
-    let table = [[
-            { data: 'Severity', header: true },
-            { data: 'Package', header: true },
-            { data: 'CVSS Score', header: true },
-            { data: 'CVSS Version', header: true },
-            { data: 'CVSS Vector', header: true },
-            { data: 'Fixed Version', header: true },
-            { data: 'Exploitable', header: true }
-        ]];
-    (_a = rule.failures) === null || _a === void 0 ? void 0 : _a.forEach(failure => {
-        var _a, _b, _c;
-        let pkgIndex = (_a = failure.pkgIndex) !== null && _a !== void 0 ? _a : 0;
-        let vulnInPkgIndex = (_b = failure.vulnInPkgIndex) !== null && _b !== void 0 ? _b : 0;
-        let pkg = packages[pkgIndex];
-        let vuln = (_c = pkg.vulns) === null || _c === void 0 ? void 0 : _c.at(vulnInPkgIndex);
-        if (vuln) {
-            table.push([
-                { data: `${vuln.severity.value.toString()}` },
-                { data: `${pkg.name}` },
-                { data: `${vuln.cvssScore.value.score}` },
-                { data: `${vuln.cvssScore.value.version}` },
-                { data: `${vuln.cvssScore.value.vector}` },
-                { data: `${pkg.suggestedFix || "No fix available"}` },
-                { data: `${vuln.exploitable}` },
-            ]);
-        }
-    });
-    core.summary.addTable(table);
-}
-function getRuleImageMessage(rule) {
-    var _a, _b;
-    let message = [];
-    (_a = rule.failures) === null || _a === void 0 ? void 0 : _a.map(failure => failure.remediation);
-    (_b = rule.failures) === null || _b === void 0 ? void 0 : _b.forEach(failure => {
-        message.push(`${failure.remediation}`);
-    });
-    core.summary.addList(message);
-}
-function addVulnTableToSummary(data) {
-    let totalVuln = data.result.vulnTotalBySeverity;
-    let fixableVuln = data.result.fixableVulnTotalBySeverity;
-    core.summary.addBreak;
-    core.summary.addTable([
-        [{ data: '', header: true }, { data: '🟣 Critical', header: true }, { data: '🔴 High', header: true }, { data: '🟠 Medium', header: true }, { data: '🟡 Low', header: true }, { data: '⚪ Negligible', header: true }],
-        [{ data: '⚠️ Total Vulnerabilities', header: true }, `${totalVuln.critical}`, `${totalVuln.high}`, `${totalVuln.medium}`, `${totalVuln.low}`, `${totalVuln.negligible}`],
-        [{ data: '🔧 Fixable Vulnerabilities', header: true }, `${fixableVuln.critical}`, `${fixableVuln.high}`, `${fixableVuln.medium}`, `${fixableVuln.low}`, `${fixableVuln.negligible}`],
-    ]);
-}
-function addReportToSummary(data) {
-    let policyEvaluations = data.result.policyEvaluations;
-    let packages = data.result.packages;
-    policyEvaluations.forEach(policy => {
-        core.summary.addHeading(`${EVALUATION[policy.evaluationResult]} Policy: ${policy.name}`, 2);
-        if (policy.evaluationResult != "passed") {
-            policy.bundles.forEach(bundle => {
-                core.summary.addHeading(`Rule Bundle: ${bundle.name}`, 3);
-                bundle.rules.forEach(rule => {
-                    core.summary.addHeading(`${EVALUATION[rule.evaluationResult]} Rule: ${rule.description}`, 5);
-                    if (rule.evaluationResult != "passed") {
-                        if (rule.failureType == "pkgVulnFailure") {
-                            getRulePkgMessage(rule, packages);
-                        }
-                        else {
-                            getRuleImageMessage(rule);
-                        }
-                    }
-                    core.summary.addBreak();
-                });
-            });
-        }
-    });
-}
-module.exports = {
-    ExecutionError,
-    parseActionInputs: action_1.parseActionInputs,
-    pullScanner: scanner_1.pullScanner,
-    executeScan: scanner_1.executeScan,
-    processScanResult,
-    run,
-    validateInput: action_1.validateInput,
-    cliScannerURL: scanner_1.cliScannerURL,
-};
 if (require.main === require.cache[eval('__filename')]) {
     run();
 }
@@ -960,6 +860,141 @@ function getRunOS() {
         os_name = "darwin";
     }
     return os_name;
+}
+
+
+/***/ }),
+
+/***/ 5389:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.generateSummary = generateSummary;
+const core = __importStar(__nccwpck_require__(2186));
+const EVALUATION = {
+    "failed": "❌",
+    "passed": "✅"
+};
+function generateSummary(opts, data) {
+    return __awaiter(this, void 0, void 0, function* () {
+        core.summary.emptyBuffer().clear();
+        core.summary.addHeading(`Scan Results for ${opts.overridePullString || opts.imageTag}`);
+        addVulnTableToSummary(data);
+        if (!opts.standalone) {
+            core.summary.addBreak()
+                .addRaw(`Policies evaluation: ${data.result.policyEvaluationsResult} ${EVALUATION[data.result.policyEvaluationsResult]}`);
+            addReportToSummary(data);
+        }
+        yield core.summary.write({ overwrite: true });
+    });
+}
+function addVulnTableToSummary(data) {
+    let totalVuln = data.result.vulnTotalBySeverity;
+    let fixableVuln = data.result.fixableVulnTotalBySeverity;
+    core.summary.addBreak;
+    core.summary.addTable([
+        [{ data: '', header: true }, { data: '🟣 Critical', header: true }, { data: '🔴 High', header: true }, { data: '🟠 Medium', header: true }, { data: '🟡 Low', header: true }, { data: '⚪ Negligible', header: true }],
+        [{ data: '⚠️ Total Vulnerabilities', header: true }, `${totalVuln.critical}`, `${totalVuln.high}`, `${totalVuln.medium}`, `${totalVuln.low}`, `${totalVuln.negligible}`],
+        [{ data: '🔧 Fixable Vulnerabilities', header: true }, `${fixableVuln.critical}`, `${fixableVuln.high}`, `${fixableVuln.medium}`, `${fixableVuln.low}`, `${fixableVuln.negligible}`],
+    ]);
+}
+function addReportToSummary(data) {
+    let policyEvaluations = data.result.policyEvaluations;
+    let packages = data.result.packages;
+    policyEvaluations.forEach(policy => {
+        core.summary.addHeading(`${EVALUATION[policy.evaluationResult]} Policy: ${policy.name}`, 2);
+        if (policy.evaluationResult != "passed") {
+            policy.bundles.forEach(bundle => {
+                core.summary.addHeading(`Rule Bundle: ${bundle.name}`, 3);
+                bundle.rules.forEach(rule => {
+                    core.summary.addHeading(`${EVALUATION[rule.evaluationResult]} Rule: ${rule.description}`, 5);
+                    if (rule.evaluationResult != "passed") {
+                        if (rule.failureType == "pkgVulnFailure") {
+                            getRulePkgMessage(rule, packages);
+                        }
+                        else {
+                            getRuleImageMessage(rule);
+                        }
+                    }
+                    core.summary.addBreak();
+                });
+            });
+        }
+    });
+}
+function getRulePkgMessage(rule, packages) {
+    var _a;
+    let table = [[
+            { data: 'Severity', header: true },
+            { data: 'Package', header: true },
+            { data: 'CVSS Score', header: true },
+            { data: 'CVSS Version', header: true },
+            { data: 'CVSS Vector', header: true },
+            { data: 'Fixed Version', header: true },
+            { data: 'Exploitable', header: true }
+        ]];
+    (_a = rule.failures) === null || _a === void 0 ? void 0 : _a.forEach(failure => {
+        var _a, _b, _c;
+        let pkgIndex = (_a = failure.pkgIndex) !== null && _a !== void 0 ? _a : 0;
+        let vulnInPkgIndex = (_b = failure.vulnInPkgIndex) !== null && _b !== void 0 ? _b : 0;
+        let pkg = packages[pkgIndex];
+        let vuln = (_c = pkg.vulns) === null || _c === void 0 ? void 0 : _c.at(vulnInPkgIndex);
+        if (vuln) {
+            table.push([
+                { data: `${vuln.severity.value.toString()}` },
+                { data: `${pkg.name}` },
+                { data: `${vuln.cvssScore.value.score}` },
+                { data: `${vuln.cvssScore.value.version}` },
+                { data: `${vuln.cvssScore.value.vector}` },
+                { data: `${pkg.suggestedFix || "No fix available"}` },
+                { data: `${vuln.exploitable}` },
+            ]);
+        }
+    });
+    core.summary.addTable(table);
+}
+function getRuleImageMessage(rule) {
+    var _a, _b;
+    let message = [];
+    (_a = rule.failures) === null || _a === void 0 ? void 0 : _a.map(failure => failure.remediation);
+    (_b = rule.failures) === null || _b === void 0 ? void 0 : _b.forEach(failure => {
+        message.push(`${failure.remediation}`);
+    });
+    core.summary.addList(message);
 }
 
 
