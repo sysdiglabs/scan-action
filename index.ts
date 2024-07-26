@@ -1,44 +1,10 @@
 import * as core from '@actions/core';
-import * as exec from '@actions/exec';
 import fs from 'fs';
-const performance = require('perf_hooks').performance;
-import process from 'process';
-import os from 'os';
-import { Package, Priority, Report, Rule, SeverityValue} from './src/report'; 
+import { Package, Priority, Report, Rule, SeverityValue } from './src/report';
 import { generateSARIFReport } from './src/sarif';
+import { cliScannerName, cliScannerResult, cliScannerURL, composeFlags, executeScan, pullScanner, ScanExecutionResult, vmMode } from './src/scanner';
+import { ActionInputs, defaultSecureEndpoint, parseActionInputs, printOptions, validateInput } from './src/action';
 
-const vmMode = "vm"
-const iacMode = "iac"
-
-function getRunArch() {
-  let arch = "unknown";
-  if (os.arch() == "x64") {
-    arch = "amd64";
-  } else if (os.arch() == "arm64") {
-    arch = "arm64";
-  }
-  return arch;
-}
-
-function getRunOS() {
-  let os_name = "unknown";
-  if (os.platform() == "linux") {
-    os_name = "linux";
-  } else if (os.platform() == "darwin") {
-    os_name = "darwin";
-  }
-  return os_name;
-}
-
-const cliScannerVersion = "1.13.0"
-export const cliScannerName = "sysdig-cli-scanner"
-const cliScannerOS = getRunOS()
-const cliScannerArch = getRunArch()
-const cliScannerURLBase = "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner";
-export const cliScannerURL = `${cliScannerURLBase}/${cliScannerVersion}/${cliScannerOS}/${cliScannerArch}/${cliScannerName}`
-export const cliScannerResult = "scan-result.json"
-
-export const defaultSecureEndpoint = "https://secure.sysdig.com/"
 
 
 const EVALUATION: any = {
@@ -52,204 +18,12 @@ export class ExecutionError extends Error {
   }
 }
 
-export interface ActionInputs {
-  cliScannerURL: string;
-  cliScannerVersion: string;
-  registryUser: string;
-  registryPassword: string;
-  stopOnFailedPolicyEval: boolean;
-  stopOnProcessingError: boolean;
-  standalone: boolean;
-  dbPath: string;
-  skipUpload: boolean;
-  skipSummary: boolean;
-  usePolicies: string;
-  overridePullString: string;
-  imageTag: string;
-  sysdigSecureToken: string;
-  sysdigSecureURL: string;
-  sysdigSkipTLS: boolean;
-  severityAtLeast?: SeverityValue;
-  groupByPackage: boolean;
-  extraParameters: string;
-  mode: string;
-  recursive: boolean;
-  minimumSeverity: string;
-  iacScanPath: string;
-}
-
-export function parseActionInputs() : ActionInputs {
-  return {
-    cliScannerURL: core.getInput('cli-scanner-url') || cliScannerURL,
-    cliScannerVersion: core.getInput('cli-scanner-version'),
-    registryUser: core.getInput('registry-user'),
-    registryPassword: core.getInput('registry-password'),
-    stopOnFailedPolicyEval: core.getInput('stop-on-failed-policy-eval') == 'true',
-    stopOnProcessingError: core.getInput('stop-on-processing-error') == 'true',
-    standalone: core.getInput('standalone') == 'true',
-    dbPath: core.getInput('db-path'),
-    skipUpload: core.getInput('skip-upload') == 'true',
-    skipSummary: core.getInput('skip-summary') == 'true',
-    usePolicies: core.getInput('use-policies'),
-    overridePullString: core.getInput('override-pullstring'),
-    imageTag: core.getInput('image-tag'),
-    sysdigSecureToken: core.getInput('sysdig-secure-token'),
-    sysdigSecureURL: core.getInput('sysdig-secure-url') || defaultSecureEndpoint,
-    sysdigSkipTLS: core.getInput('sysdig-skip-tls') == 'true',
-    severityAtLeast: core.getInput('severity-at-least') as SeverityValue || undefined,
-    groupByPackage: core.getInput('group-by-package') == 'true',
-    extraParameters: core.getInput('extra-parameters'),
-    mode: core.getInput('mode') || vmMode,
-    recursive: core.getInput('recursive') == 'true',
-    minimumSeverity: core.getInput('minimum-severity'),
-    iacScanPath: core.getInput('iac-scan-path') || './'
-  }
-}
-
-
-function printOptions(opts: ActionInputs) {
-  if (opts.standalone) {
-    core.info(`[!] Running in Standalone Mode.`);
-  }
-
-  if (opts.sysdigSecureURL) {
-    core.info('Sysdig Secure URL: ' + opts.sysdigSecureURL);
-  }
-
-  if (opts.registryUser && opts.registryPassword) {
-    core.info(`Using specified Registry credentials.`);
-  }
-
-  core.info(`Stop on Failed Policy Evaluation: ${opts.stopOnFailedPolicyEval}`);
-
-  core.info(`Stop on Processing Error: ${opts.stopOnProcessingError}`);
-
-  if (opts.skipUpload) {
-    core.info(`Skipping scan results upload to Sysdig Secure...`);
-  }
-
-  if (opts.dbPath) {
-    core.info(`DB Path: ${opts.dbPath}`);
-  }
-
-  core.info(`Sysdig skip TLS: ${opts.sysdigSkipTLS}`);
-
-  if (opts.severityAtLeast) {
-    core.info(`Severity level: ${opts.severityAtLeast}`);
-  }
-
-  core.info('Analyzing image: ' + opts.imageTag);
-
-  if (opts.overridePullString) {
-    core.info(` * Image PullString will be overwritten as ${opts.overridePullString}`);
-  }
-
-  if (opts.skipSummary) {
-    core.info("This run will NOT generate a SUMMARY.");
-  }
-}
-
-interface ComposeFlags {
-    envvars: {
-        [key: string]: string;
-    };
-    flags: string;
-}
-
-export function composeFlags(opts: ActionInputs): ComposeFlags {
-  let envvars: { [key: string]: string } = {}
-  envvars['SECURE_API_TOKEN'] = opts.sysdigSecureToken || "";
-
-  let flags = ""
-
-  if (opts.registryUser) {
-    envvars['REGISTRY_USER'] = opts.registryUser;
-  }
-
-  if (opts.registryPassword) {
-    envvars['REGISTRY_PASSWORD'] = opts.registryPassword;
-  }
-
-  if (opts.standalone) {
-    flags += " --standalone";
-  }
-
-  if (opts.sysdigSecureURL) {
-    flags += ` --apiurl ${opts.sysdigSecureURL}`;
-  }
-
-  if (opts.dbPath) {
-    flags += ` --dbpath=${opts.dbPath}`;
-  }
-
-  if (opts.skipUpload) {
-    flags += ' --skipupload';
-  }
-
-  if (opts.usePolicies) {
-    flags += ` --policy=${opts.usePolicies}`;
-  }
-
-  if (opts.sysdigSkipTLS) {
-    flags += ` --skiptlsverify`;
-  }
-
-  if (opts.overridePullString) {
-    flags += ` --override-pullstring=${opts.overridePullString}`;
-  }
-
-  if (opts.extraParameters) {
-    flags += ` ${opts.extraParameters}`;
-  }
-
-  if (opts.mode && opts.mode == iacMode) {
-    flags += ` --iac`;
-  }
-
-  if (opts.recursive && opts.mode == iacMode) {
-    flags += ` -r`;
-  }
-
-  if (opts.minimumSeverity && opts.mode == iacMode) {
-    flags += ` -f=${opts.minimumSeverity}`;
-  }
-
-  if (opts.mode && opts.mode == vmMode) {
-    flags += ` --json-scan-result=${cliScannerResult}`
-    flags += ` ${opts.imageTag}`;
-  }
-
-  if (opts.mode && opts.mode == iacMode) {
-    flags += ` ${opts.iacScanPath}`;
-  }
-
-  return {
-    envvars: envvars,
-    flags: flags
-  }
-}
 
 function writeReport(reportData: string) {
   fs.writeFileSync("./report.json", reportData);
   core.setOutput("scanReport", "./report.json");
 }
 
-export function validateInput(opts: ActionInputs) {
-  if (!opts.standalone && !opts.sysdigSecureToken) {
-    core.setFailed("Sysdig Secure Token is required for standard execution, please set your token or remove the standalone input.");
-    throw new Error("Sysdig Secure Token is required for standard execution, please set your token or remove the standalone input.");
-  }
-
-  if (opts.mode && opts.mode == vmMode && !opts.imageTag) {
-    core.setFailed("image-tag is required for VM mode.");
-    throw new Error("image-tag is required for VM mode.");
-  }
-
-  if (opts.mode && opts.mode == iacMode && opts.iacScanPath == "") {
-    core.setFailed("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
-    throw new Error("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
-  }
-}
 
 export async function run() {
 
@@ -257,12 +31,7 @@ export async function run() {
     let opts = parseActionInputs();
     validateInput(opts)
     printOptions(opts);
-    let scanFlags = composeFlags(opts);
-
-    // If custom scanner version is specified
-    if (opts.cliScannerVersion && opts.cliScannerURL == cliScannerURL) {
-      opts.cliScannerURL = `${cliScannerURLBase}/${opts.cliScannerVersion}/${cliScannerOS}/${cliScannerArch}/${cliScannerName}`
-    }
+    let scanFlags = composeFlags(opts); // FIXME(fede) this also modifies the opts.cliScannerURL, which is something we don't want
 
     let scanResult: ScanExecutionResult;
     // Download CLI Scanner from 'cliScannerURL'
@@ -341,82 +110,6 @@ export async function processScanResult(result: ScanExecutionResult, opts: Actio
   }
 }
 
-export async function pullScanner(scannerURL: string) {
-  let start = performance.now();
-  core.info('Pulling cli-scanner from: ' + scannerURL);
-  let cmd = `wget ${scannerURL} -O ./${cliScannerName}`;
-  let retCode = await exec.exec(cmd, undefined, { silent: true });
-
-  if (retCode == 0) {
-    cmd = `chmod u+x ./${cliScannerName}`;
-    await exec.exec(cmd, undefined, { silent: true });
-  } else {
-    core.error(`Falied to pull scanner using "${scannerURL}"`)
-  }
-
-  core.info("Scanner pull took " + Math.round(performance.now() - start) + " milliseconds.");
-  return retCode;
-}
-
-interface ScanExecutionResult {
-    ReturnCode: number;
-    Output: string;
-    Error: string;
-}
-
-export async function executeScan(scanFlags: ComposeFlags): Promise<ScanExecutionResult> {
-  let {envvars, flags} = scanFlags;
-  let execOutput = '';
-  let errOutput = '';
-
-
-  const scanOptions: exec.ExecOptions = {
-    env: envvars,
-    silent: true,
-    ignoreReturnCode: true,
-    listeners: {
-      stdout: (data: Buffer) => {
-        process.stdout.write(data);
-      },
-      stderr: (data: Buffer) => {
-        process.stderr.write(data);
-      }
-    }
-  };
-
-  const catOptions: exec.ExecOptions = {
-    silent: true,
-    ignoreReturnCode: true,
-    listeners: {
-      stdout: (data) => {
-        execOutput += data.toString();
-      },
-      stderr: (data) => {
-        errOutput += data.toString();
-      }
-    }
-  }
-
-  let start = performance.now();
-  let cmd = `./${cliScannerName} ${flags}`;
-  core.info("Executing: " + cmd);
-  let retCode = await exec.exec(cmd, undefined, scanOptions);
-  core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
-
-  if (retCode == 0 || retCode == 1) {
-    cmd = `cat ./${cliScannerResult}`;
-    await exec.exec(cmd, undefined, catOptions);
-  }
-  return { ReturnCode: retCode, Output: execOutput, Error: errOutput };
-}
-
-
-
-
-
-
-
-
 
 async function generateSummary(opts: ActionInputs, data: Report) {
 
@@ -436,7 +129,7 @@ async function generateSummary(opts: ActionInputs, data: Report) {
 }
 
 function getRulePkgMessage(rule: Rule, packages: Package[]) {
-  let table : { data: string, header?: boolean}[][] = [[
+  let table: { data: string, header?: boolean }[][] = [[
     { data: 'Severity', header: true },
     { data: 'Package', header: true },
     { data: 'CVSS Score', header: true },
@@ -455,13 +148,13 @@ function getRulePkgMessage(rule: Rule, packages: Package[]) {
     if (vuln) {
       table.push([
         { data: `${vuln.severity.value.toString()}` },
-      { data: `${pkg.name}`},
-      { data: `${vuln.cvssScore.value.score}` },
-      { data: `${vuln.cvssScore.value.version}` },
-      { data: `${vuln.cvssScore.value.vector}` },
-      { data: `${pkg.suggestedFix || "No fix available"}` },
-      { data: `${vuln.exploitable}` },
-    ]);
+        { data: `${pkg.name}` },
+        { data: `${vuln.cvssScore.value.score}` },
+        { data: `${vuln.cvssScore.value.version}` },
+        { data: `${vuln.cvssScore.value.vector}` },
+        { data: `${pkg.suggestedFix || "No fix available"}` },
+        { data: `${vuln.exploitable}` },
+      ]);
     }
   });
 
@@ -521,23 +214,16 @@ function addReportToSummary(data: Report) {
 
 }
 
-module.exports = {
-  ExecutionError,
+export {
   parseActionInputs,
+  validateInput,
+  cliScannerURL,
+  defaultSecureEndpoint,
   composeFlags,
   pullScanner,
-  executeScan,
-  processScanResult,
-  run,
-  validateInput,
   cliScannerName,
+  executeScan,
   cliScannerResult,
-  cliScannerVersion,
-  cliScannerArch,
-  cliScannerOS,
-  cliScannerURLBase,
-  cliScannerURL,
-  defaultSecureEndpoint
 };
 
 if (require.main === module) {
