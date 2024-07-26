@@ -75,7 +75,15 @@ export interface Vuln {
   publishDateByVendor: PublishDateByVendor
 }
 
-export type SeverityValue = "Critical" | "High" | "Medium" | "Negligible" | "Low"
+export enum Priority {
+  Critical,
+  High,
+  Medium,
+  Low,
+  Negligible,
+}
+
+export type SeverityValue = keyof typeof Priority;
 
 export interface Severity {
   value: SeverityValue
