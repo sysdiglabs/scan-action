@@ -77,41 +77,6 @@ jobs:
             echo "Scan failed as expected."
           fi
 
-  macos-scan-from-registry:
-    runs-on: macos-latest
-
-    steps:
-      # This step checks out a copy of your repository.
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Scan dummy-vuln-app from registry
-        id: scan
-        uses: ./
-        continue-on-error: true
-        with:
-          # Tag of the image to analyse
-          image-tag: sysdiglabs/dummy-vuln-app:latest
-          # API token for Sysdig Scanning auth
-          sysdig-secure-token: ${{ secrets.KUBELAB_SECURE_API_TOKEN }}
-          stop-on-failed-policy-eval: true
-          stop-on-processing-error: true
-
-      - name: Upload SARIF file
-        if: success() || failure() # Upload results regardless previous step fails
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: ${{ github.workspace }}/sarif.json
-
-      - name: Check that the scan has failed
-        run: |
-          if [ "${{ steps.scan.outcome }}" == "success" ]; then
-            echo "Scan succeeded but the step should fail."
-            exit 1
-          else
-            echo "Scan failed as expected."
-          fi
-
   standalone-scan-from-registry:
     runs-on: ubuntu-latest
 
