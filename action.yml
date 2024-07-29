@@ -3,11 +3,10 @@ description: 'Perform image analysis on locally built container image and post t
 inputs:
   cli-scanner-url:
     description: URL to sysdig-cli-scanner binary download
-    default: https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/1.8.1/linux/amd64/sysdig-cli-scanner
     required: false
   cli-scanner-version:
     description: Custom sysdig-cli-scanner version to download
-    default: "1.8.1"
+    default: "1.13.0"
     required: false
   registry-user:
     description: Registry username.
