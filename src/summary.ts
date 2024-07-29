@@ -37,6 +37,7 @@ function addVulnTableToSummary(data: Report) {
   ]);
 }
 
+
 function addVulnsByLayerTableToSummary(data: Report) {
   if (!data.result.layers) {
     return
@@ -53,16 +54,30 @@ function addVulnsByLayerTableToSummary(data: Report) {
 
   data.result.layers.forEach((layer, index) => {
     core.summary.addCodeBlock(`LAYER ${index} - ${layer.command.replace(new RegExp('\$', 'g'), "&#36;").replace(new RegExp('\&', 'g'), '&amp;')}`);
-
     if (!layer.digest) {
       return;
     }
+
     let packagesWithVulns = (packagesPerLayer[layer.digest] ?? [])
       .filter(pkg => pkg.vulns);
-
     if (packagesWithVulns.length == 0) {
       return;
     }
+
+    let orderedPackagesBySeverity = packagesWithVulns.sort((a, b) => {
+      const getSeverityCount = (pkg: Package, severity: string) =>
+        pkg.vulns?.filter((vul: any) => vul.severity.value === severity).length || 0;
+
+      const severities = ['Critical', 'High', 'Medium', 'Low', 'Negligible'];
+      for (const severity of severities) {
+        const countA = getSeverityCount(a, severity);
+        const countB = getSeverityCount(b, severity);
+        if (countA !== countB) {
+          return countB - countA;
+        }
+      }
+      return 0;
+    })
 
     core.summary.addTable([
       [
@@ -77,7 +92,7 @@ function addVulnsByLayerTableToSummary(data: Report) {
         { data: '⚪ Negligible', header: true },
         { data: 'Exploit', header: true },
       ],
-      ...packagesWithVulns.map(layerPackage => {
+      ...orderedPackagesBySeverity.map(layerPackage => {
         let criticalVulns = layerPackage.vulns?.filter(vuln => vuln.severity.value.toLowerCase() == 'critical').length ?? 0;
         let highVulns = layerPackage.vulns?.filter(vuln => vuln.severity.value.toLowerCase() == 'high').length ?? 0;
         let mediumVulns = layerPackage.vulns?.filter(vuln => vuln.severity.value.toLowerCase() == 'medium').length ?? 0;
