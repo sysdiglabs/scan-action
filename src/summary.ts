@@ -41,7 +41,7 @@ function addVulnsByLayerTableToSummary(data: Report) {
   if (!data.result.layers) {
     return
   }
-
+  core.summary.addSeparator();
   core.summary.addHeading(`Package vulnerabilities per layer`)
 
   let packagesPerLayer: { [key: string]: Package[] } = {}
@@ -52,7 +52,7 @@ function addVulnsByLayerTableToSummary(data: Report) {
   })
 
   data.result.layers.forEach((layer, index) => {
-    core.summary.addHeading(`LAYER ${index} - ${layer.command}`, 4);
+    core.summary.addCodeBlock(`LAYER ${index} - ${layer.command.replace(new RegExp('\$', 'g'), "&#36;").replace(new RegExp('\&', 'g'), '&amp;')}`);
 
     if (!layer.digest) {
       return;
@@ -106,6 +106,7 @@ function addReportToSummary(data: Report) {
   let packages = data.result.packages;
 
   policyEvaluations.forEach(policy => {
+    core.summary.addSeparator()
     core.summary.addHeading(`${EVALUATION[policy.evaluationResult]} Policy: ${policy.name}`, 2)
 
     if (policy.evaluationResult != "passed") {
