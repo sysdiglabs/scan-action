@@ -1,10 +1,10 @@
 import * as core from '@actions/core';
 import fs from 'fs';
-import { Package, Priority, Report, Rule, SeverityValue } from './src/report';
 import { generateSARIFReport } from './src/sarif';
-import { cliScannerName, cliScannerResult, cliScannerURL, composeFlags, executeScan, pullScanner, ScanExecutionResult, vmMode } from './src/scanner';
+import { cliScannerName, cliScannerResult, cliScannerURL, composeFlags, executeScan, numericPriorityForSeverity, pullScanner, ScanExecutionResult, vmMode } from './src/scanner';
 import { ActionInputs, defaultSecureEndpoint, parseActionInputs, printOptions, validateInput } from './src/action';
 import { generateSummary } from './src/summary';
+import { Report } from './src/report';
 
 export class ExecutionError extends Error {
   constructor(stdout: string, stderr: string) {
@@ -64,11 +64,11 @@ export async function run() {
 }
 
 
-function filterResult(report: Report, severity: SeverityValue) {
-  let filter_num: number = Priority[severity];
+function filterResult(report: Report, severity: string) {
+  let filter_num: number = numericPriorityForSeverity(severity) ?? 5;
 
   report.result.packages.forEach(pkg => {
-    if (pkg.vulns) pkg.vulns = pkg.vulns.filter((vuln) => Priority[vuln.severity.value] <= filter_num);
+    if (pkg.vulns) pkg.vulns = pkg.vulns.filter((vuln) => numericPriorityForSeverity(vuln.severity.value) ?? 5 <= filter_num);
   });
   return report;
 }

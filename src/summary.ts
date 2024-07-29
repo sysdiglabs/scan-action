@@ -8,11 +8,12 @@ const EVALUATION: any = {
 }
 
 export async function generateSummary(opts: ActionInputs, data: Report) {
-
   core.summary.emptyBuffer().clear();
   core.summary.addHeading(`Scan Results for ${opts.overridePullString || opts.imageTag}`);
 
   addVulnTableToSummary(data);
+
+  addVulnsByLayerTableToSummary(data);
 
   if (!opts.standalone) {
     core.summary.addBreak()
@@ -34,6 +35,70 @@ function addVulnTableToSummary(data: Report) {
     [{ data: '⚠️ Total Vulnerabilities', header: true }, `${totalVuln.critical}`, `${totalVuln.high}`, `${totalVuln.medium}`, `${totalVuln.low}`, `${totalVuln.negligible}`],
     [{ data: '🔧 Fixable Vulnerabilities', header: true }, `${fixableVuln.critical}`, `${fixableVuln.high}`, `${fixableVuln.medium}`, `${fixableVuln.low}`, `${fixableVuln.negligible}`],
   ]);
+}
+
+function addVulnsByLayerTableToSummary(data: Report) {
+  if (!data.result.layers) {
+    return
+  }
+
+  core.summary.addHeading(`Package vulnerabilities per layer`)
+
+  let packagesPerLayer: { [key: string]: Package[] } = {}
+  data.result.packages.forEach(layerPackage => {
+    if (layerPackage.layerDigest) {
+      packagesPerLayer[layerPackage.layerDigest] = (packagesPerLayer[layerPackage.layerDigest] ?? []).concat(layerPackage)
+    }
+  })
+
+  data.result.layers.forEach((layer, index) => {
+    core.summary.addHeading(`LAYER ${index} - ${layer.command}`, 4);
+
+    if (!layer.digest) {
+      return;
+    }
+    let packagesWithVulns = (packagesPerLayer[layer.digest] ?? [])
+      .filter(pkg => pkg.vulns);
+
+    if (packagesWithVulns.length == 0) {
+      return;
+    }
+
+    core.summary.addTable([
+      [
+        { data: 'Package', header: true },
+        { data: 'Type', header: true },
+        { data: 'Version', header: true },
+        { data: 'Suggested fix', header: true },
+        { data: '🟣 Critical', header: true },
+        { data: '🔴 High', header: true },
+        { data: '🟠 Medium', header: true },
+        { data: '🟡 Low', header: true },
+        { data: '⚪ Negligible', header: true },
+        { data: 'Exploit', header: true },
+      ],
+      ...packagesWithVulns.map(layerPackage => {
+        let criticalVulns = layerPackage.vulns?.filter(vuln => vuln.severity.value.toLowerCase() == 'critical').length ?? 0;
+        let highVulns = layerPackage.vulns?.filter(vuln => vuln.severity.value.toLowerCase() == 'high').length ?? 0;
+        let mediumVulns = layerPackage.vulns?.filter(vuln => vuln.severity.value.toLowerCase() == 'medium').length ?? 0;
+        let lowVulns = layerPackage.vulns?.filter(vuln => vuln.severity.value.toLowerCase() == 'low').length ?? 0;
+        let negligibleVulns = layerPackage.vulns?.filter(vuln => vuln.severity.value.toLowerCase() == 'negligible').length ?? 0;
+        let exploits = layerPackage.vulns?.filter(vuln => vuln.exploitable).length ?? 0;
+        return [
+          { data: layerPackage.name },
+          { data: layerPackage.type },
+          { data: layerPackage.version },
+          { data: layerPackage.suggestedFix || "" },
+          { data: criticalVulns.toString() },
+          { data: highVulns.toString() },
+          { data: mediumVulns.toString() },
+          { data: lowVulns.toString() },
+          { data: negligibleVulns.toString() },
+          { data: exploits.toString() },
+        ]
+      })
+    ])
+  })
 }
 
 function addReportToSummary(data: Report) {

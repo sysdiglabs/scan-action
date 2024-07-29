@@ -170,6 +170,24 @@ export function composeFlags(opts: ActionInputs): ComposeFlags {
   }
 }
 
+export function numericPriorityForSeverity(severity: string): number | undefined {
+  switch (severity.toLowerCase()) {
+    case 'critical':
+      return 0
+    case 'high':
+      return 1
+    case 'medium':
+      return 2
+    case 'low':
+      return 3
+    case 'negligible':
+      return 4
+    case 'any':
+      return 5
+  }
+}
+
+
 function getRunArch() {
   let arch = "unknown";
   if (os.arch() == "x64") {

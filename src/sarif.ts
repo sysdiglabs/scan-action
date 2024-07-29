@@ -1,8 +1,9 @@
 import * as core from '@actions/core';
 import fs from 'fs';
-import { Package, Priority, Report, Vuln } from './report'; 
+import { Package, Report, Vuln } from './report';
 
-import { version }  from '../package.json';
+import { version } from '../package.json';
+import { numericPriorityForSeverity } from './scanner';
 const toolVersion = `${version}`;
 const dottedQuadToolVersion = `${version}.0`;
 
@@ -137,9 +138,9 @@ function vulnerabilities2SARIFResByPackage(data: Report): [SARIFRule[], SARIFRes
       pkg.vulns.forEach(vuln => {
         fullDescription += `${getSARIFVulnFullDescription(pkg, vuln)}\n\n\n`;
 
-        if (Priority[vuln.severity.value] < severity_num) {
+        if (numericPriorityForSeverity(vuln.severity.value) ?? 5 < severity_num) {
           severity_level = vuln.severity.value.toLowerCase();
-          severity_num = Priority[vuln.severity.value];
+          severity_num = numericPriorityForSeverity(vuln.severity.value) ?? 5;
         }
 
         if (vuln.cvssScore.value.score > score) {
@@ -202,7 +203,7 @@ function vulnerabilities2SARIFResByPackage(data: Report): [SARIFRule[], SARIFRes
 
 function vulnerabilities2SARIFRes(data: Report): [SARIFRule[], SARIFResult[]] {
   let results: SARIFResult[] = [];
-  let rules : SARIFRule[]= [];
+  let rules: SARIFRule[] = [];
   let ruleIds: string[] = [];
   let resultUrl = "";
   let baseUrl: string | undefined;

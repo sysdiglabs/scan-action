@@ -1,5 +1,4 @@
 import * as core from '@actions/core';
-import { SeverityValue } from './report';
 import { cliScannerURL, iacMode, vmMode } from './scanner';
 
 export const defaultSecureEndpoint = "https://secure.sysdig.com/"
@@ -21,7 +20,7 @@ export interface ActionInputs {
   sysdigSecureToken: string;
   sysdigSecureURL: string;
   sysdigSkipTLS: boolean;
-  severityAtLeast?: SeverityValue;
+  severityAtLeast?: string;
   groupByPackage: boolean;
   extraParameters: string;
   mode: string;
@@ -48,7 +47,7 @@ export function parseActionInputs() : ActionInputs {
     sysdigSecureToken: core.getInput('sysdig-secure-token'),
     sysdigSecureURL: core.getInput('sysdig-secure-url') || defaultSecureEndpoint,
     sysdigSkipTLS: core.getInput('sysdig-skip-tls') == 'true',
-    severityAtLeast: core.getInput('severity-at-least') as SeverityValue || undefined,
+    severityAtLeast: core.getInput('severity-at-least') || undefined,
     groupByPackage: core.getInput('group-by-package') == 'true',
     extraParameters: core.getInput('extra-parameters'),
     mode: core.getInput('mode') || vmMode,
