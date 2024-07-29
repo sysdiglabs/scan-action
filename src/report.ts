@@ -23,8 +23,10 @@ export interface Result {
   fixableVulnTotalBySeverity: FixableVulnTotalBySeverity
   exploitsCount: number
   packages: Package[]
+  layers?: Layer[]
   policyEvaluations: PolicyEvaluation[]
   policyEvaluationsResult: string
+  riskAcceptanceDefinitions?: RiskAcceptanceDefinition[]
 }
 
 export interface Metadata {
@@ -35,6 +37,7 @@ export interface Metadata {
   size: number
   os: string
   architecture: string
+  labels?: {[key: string]: string}
   layersCount: number
   createdAt: string
 }
@@ -60,6 +63,7 @@ export interface Package {
   name: string
   version: string
   path: string
+  layerDigest?: string
   suggestedFix?: string
   vulns?: Vuln[]
 }
@@ -73,6 +77,8 @@ export interface Vuln {
   exploitable: boolean
   fixedInVersion?: string
   publishDateByVendor: PublishDateByVendor
+  annotations?: {[key: string]: string}
+  acceptedRisks?: AcceptedRisk[]
 }
 
 export enum Priority {
@@ -103,8 +109,38 @@ export interface Value {
 }
 
 export interface PublishDateByVendor {
-  nvd: string
+  nvd?: string
   vulndb: string
+  cisakev?: string
+}
+
+export interface AcceptedRisk {
+  index: number
+  ref: string
+  id: string
+}
+
+export interface Layer {
+  digest?: string
+  size?: number
+  command: string
+  vulns: Vulns
+  runningVulns: RunningVulns
+  baseImages: BaseImage[]
+}
+
+export interface Vulns {
+  critical?: number
+  high?: number
+  low?: number
+  medium?: number
+  negligible?: number
+}
+
+export interface RunningVulns {}
+
+export interface BaseImage {
+  pullstrings: string[]
 }
 
 export interface PolicyEvaluation {
@@ -143,6 +179,7 @@ export interface Failure {
   description?: string
   remediation?: string
   Arguments?: Arguments
+  acceptedRisks?: AcceptedRisk[]
 }
 
 export interface Arguments {
@@ -157,5 +194,19 @@ export interface Predicate {
 export interface Extra {
   level?: string
   age?: number
+  vulnIds?: string[]
+}
+
+export interface RiskAcceptanceDefinition {
+  id: string
+  entityType: string
+  entityValue: string
+  context: any[]
+  status: string
+  reason: string
+  description: string
+  expirationDate: string
+  createdAt: string
+  updatedAt: string
 }
 

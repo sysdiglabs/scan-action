@@ -280,11 +280,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Priority = void 0;
 var Priority;
 (function (Priority) {
-    Priority[Priority["Critical"] = 0] = "Critical";
-    Priority[Priority["High"] = 1] = "High";
-    Priority[Priority["Medium"] = 2] = "Medium";
-    Priority[Priority["Low"] = 3] = "Low";
-    Priority[Priority["Negligible"] = 4] = "Negligible";
+    Priority[Priority["critical"] = 0] = "critical";
+    Priority[Priority["high"] = 1] = "high";
+    Priority[Priority["medium"] = 2] = "medium";
+    Priority[Priority["low"] = 3] = "low";
+    Priority[Priority["negligible"] = 4] = "negligible";
+    Priority[Priority["any"] = 5] = "any";
 })(Priority || (exports.Priority = Priority = {}));
 
 
