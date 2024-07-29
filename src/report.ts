@@ -81,17 +81,6 @@ export interface Vuln {
   acceptedRisks?: AcceptedRisk[]
 }
 
-// export enum Priority {
-//   critical,
-//   high,
-//   medium,
-//   low,
-//   negligible,
-//   any
-// }
-
-// export type SeverityValue = keyof typeof Priority;
-
 export interface Severity {
   value: string
   sourceName: string
