@@ -10,7 +10,7 @@ const cliScannerArch = getRunArch()
 const cliScannerURLBase = "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner";
 export const cliScannerName = "sysdig-cli-scanner"
 export const cliScannerResult = "scan-result.json"
-export const cliScannerURL = `${cliScannerURLBase}/${cliScannerVersion}/${cliScannerOS}/${cliScannerArch}/${cliScannerName}`
+export const defaultScannerURL = `${cliScannerURLBase}/${cliScannerVersion}/${cliScannerOS}/${cliScannerArch}/${cliScannerName}`
 
 export enum ScanMode {
   vm = "vm",
@@ -28,21 +28,40 @@ export namespace ScanMode {
   }
 }
 
-export async function pullScanner(scannerURL: string) {
-  let start = performance.now();
-  core.info('Pulling cli-scanner from: ' + scannerURL);
-  let cmd = `wget ${scannerURL} -O ./${cliScannerName}`;
-  let retCode = await exec.exec(cmd, undefined, { silent: true });
+type ScannerOption = (scanner: Scanner) => void;
 
-  if (retCode == 0) {
-    cmd = `chmod u+x ./${cliScannerName}`;
-    await exec.exec(cmd, undefined, { silent: true });
-  } else {
-    core.error(`Falied to pull scanner using "${scannerURL}"`)
+export class Scanner {
+  protected scannerURL: string;
+
+  constructor(...options: ScannerOption[]) {
+    this.scannerURL = defaultScannerURL;
+    options.forEach(o => o(this));
   }
 
-  core.info("Scanner pull took " + Math.round(performance.now() - start) + " milliseconds.");
-  return retCode;
+  async pullScanner() {
+    let start = performance.now();
+    core.info('Pulling cli-scanner from: ' + this.scannerURL);
+    let cmd = `wget ${this.scannerURL} -O ./${cliScannerName}`;
+    let retCode = await exec.exec(cmd, undefined, { silent: true });
+
+    if (retCode == 0) {
+      cmd = `chmod u+x ./${cliScannerName}`;
+      await exec.exec(cmd, undefined, { silent: true });
+    } else {
+      core.error(`Falied to pull scanner using "${this.scannerURL}"`)
+    }
+
+    core.info("Scanner pull took " + Math.round(performance.now() - start) + " milliseconds.");
+    return retCode;
+  }
+
+  static Options = class {
+    static withScannerURL(scannerURL: string): ScannerOption {
+      return (scanner) => {
+        scanner.scannerURL = scannerURL
+      }
+    }
+  }
 }
 
 export interface ScanExecutionResult {

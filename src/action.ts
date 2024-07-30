@@ -1,5 +1,5 @@
 import * as core from '@actions/core';
-import { cliScannerResult, cliScannerURL, ComposeFlags, ScanMode, scannerURLForVersion } from './scanner';
+import { cliScannerResult, defaultScannerURL, ComposeFlags, ScanMode, scannerURLForVersion } from './scanner';
 
 export const defaultSecureEndpoint = "https://secure.sysdig.com/"
 
@@ -54,7 +54,7 @@ export class ActionInputs {
   static overridingParsedActionInputs(overrides: { [key: string]: any }) {
 
     const params: ActionInputParameters = {
-      cliScannerURL: core.getInput('cli-scanner-url') || cliScannerURL,
+      cliScannerURL: core.getInput('cli-scanner-url') || defaultScannerURL,
       cliScannerVersion: core.getInput('cli-scanner-version'),
       registryUser: core.getInput('registry-user'),
       registryPassword: core.getInput('registry-password'),
@@ -147,7 +147,7 @@ export class ActionInputs {
 
   // FIXME(fede) this also modifies the opts.cliScannerURL, which is something we don't want
   public composeFlags(): ComposeFlags {
-    if (this.params.cliScannerVersion && this.params.cliScannerURL == cliScannerURL) {
+    if (this.params.cliScannerVersion && this.params.cliScannerURL == defaultScannerURL) {
       this.params.cliScannerURL = scannerURLForVersion(this.params.cliScannerVersion)
     }
 
