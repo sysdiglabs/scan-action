@@ -82,7 +82,7 @@ function run() {
                 retCode = scanResult.ReturnCode;
                 if (retCode == 0 || retCode == 1) {
                     // Transform Scan Results to other formats such as SARIF
-                    if (opts.mode == scanner_1.vmMode) {
+                    if (opts.mode == scanner_1.ScanMode.vm) {
                         yield processScanResult(scanResult, opts);
                     }
                 }
@@ -227,7 +227,7 @@ class ActionInputs {
             severityAtLeast: core.getInput('severity-at-least') || undefined,
             groupByPackage: core.getInput('group-by-package') == 'true',
             extraParameters: core.getInput('extra-parameters'),
-            mode: core.getInput('mode') || scanner_1.vmMode,
+            mode: scanner_1.ScanMode.fromString(core.getInput('mode')) || scanner_1.ScanMode.vm,
             recursive: core.getInput('recursive') == 'true',
             minimumSeverity: core.getInput('minimum-severity'),
             iacScanPath: core.getInput('iac-scan-path') || './',
@@ -239,7 +239,7 @@ class ActionInputs {
         return this.params.cliScannerURL;
     }
     get mode() {
-        return this.params.mode || scanner_1.vmMode;
+        return this.params.mode;
     }
     get stopOnProcessingError() {
         return this.params.stopOnProcessingError;
@@ -270,11 +270,11 @@ class ActionInputs {
             core.setFailed("Sysdig Secure Token is required for standard execution, please set your token or remove the standalone input.");
             throw new Error("Sysdig Secure Token is required for standard execution, please set your token or remove the standalone input.");
         }
-        if (params.mode && params.mode == scanner_1.vmMode && !params.imageTag) {
+        if (params.mode && params.mode == scanner_1.ScanMode.vm && !params.imageTag) {
             core.setFailed("image-tag is required for VM mode.");
             throw new Error("image-tag is required for VM mode.");
         }
-        if (params.mode && params.mode == scanner_1.iacMode && params.iacScanPath == "") {
+        if (params.mode && params.mode == scanner_1.ScanMode.iac && params.iacScanPath == "") {
             core.setFailed("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
             throw new Error("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
         }
@@ -317,21 +317,19 @@ class ActionInputs {
         if (this.params.extraParameters) {
             flags += ` ${this.params.extraParameters}`;
         }
-        if (this.params.mode && this.params.mode == scanner_1.iacMode) {
+        if (this.params.mode == scanner_1.ScanMode.iac) {
             flags += ` --iac`;
+            if (this.params.recursive) {
+                flags += ` -r`;
+            }
+            if (this.params.minimumSeverity) {
+                flags += ` -f=${this.params.minimumSeverity}`;
+            }
+            flags += ` ${this.params.iacScanPath}`;
         }
-        if (this.params.recursive && this.params.mode == scanner_1.iacMode) {
-            flags += ` -r`;
-        }
-        if (this.params.minimumSeverity && this.params.mode == scanner_1.iacMode) {
-            flags += ` -f=${this.params.minimumSeverity}`;
-        }
-        if (this.params.mode && this.params.mode == scanner_1.vmMode) {
+        if (this.params.mode == scanner_1.ScanMode.vm) {
             flags += ` --json-scan-result=${scanner_1.cliScannerResult}`;
             flags += ` ${this.params.imageTag}`;
-        }
-        if (this.params.mode && this.params.mode == scanner_1.iacMode) {
-            flags += ` ${this.params.iacScanPath}`;
         }
         return {
             envvars: envvars,
@@ -790,7 +788,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.iacMode = exports.vmMode = exports.cliScannerURL = exports.cliScannerResult = exports.cliScannerName = void 0;
+exports.ScanMode = exports.cliScannerURL = exports.cliScannerResult = exports.cliScannerName = void 0;
 exports.pullScanner = pullScanner;
 exports.executeScan = executeScan;
 exports.scannerURLForVersion = scannerURLForVersion;
@@ -807,8 +805,22 @@ const cliScannerURLBase = "https://download.sysdig.com/scanning/bin/sysdig-cli-s
 exports.cliScannerName = "sysdig-cli-scanner";
 exports.cliScannerResult = "scan-result.json";
 exports.cliScannerURL = `${cliScannerURLBase}/${cliScannerVersion}/${cliScannerOS}/${cliScannerArch}/${exports.cliScannerName}`;
-exports.vmMode = "vm";
-exports.iacMode = "iac";
+var ScanMode;
+(function (ScanMode) {
+    ScanMode["vm"] = "vm";
+    ScanMode["iac"] = "iac";
+})(ScanMode || (exports.ScanMode = ScanMode = {}));
+(function (ScanMode) {
+    function fromString(str) {
+        switch (str.toLowerCase()) {
+            case "vm":
+                return ScanMode.vm;
+            case "iac":
+                return ScanMode.iac;
+        }
+    }
+    ScanMode.fromString = fromString;
+})(ScanMode || (exports.ScanMode = ScanMode = {}));
 function pullScanner(scannerURL) {
     return __awaiter(this, void 0, void 0, function* () {
         let start = performance.now();

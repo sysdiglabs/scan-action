@@ -12,8 +12,21 @@ export const cliScannerName = "sysdig-cli-scanner"
 export const cliScannerResult = "scan-result.json"
 export const cliScannerURL = `${cliScannerURLBase}/${cliScannerVersion}/${cliScannerOS}/${cliScannerArch}/${cliScannerName}`
 
-export const vmMode = "vm"
-export const iacMode = "iac"
+export enum ScanMode {
+  vm = "vm",
+  iac = "iac",
+}
+
+export namespace ScanMode {
+  export function fromString(str: string): ScanMode | undefined {
+    switch (str.toLowerCase()) {
+      case "vm":
+        return ScanMode.vm;
+      case "iac":
+        return ScanMode.iac;
+    }
+  }
+}
 
 export async function pullScanner(scannerURL: string) {
   let start = performance.now();

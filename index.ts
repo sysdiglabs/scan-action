@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import fs from 'fs';
 import { generateSARIFReport } from './src/sarif';
-import { cliScannerName, cliScannerResult, cliScannerURL, executeScan, numericPriorityForSeverity, pullScanner, ScanExecutionResult, vmMode } from './src/scanner';
+import { cliScannerName, cliScannerResult, cliScannerURL, executeScan, numericPriorityForSeverity, pullScanner, ScanExecutionResult, ScanMode } from './src/scanner';
 import { ActionInputs, defaultSecureEndpoint } from './src/action';
 import { generateSummary } from './src/summary';
 import { Report } from './src/report';
@@ -35,7 +35,7 @@ export async function run() {
       if (retCode == 0 || retCode == 1) {
         // Transform Scan Results to other formats such as SARIF
 
-        if (opts.mode == vmMode) {
+        if (opts.mode == ScanMode.vm) {
           await processScanResult(scanResult, opts);
         }
       } else {
