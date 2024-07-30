@@ -42,7 +42,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.cliScannerResult = exports.executeScan = exports.cliScannerName = exports.pullScanner = exports.defaultSecureEndpoint = exports.cliScannerURL = exports.ExecutionError = void 0;
+exports.cliScannerResult = exports.executeScan = exports.cliScannerName = exports.defaultSecureEndpoint = exports.cliScannerURL = exports.ExecutionError = void 0;
 exports.run = run;
 exports.processScanResult = processScanResult;
 const core = __importStar(__nccwpck_require__(2186));
@@ -51,9 +51,8 @@ const sarif_1 = __nccwpck_require__(3032);
 const scanner_1 = __nccwpck_require__(491);
 Object.defineProperty(exports, "cliScannerName", ({ enumerable: true, get: function () { return scanner_1.cliScannerName; } }));
 Object.defineProperty(exports, "cliScannerResult", ({ enumerable: true, get: function () { return scanner_1.cliScannerResult; } }));
-Object.defineProperty(exports, "cliScannerURL", ({ enumerable: true, get: function () { return scanner_1.cliScannerURL; } }));
+Object.defineProperty(exports, "cliScannerURL", ({ enumerable: true, get: function () { return scanner_1.defaultScannerURL; } }));
 Object.defineProperty(exports, "executeScan", ({ enumerable: true, get: function () { return scanner_1.executeScan; } }));
-Object.defineProperty(exports, "pullScanner", ({ enumerable: true, get: function () { return scanner_1.pullScanner; } }));
 const action_1 = __nccwpck_require__(3761);
 Object.defineProperty(exports, "defaultSecureEndpoint", ({ enumerable: true, get: function () { return action_1.defaultSecureEndpoint; } }));
 const summary_1 = __nccwpck_require__(5389);
@@ -74,8 +73,9 @@ function run() {
             opts.printOptions();
             let scanFlags = opts.composeFlags();
             let scanResult;
+            let scanner = new scanner_1.Scanner(scanner_1.Scanner.Options.withScannerURL(opts.cliScannerURL));
             // Download CLI Scanner from 'cliScannerURL'
-            let retCode = yield (0, scanner_1.pullScanner)(opts.cliScannerURL);
+            let retCode = yield scanner.pullScanner();
             if (retCode == 0) {
                 // Execute Scanner
                 scanResult = yield (0, scanner_1.executeScan)(scanFlags);
@@ -208,7 +208,7 @@ class ActionInputs {
     }
     static overridingParsedActionInputs(overrides) {
         const params = {
-            cliScannerURL: core.getInput('cli-scanner-url') || scanner_1.cliScannerURL,
+            cliScannerURL: core.getInput('cli-scanner-url') || scanner_1.defaultScannerURL,
             cliScannerVersion: core.getInput('cli-scanner-version'),
             registryUser: core.getInput('registry-user'),
             registryPassword: core.getInput('registry-password'),
@@ -281,7 +281,7 @@ class ActionInputs {
     }
     // FIXME(fede) this also modifies the opts.cliScannerURL, which is something we don't want
     composeFlags() {
-        if (this.params.cliScannerVersion && this.params.cliScannerURL == scanner_1.cliScannerURL) {
+        if (this.params.cliScannerVersion && this.params.cliScannerURL == scanner_1.defaultScannerURL) {
             this.params.cliScannerURL = (0, scanner_1.scannerURLForVersion)(this.params.cliScannerVersion);
         }
         let envvars = {};
@@ -788,8 +788,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ScanMode = exports.cliScannerURL = exports.cliScannerResult = exports.cliScannerName = void 0;
-exports.pullScanner = pullScanner;
+exports.Scanner = exports.ScanMode = exports.defaultScannerURL = exports.cliScannerResult = exports.cliScannerName = void 0;
 exports.executeScan = executeScan;
 exports.scannerURLForVersion = scannerURLForVersion;
 exports.numericPriorityForSeverity = numericPriorityForSeverity;
@@ -804,7 +803,7 @@ const cliScannerArch = getRunArch();
 const cliScannerURLBase = "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner";
 exports.cliScannerName = "sysdig-cli-scanner";
 exports.cliScannerResult = "scan-result.json";
-exports.cliScannerURL = `${cliScannerURLBase}/${cliScannerVersion}/${cliScannerOS}/${cliScannerArch}/${exports.cliScannerName}`;
+exports.defaultScannerURL = `${cliScannerURLBase}/${cliScannerVersion}/${cliScannerOS}/${cliScannerArch}/${exports.cliScannerName}`;
 var ScanMode;
 (function (ScanMode) {
     ScanMode["vm"] = "vm";
@@ -821,23 +820,37 @@ var ScanMode;
     }
     ScanMode.fromString = fromString;
 })(ScanMode || (exports.ScanMode = ScanMode = {}));
-function pullScanner(scannerURL) {
-    return __awaiter(this, void 0, void 0, function* () {
-        let start = performance.now();
-        core.info('Pulling cli-scanner from: ' + scannerURL);
-        let cmd = `wget ${scannerURL} -O ./${exports.cliScannerName}`;
-        let retCode = yield exec.exec(cmd, undefined, { silent: true });
-        if (retCode == 0) {
-            cmd = `chmod u+x ./${exports.cliScannerName}`;
-            yield exec.exec(cmd, undefined, { silent: true });
-        }
-        else {
-            core.error(`Falied to pull scanner using "${scannerURL}"`);
-        }
-        core.info("Scanner pull took " + Math.round(performance.now() - start) + " milliseconds.");
-        return retCode;
-    });
+class Scanner {
+    constructor(...options) {
+        this.scannerURL = exports.defaultScannerURL;
+        options.forEach(o => o(this));
+    }
+    pullScanner() {
+        return __awaiter(this, void 0, void 0, function* () {
+            let start = performance.now();
+            core.info('Pulling cli-scanner from: ' + this.scannerURL);
+            let cmd = `wget ${this.scannerURL} -O ./${exports.cliScannerName}`;
+            let retCode = yield exec.exec(cmd, undefined, { silent: true });
+            if (retCode == 0) {
+                cmd = `chmod u+x ./${exports.cliScannerName}`;
+                yield exec.exec(cmd, undefined, { silent: true });
+            }
+            else {
+                core.error(`Falied to pull scanner using "${this.scannerURL}"`);
+            }
+            core.info("Scanner pull took " + Math.round(performance.now() - start) + " milliseconds.");
+            return retCode;
+        });
+    }
 }
+exports.Scanner = Scanner;
+Scanner.Options = class {
+    static withScannerURL(scannerURL) {
+        return (scanner) => {
+            scanner.scannerURL = scannerURL;
+        };
+    }
+};
 // If custom scanner version is specified
 function executeScan(scanFlags) {
     return __awaiter(this, void 0, void 0, function* () {
