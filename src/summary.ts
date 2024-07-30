@@ -1,6 +1,6 @@
 import * as core from "@actions/core";
-import { ActionInputs } from "./action";
 import { Package, Report, Rule } from "./report";
+import { ActionInputs } from "./action";
 
 const EVALUATION: any = {
   "failed": "❌",

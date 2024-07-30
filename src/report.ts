@@ -37,7 +37,7 @@ export interface Metadata {
   size: number
   os: string
   architecture: string
-  labels?: {[key: string]: string}
+  labels?: { [key: string]: string }
   layersCount: number
   createdAt: string
 }
@@ -77,7 +77,7 @@ export interface Vuln {
   exploitable: boolean
   fixedInVersion?: string
   publishDateByVendor: PublishDateByVendor
-  annotations?: {[key: string]: string}
+  annotations?: { [key: string]: string }
   acceptedRisks?: AcceptedRisk[]
 }
 
@@ -126,7 +126,7 @@ export interface Vulns {
   negligible?: number
 }
 
-export interface RunningVulns {}
+export interface RunningVulns { }
 
 export interface BaseImage {
   pullstrings: string[]

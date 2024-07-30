@@ -2,7 +2,6 @@ import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import os from 'os';
 import process from 'process';
-import { ActionInputs } from './action';
 const performance = require('perf_hooks').performance;
 
 const cliScannerVersion = "1.13.0"
@@ -88,88 +87,17 @@ export async function executeScan(scanFlags: ComposeFlags): Promise<ScanExecutio
   return { ReturnCode: retCode, Output: execOutput, Error: errOutput };
 }
 
-interface ComposeFlags {
+export interface ComposeFlags {
   envvars: {
     [key: string]: string;
   };
   flags: string;
 }
-export function composeFlags(opts: ActionInputs): ComposeFlags {
-  if (opts.cliScannerVersion && opts.cliScannerURL == cliScannerURL) {
-    opts.cliScannerURL = `${cliScannerURLBase}/${opts.cliScannerVersion}/${cliScannerOS}/${cliScannerArch}/${cliScannerName}`
-  }
-  let envvars: { [key: string]: string } = {}
-  envvars['SECURE_API_TOKEN'] = opts.sysdigSecureToken || "";
 
-  let flags = ""
+export function scannerURLForVersion(version: string): string {
+  return `${cliScannerURLBase}/${version}/${cliScannerOS}/${cliScannerArch}/${cliScannerName}`;
 
-  if (opts.registryUser) {
-    envvars['REGISTRY_USER'] = opts.registryUser;
-  }
-
-  if (opts.registryPassword) {
-    envvars['REGISTRY_PASSWORD'] = opts.registryPassword;
-  }
-
-  if (opts.standalone) {
-    flags += " --standalone";
-  }
-
-  if (opts.sysdigSecureURL) {
-    flags += ` --apiurl ${opts.sysdigSecureURL}`;
-  }
-
-  if (opts.dbPath) {
-    flags += ` --dbpath=${opts.dbPath}`;
-  }
-
-  if (opts.skipUpload) {
-    flags += ' --skipupload';
-  }
-
-  if (opts.usePolicies) {
-    flags += ` --policy=${opts.usePolicies}`;
-  }
-
-  if (opts.sysdigSkipTLS) {
-    flags += ` --skiptlsverify`;
-  }
-
-  if (opts.overridePullString) {
-    flags += ` --override-pullstring=${opts.overridePullString}`;
-  }
-
-  if (opts.extraParameters) {
-    flags += ` ${opts.extraParameters}`;
-  }
-
-  if (opts.mode && opts.mode == iacMode) {
-    flags += ` --iac`;
-  }
-
-  if (opts.recursive && opts.mode == iacMode) {
-    flags += ` -r`;
-  }
-
-  if (opts.minimumSeverity && opts.mode == iacMode) {
-    flags += ` -f=${opts.minimumSeverity}`;
-  }
-
-  if (opts.mode && opts.mode == vmMode) {
-    flags += ` --json-scan-result=${cliScannerResult}`
-    flags += ` ${opts.imageTag}`;
-  }
-
-  if (opts.mode && opts.mode == iacMode) {
-    flags += ` ${opts.iacScanPath}`;
-  }
-
-  return {
-    envvars: envvars,
-    flags: flags
-  }
 }
-
 export function numericPriorityForSeverity(severity: string): number | undefined {
   switch (severity.toLowerCase()) {
     case 'critical':

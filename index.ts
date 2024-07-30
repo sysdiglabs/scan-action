@@ -1,8 +1,8 @@
 import * as core from '@actions/core';
 import fs from 'fs';
 import { generateSARIFReport } from './src/sarif';
-import { cliScannerName, cliScannerResult, cliScannerURL, composeFlags, executeScan, numericPriorityForSeverity, pullScanner, ScanExecutionResult, vmMode } from './src/scanner';
-import { ActionInputs, defaultSecureEndpoint, parseActionInputs, printOptions, validateInput } from './src/action';
+import { cliScannerName, cliScannerResult, cliScannerURL, executeScan, numericPriorityForSeverity, pullScanner, ScanExecutionResult, vmMode } from './src/scanner';
+import { ActionInputs, defaultSecureEndpoint } from './src/action';
 import { generateSummary } from './src/summary';
 import { Report } from './src/report';
 
@@ -20,10 +20,9 @@ function writeReport(reportData: string) {
 export async function run() {
 
   try {
-    let opts = parseActionInputs();
-    validateInput(opts)
-    printOptions(opts);
-    let scanFlags = composeFlags(opts); // FIXME(fede) this also modifies the opts.cliScannerURL, which is something we don't want
+    let opts = ActionInputs.parseActionInputs();
+    opts.printOptions();
+    let scanFlags = opts.composeFlags();
 
     let scanResult: ScanExecutionResult;
     // Download CLI Scanner from 'cliScannerURL'
@@ -35,7 +34,8 @@ export async function run() {
       retCode = scanResult.ReturnCode;
       if (retCode == 0 || retCode == 1) {
         // Transform Scan Results to other formats such as SARIF
-        if (opts.mode && opts.mode == vmMode) {
+
+        if (opts.mode == vmMode) {
           await processScanResult(scanResult, opts);
         }
       } else {
@@ -103,11 +103,8 @@ export async function processScanResult(result: ScanExecutionResult, opts: Actio
 }
 
 export {
-  parseActionInputs,
-  validateInput,
   cliScannerURL,
   defaultSecureEndpoint,
-  composeFlags,
   pullScanner,
   cliScannerName,
   executeScan,
