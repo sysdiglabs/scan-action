@@ -6,6 +6,7 @@ import * as core from "@actions/core";
 import * as report_test from "./fixtures/report-test.json";
 
 import { exec } from "@actions/exec";
+import { ActionInputs } from '../src/action';
 jest.mock("@actions/exec");
 const mockExec = jest.mocked(exec);
 
@@ -47,16 +48,15 @@ describe("input parsing", () => {
 
   it("raises error if no image tag provided", () => {
     process.env['INPUT_SYSDIG-SECURE-TOKEN'] = "token";
-    let opts = index.parseActionInputs();
-    expect(() => index.validateInput(opts)).toThrow("image-tag is required for VM mode.");
+    expect(() => ActionInputs.parseActionInputs()).toThrow("image-tag is required for VM mode.");
   });
 
   it("sets default for inputs", () => {
     process.env['INPUT_SYSDIG-SECURE-TOKEN'] = "token";
     process.env['INPUT_IMAGE-TAG'] = "image:tag";
-    let opts = index.parseActionInputs();
+    let opts = ActionInputs.parseActionInputs();
 
-    expect(opts).toEqual({
+    expect(opts.params).toEqual({
       cliScannerURL: index.cliScannerURL,
       cliScannerVersion: "",
       registryUser: "",
@@ -107,9 +107,9 @@ describe("input parsing", () => {
     process.env['INPUT_RECURSIVE'] = "true";
     process.env['INPUT_MINIMUM-SEVERITY'] = "high";
     process.env['INPUT_MODE'] = "vm";
-    let opts = index.parseActionInputs();
+    let opts = ActionInputs.parseActionInputs();
 
-    expect(opts).toEqual({
+    expect(opts.params).toEqual({
       "cliScannerURL": "https://foo",
       "cliScannerVersion": "1.0.0",
       "registryUser": "user",
@@ -141,82 +141,55 @@ describe("input parsing", () => {
 describe("execution flags", () => {
 
   it("uses default flags for VM mode", () => {
-    let flags = index.composeFlags({ ...index.parseActionInputs(), sysdigSecureToken: "foo-token", imageTag: "image:tag", mode: "vm" });
+    let flags = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", mode: "vm" }).composeFlags();
     expect(flags.envvars.SECURE_API_TOKEN).toMatch("foo-token");
     expect(flags.flags).toMatch(/(^| )image:tag($| )/);
   });
 
   it("uses default flags for IaC mode", () => {
-    let flags = index.composeFlags({ ...index.parseActionInputs(), sysdigSecureToken: "foo-token", mode: "iac", iacScanPath: "/my-special-path" });
+    let flags = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", mode: "iac", iacScanPath: "/my-special-path" }).composeFlags();
     expect(flags.envvars.SECURE_API_TOKEN).toMatch("foo-token");
     expect(flags.flags).toMatch(/(^| )--iac \/my-special-path($| )/);
   });
 
   it("adds secure URL flag", () => {
-    let flags = index.composeFlags({
-      ...index.parseActionInputs(),
-      sysdigSecureToken: "foo-token",
-      sysdigSecureURL: "https://foo"
-    });
+    let flags = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", sysdigSecureURL: "https://foo" }).composeFlags();
     expect(flags.flags).toMatch(/(^| )--apiurl[ =]https:\/\/foo($| )/);
   });
 
   it("uses standalone mode", () => {
-    let flags = index.composeFlags({
-      ...index.parseActionInputs(),
-      sysdigSecureToken: "foo-token",
-      standalone: true,
-    });
+    let flags = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", standalone: true }).composeFlags();
     expect(flags.flags).toMatch(/(^| )--standalone($| )/);
   });
 
   it("uses registry credentials", () => {
-    let flags = index.composeFlags({
-      ...index.parseActionInputs(),
-      sysdigSecureToken: "foo-token",
-      registryUser: "user",
-      registryPassword: "pass"
-    });
+    let flags = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", registryUser: "user", registryPassword: "pass" }).composeFlags();
     expect(flags.envvars.REGISTRY_USER).toMatch('user');
     expect(flags.envvars.REGISTRY_PASSWORD).toMatch('pass');
   });
 
   it("uses custom db path", () => {
-    let flags = index.composeFlags({
-      ...index.parseActionInputs(),
-      dbPath: "/mypath",
-    });
+    let flags = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", dbPath: "/mypath", }).composeFlags();
     expect(flags.flags).toMatch(new RegExp(/(^| )--dbpath[ =]\/mypath($| )/));
   });
 
   it("uses skip upload flag", () => {
-    let flags = index.composeFlags({
-      ...index.parseActionInputs(), skipUpload: true,
-    });
+    let flags = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", skipUpload: true, }).composeFlags();
     expect(flags.flags).toMatch(new RegExp(/(^| )--skipupload($| )/));
   });
 
   it("uses custom policies flag", () => {
-    let flags = index.composeFlags({
-      ...index.parseActionInputs(),
-      usePolicies: "abcxyz",
-    });
+    let flags = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", usePolicies: "abcxyz", }).composeFlags();
     expect(flags.flags).toMatch(new RegExp(/(^| )--policy[ =]abcxyz($| )/));
   });
 
   it("uses --skip-tls flag", () => {
-    let flags = index.composeFlags({
-      ...index.parseActionInputs(),
-      sysdigSkipTLS: true,
-    });
+    let flags = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", sysdigSkipTLS: true, }).composeFlags();
     expect(flags.flags).toMatch(new RegExp(/(^| )--skiptlsverify($| )/));
   });
 
   it("uses override pullstring flag", () => {
-    let flags = index.composeFlags({
-      ...index.parseActionInputs(),
-      overridePullString: "my-image",
-    });
+    let flags = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", overridePullString: "my-image", }).composeFlags();
     expect(flags.flags).toMatch(new RegExp(/(^| )--override-pullstring[ =]my-image($| )/));
   });
 });
@@ -320,12 +293,7 @@ describe("process scan results", () => {
       Error: ""
     };
 
-    let opts = {
-      ...index.parseActionInputs(),
-      skipSummary: true,
-      standalone: false,
-      overridePullString: "none"
-    };
+    let opts = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", skipSummary: true, standalone: false, overridePullString: "none" });
     await expect(index.processScanResult(scanResult, opts)).rejects.toThrow(new index.ExecutionError('invalid JSON', ''));
     expect(mockCore.error).toHaveBeenCalledTimes(1);
     expect(mockCore.error).toHaveBeenCalledWith(expect.stringContaining("Error parsing analysis JSON report"))
@@ -342,13 +310,7 @@ describe("process scan results", () => {
       Error: ""
     };
 
-    let opts = {
-      ...index.parseActionInputs(),
-      skipSummary: true,
-      standalone: false,
-      overridePullString: "none"
-    };
-
+    let opts = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", skipSummary: true, standalone: false, overridePullString: "none" });
     await index.processScanResult(scanResult, opts);
     expect(fs.writeFileSync).toHaveBeenCalledWith("./report.json", reportData);
     fs.writeFileSync = realWriteFileSync;
@@ -357,7 +319,7 @@ describe("process scan results", () => {
 
 describe("run the full action", () => {
   let tmpDir: TempDir;
-  let oldEnv: NodeJS.ProcessEnv;  
+  let oldEnv: NodeJS.ProcessEnv;
   let mockCore: jest.Mocked<typeof core>;
 
   beforeEach(() => {

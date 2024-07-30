@@ -42,7 +42,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.cliScannerResult = exports.executeScan = exports.cliScannerName = exports.pullScanner = exports.composeFlags = exports.defaultSecureEndpoint = exports.cliScannerURL = exports.validateInput = exports.parseActionInputs = exports.ExecutionError = void 0;
+exports.cliScannerResult = exports.executeScan = exports.cliScannerName = exports.pullScanner = exports.defaultSecureEndpoint = exports.cliScannerURL = exports.ExecutionError = void 0;
 exports.run = run;
 exports.processScanResult = processScanResult;
 const core = __importStar(__nccwpck_require__(2186));
@@ -52,13 +52,10 @@ const scanner_1 = __nccwpck_require__(491);
 Object.defineProperty(exports, "cliScannerName", ({ enumerable: true, get: function () { return scanner_1.cliScannerName; } }));
 Object.defineProperty(exports, "cliScannerResult", ({ enumerable: true, get: function () { return scanner_1.cliScannerResult; } }));
 Object.defineProperty(exports, "cliScannerURL", ({ enumerable: true, get: function () { return scanner_1.cliScannerURL; } }));
-Object.defineProperty(exports, "composeFlags", ({ enumerable: true, get: function () { return scanner_1.composeFlags; } }));
 Object.defineProperty(exports, "executeScan", ({ enumerable: true, get: function () { return scanner_1.executeScan; } }));
 Object.defineProperty(exports, "pullScanner", ({ enumerable: true, get: function () { return scanner_1.pullScanner; } }));
 const action_1 = __nccwpck_require__(3761);
 Object.defineProperty(exports, "defaultSecureEndpoint", ({ enumerable: true, get: function () { return action_1.defaultSecureEndpoint; } }));
-Object.defineProperty(exports, "parseActionInputs", ({ enumerable: true, get: function () { return action_1.parseActionInputs; } }));
-Object.defineProperty(exports, "validateInput", ({ enumerable: true, get: function () { return action_1.validateInput; } }));
 const summary_1 = __nccwpck_require__(5389);
 class ExecutionError extends Error {
     constructor(stdout, stderr) {
@@ -73,10 +70,9 @@ function writeReport(reportData) {
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            let opts = (0, action_1.parseActionInputs)();
-            (0, action_1.validateInput)(opts);
-            (0, action_1.printOptions)(opts);
-            let scanFlags = (0, scanner_1.composeFlags)(opts); // FIXME(fede) this also modifies the opts.cliScannerURL, which is something we don't want
+            let opts = action_1.ActionInputs.parseActionInputs();
+            opts.printOptions();
+            let scanFlags = opts.composeFlags();
             let scanResult;
             // Download CLI Scanner from 'cliScannerURL'
             let retCode = yield (0, scanner_1.pullScanner)(opts.cliScannerURL);
@@ -86,7 +82,7 @@ function run() {
                 retCode = scanResult.ReturnCode;
                 if (retCode == 0 || retCode == 1) {
                     // Transform Scan Results to other formats such as SARIF
-                    if (opts.mode && opts.mode == scanner_1.vmMode) {
+                    if (opts.mode == scanner_1.vmMode) {
                         yield processScanResult(scanResult, opts);
                     }
                 }
@@ -189,84 +185,191 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.defaultSecureEndpoint = void 0;
-exports.parseActionInputs = parseActionInputs;
-exports.validateInput = validateInput;
-exports.printOptions = printOptions;
+exports.ActionInputs = exports.defaultSecureEndpoint = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const scanner_1 = __nccwpck_require__(491);
 exports.defaultSecureEndpoint = "https://secure.sysdig.com/";
-function parseActionInputs() {
-    return {
-        cliScannerURL: core.getInput('cli-scanner-url') || scanner_1.cliScannerURL,
-        cliScannerVersion: core.getInput('cli-scanner-version'),
-        registryUser: core.getInput('registry-user'),
-        registryPassword: core.getInput('registry-password'),
-        stopOnFailedPolicyEval: core.getInput('stop-on-failed-policy-eval') == 'true',
-        stopOnProcessingError: core.getInput('stop-on-processing-error') == 'true',
-        standalone: core.getInput('standalone') == 'true',
-        dbPath: core.getInput('db-path'),
-        skipUpload: core.getInput('skip-upload') == 'true',
-        skipSummary: core.getInput('skip-summary') == 'true',
-        usePolicies: core.getInput('use-policies'),
-        overridePullString: core.getInput('override-pullstring'),
-        imageTag: core.getInput('image-tag'),
-        sysdigSecureToken: core.getInput('sysdig-secure-token'),
-        sysdigSecureURL: core.getInput('sysdig-secure-url') || exports.defaultSecureEndpoint,
-        sysdigSkipTLS: core.getInput('sysdig-skip-tls') == 'true',
-        severityAtLeast: core.getInput('severity-at-least') || undefined,
-        groupByPackage: core.getInput('group-by-package') == 'true',
-        extraParameters: core.getInput('extra-parameters'),
-        mode: core.getInput('mode') || scanner_1.vmMode,
-        recursive: core.getInput('recursive') == 'true',
-        minimumSeverity: core.getInput('minimum-severity'),
-        iacScanPath: core.getInput('iac-scan-path') || './'
-    };
+class ActionInputs {
+    get params() {
+        return this._params;
+    }
+    constructor(params) {
+        ActionInputs.validateInputs(params);
+        this._params = params;
+    }
+    static from(any) {
+        return new ActionInputs(any);
+    }
+    static fromJSON(jsonContents) {
+        return ActionInputs.from(JSON.parse(jsonContents));
+    }
+    static parseActionInputs() {
+        return ActionInputs.overridingParsedActionInputs({});
+    }
+    static overridingParsedActionInputs(overrides) {
+        const params = {
+            cliScannerURL: core.getInput('cli-scanner-url') || scanner_1.cliScannerURL,
+            cliScannerVersion: core.getInput('cli-scanner-version'),
+            registryUser: core.getInput('registry-user'),
+            registryPassword: core.getInput('registry-password'),
+            stopOnFailedPolicyEval: core.getInput('stop-on-failed-policy-eval') == 'true',
+            stopOnProcessingError: core.getInput('stop-on-processing-error') == 'true',
+            standalone: core.getInput('standalone') == 'true',
+            dbPath: core.getInput('db-path'),
+            skipUpload: core.getInput('skip-upload') == 'true',
+            skipSummary: core.getInput('skip-summary') == 'true',
+            usePolicies: core.getInput('use-policies'),
+            overridePullString: core.getInput('override-pullstring'),
+            imageTag: core.getInput('image-tag'),
+            sysdigSecureToken: core.getInput('sysdig-secure-token'),
+            sysdigSecureURL: core.getInput('sysdig-secure-url') || exports.defaultSecureEndpoint,
+            sysdigSkipTLS: core.getInput('sysdig-skip-tls') == 'true',
+            severityAtLeast: core.getInput('severity-at-least') || undefined,
+            groupByPackage: core.getInput('group-by-package') == 'true',
+            extraParameters: core.getInput('extra-parameters'),
+            mode: core.getInput('mode') || scanner_1.vmMode,
+            recursive: core.getInput('recursive') == 'true',
+            minimumSeverity: core.getInput('minimum-severity'),
+            iacScanPath: core.getInput('iac-scan-path') || './',
+        };
+        const overridenParams = Object.assign(Object.assign({}, params), overrides);
+        return ActionInputs.from(overridenParams);
+    }
+    get cliScannerURL() {
+        return this.params.cliScannerURL;
+    }
+    get mode() {
+        return this.params.mode || scanner_1.vmMode;
+    }
+    get stopOnProcessingError() {
+        return this.params.stopOnProcessingError;
+    }
+    get standalone() {
+        return this.params.standalone;
+    }
+    get stopOnFailedPolicyEval() {
+        return this.params.stopOnFailedPolicyEval;
+    }
+    get skipSummary() {
+        return this.params.skipSummary;
+    }
+    get groupByPackage() {
+        return this.params.groupByPackage;
+    }
+    get severityAtLeast() {
+        return this.params.severityAtLeast;
+    }
+    get imageTag() {
+        return this.params.imageTag;
+    }
+    get overridePullString() {
+        return this.params.overridePullString;
+    }
+    static validateInputs(params) {
+        if (!params.standalone && !params.sysdigSecureToken) {
+            core.setFailed("Sysdig Secure Token is required for standard execution, please set your token or remove the standalone input.");
+            throw new Error("Sysdig Secure Token is required for standard execution, please set your token or remove the standalone input.");
+        }
+        if (params.mode && params.mode == scanner_1.vmMode && !params.imageTag) {
+            core.setFailed("image-tag is required for VM mode.");
+            throw new Error("image-tag is required for VM mode.");
+        }
+        if (params.mode && params.mode == scanner_1.iacMode && params.iacScanPath == "") {
+            core.setFailed("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
+            throw new Error("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
+        }
+    }
+    // FIXME(fede) this also modifies the opts.cliScannerURL, which is something we don't want
+    composeFlags() {
+        if (this.params.cliScannerVersion && this.params.cliScannerURL == scanner_1.cliScannerURL) {
+            this.params.cliScannerURL = (0, scanner_1.scannerURLForVersion)(this.params.cliScannerVersion);
+        }
+        let envvars = {};
+        envvars['SECURE_API_TOKEN'] = this.params.sysdigSecureToken || "";
+        let flags = "";
+        if (this.params.registryUser) {
+            envvars['REGISTRY_USER'] = this.params.registryUser;
+        }
+        if (this.params.registryPassword) {
+            envvars['REGISTRY_PASSWORD'] = this.params.registryPassword;
+        }
+        if (this.params.standalone) {
+            flags += " --standalone";
+        }
+        if (this.params.sysdigSecureURL) {
+            flags += ` --apiurl ${this.params.sysdigSecureURL}`;
+        }
+        if (this.params.dbPath) {
+            flags += ` --dbpath=${this.params.dbPath}`;
+        }
+        if (this.params.skipUpload) {
+            flags += ' --skipupload';
+        }
+        if (this.params.usePolicies) {
+            flags += ` --policy=${this.params.usePolicies}`;
+        }
+        if (this.params.sysdigSkipTLS) {
+            flags += ` --skiptlsverify`;
+        }
+        if (this.params.overridePullString) {
+            flags += ` --override-pullstring=${this.params.overridePullString}`;
+        }
+        if (this.params.extraParameters) {
+            flags += ` ${this.params.extraParameters}`;
+        }
+        if (this.params.mode && this.params.mode == scanner_1.iacMode) {
+            flags += ` --iac`;
+        }
+        if (this.params.recursive && this.params.mode == scanner_1.iacMode) {
+            flags += ` -r`;
+        }
+        if (this.params.minimumSeverity && this.params.mode == scanner_1.iacMode) {
+            flags += ` -f=${this.params.minimumSeverity}`;
+        }
+        if (this.params.mode && this.params.mode == scanner_1.vmMode) {
+            flags += ` --json-scan-result=${scanner_1.cliScannerResult}`;
+            flags += ` ${this.params.imageTag}`;
+        }
+        if (this.params.mode && this.params.mode == scanner_1.iacMode) {
+            flags += ` ${this.params.iacScanPath}`;
+        }
+        return {
+            envvars: envvars,
+            flags: flags
+        };
+    }
+    printOptions() {
+        if (this.params.standalone) {
+            core.info(`[!] Running in Standalone Mode.`);
+        }
+        if (this.params.sysdigSecureURL) {
+            core.info('Sysdig Secure URL: ' + this.params.sysdigSecureURL);
+        }
+        if (this.params.registryUser && this.params.registryPassword) {
+            core.info(`Using specified Registry credentials.`);
+        }
+        core.info(`Stop on Failed Policy Evaluation: ${this.params.stopOnFailedPolicyEval}`);
+        core.info(`Stop on Processing Error: ${this.params.stopOnProcessingError}`);
+        if (this.params.skipUpload) {
+            core.info(`Skipping scan results upload to Sysdig Secure...`);
+        }
+        if (this.params.dbPath) {
+            core.info(`DB Path: ${this.params.dbPath}`);
+        }
+        core.info(`Sysdig skip TLS: ${this.params.sysdigSkipTLS}`);
+        if (this.params.severityAtLeast) {
+            core.info(`Severity level: ${this.params.severityAtLeast}`);
+        }
+        core.info('Analyzing image: ' + this.params.imageTag);
+        if (this.params.overridePullString) {
+            core.info(` * Image PullString will be overwritten as ${this.params.overridePullString}`);
+        }
+        if (this.params.skipSummary) {
+            core.info("This run will NOT generate a SUMMARY.");
+        }
+    }
 }
-function validateInput(opts) {
-    if (!opts.standalone && !opts.sysdigSecureToken) {
-        core.setFailed("Sysdig Secure Token is required for standard execution, please set your token or remove the standalone input.");
-        throw new Error("Sysdig Secure Token is required for standard execution, please set your token or remove the standalone input.");
-    }
-    if (opts.mode && opts.mode == scanner_1.vmMode && !opts.imageTag) {
-        core.setFailed("image-tag is required for VM mode.");
-        throw new Error("image-tag is required for VM mode.");
-    }
-    if (opts.mode && opts.mode == scanner_1.iacMode && opts.iacScanPath == "") {
-        core.setFailed("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
-        throw new Error("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
-    }
-}
-function printOptions(opts) {
-    if (opts.standalone) {
-        core.info(`[!] Running in Standalone Mode.`);
-    }
-    if (opts.sysdigSecureURL) {
-        core.info('Sysdig Secure URL: ' + opts.sysdigSecureURL);
-    }
-    if (opts.registryUser && opts.registryPassword) {
-        core.info(`Using specified Registry credentials.`);
-    }
-    core.info(`Stop on Failed Policy Evaluation: ${opts.stopOnFailedPolicyEval}`);
-    core.info(`Stop on Processing Error: ${opts.stopOnProcessingError}`);
-    if (opts.skipUpload) {
-        core.info(`Skipping scan results upload to Sysdig Secure...`);
-    }
-    if (opts.dbPath) {
-        core.info(`DB Path: ${opts.dbPath}`);
-    }
-    core.info(`Sysdig skip TLS: ${opts.sysdigSkipTLS}`);
-    if (opts.severityAtLeast) {
-        core.info(`Severity level: ${opts.severityAtLeast}`);
-    }
-    core.info('Analyzing image: ' + opts.imageTag);
-    if (opts.overridePullString) {
-        core.info(` * Image PullString will be overwritten as ${opts.overridePullString}`);
-    }
-    if (opts.skipSummary) {
-        core.info("This run will NOT generate a SUMMARY.");
-    }
-}
+exports.ActionInputs = ActionInputs;
 
 
 /***/ }),
@@ -690,7 +793,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.iacMode = exports.vmMode = exports.cliScannerURL = exports.cliScannerResult = exports.cliScannerName = void 0;
 exports.pullScanner = pullScanner;
 exports.executeScan = executeScan;
-exports.composeFlags = composeFlags;
+exports.scannerURLForVersion = scannerURLForVersion;
 exports.numericPriorityForSeverity = numericPriorityForSeverity;
 const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
@@ -766,63 +869,8 @@ function executeScan(scanFlags) {
         return { ReturnCode: retCode, Output: execOutput, Error: errOutput };
     });
 }
-function composeFlags(opts) {
-    if (opts.cliScannerVersion && opts.cliScannerURL == exports.cliScannerURL) {
-        opts.cliScannerURL = `${cliScannerURLBase}/${opts.cliScannerVersion}/${cliScannerOS}/${cliScannerArch}/${exports.cliScannerName}`;
-    }
-    let envvars = {};
-    envvars['SECURE_API_TOKEN'] = opts.sysdigSecureToken || "";
-    let flags = "";
-    if (opts.registryUser) {
-        envvars['REGISTRY_USER'] = opts.registryUser;
-    }
-    if (opts.registryPassword) {
-        envvars['REGISTRY_PASSWORD'] = opts.registryPassword;
-    }
-    if (opts.standalone) {
-        flags += " --standalone";
-    }
-    if (opts.sysdigSecureURL) {
-        flags += ` --apiurl ${opts.sysdigSecureURL}`;
-    }
-    if (opts.dbPath) {
-        flags += ` --dbpath=${opts.dbPath}`;
-    }
-    if (opts.skipUpload) {
-        flags += ' --skipupload';
-    }
-    if (opts.usePolicies) {
-        flags += ` --policy=${opts.usePolicies}`;
-    }
-    if (opts.sysdigSkipTLS) {
-        flags += ` --skiptlsverify`;
-    }
-    if (opts.overridePullString) {
-        flags += ` --override-pullstring=${opts.overridePullString}`;
-    }
-    if (opts.extraParameters) {
-        flags += ` ${opts.extraParameters}`;
-    }
-    if (opts.mode && opts.mode == exports.iacMode) {
-        flags += ` --iac`;
-    }
-    if (opts.recursive && opts.mode == exports.iacMode) {
-        flags += ` -r`;
-    }
-    if (opts.minimumSeverity && opts.mode == exports.iacMode) {
-        flags += ` -f=${opts.minimumSeverity}`;
-    }
-    if (opts.mode && opts.mode == exports.vmMode) {
-        flags += ` --json-scan-result=${exports.cliScannerResult}`;
-        flags += ` ${opts.imageTag}`;
-    }
-    if (opts.mode && opts.mode == exports.iacMode) {
-        flags += ` ${opts.iacScanPath}`;
-    }
-    return {
-        envvars: envvars,
-        flags: flags
-    };
+function scannerURLForVersion(version) {
+    return `${cliScannerURLBase}/${version}/${cliScannerOS}/${cliScannerArch}/${exports.cliScannerName}`;
 }
 function numericPriorityForSeverity(severity) {
     switch (severity.toLowerCase()) {
@@ -936,6 +984,7 @@ function addVulnsByLayerTableToSummary(data) {
     if (!data.result.layers) {
         return;
     }
+    core.summary.addSeparator();
     core.summary.addHeading(`Package vulnerabilities per layer`);
     let packagesPerLayer = {};
     data.result.packages.forEach(layerPackage => {
@@ -946,7 +995,7 @@ function addVulnsByLayerTableToSummary(data) {
     });
     data.result.layers.forEach((layer, index) => {
         var _a;
-        core.summary.addHeading(`LAYER ${index} - ${layer.command}`, 4);
+        core.summary.addCodeBlock(`LAYER ${index} - ${layer.command.replace(new RegExp('\$', 'g'), "&#36;").replace(new RegExp('\&', 'g'), '&amp;')}`);
         if (!layer.digest) {
             return;
         }
@@ -955,6 +1004,18 @@ function addVulnsByLayerTableToSummary(data) {
         if (packagesWithVulns.length == 0) {
             return;
         }
+        let orderedPackagesBySeverity = packagesWithVulns.sort((a, b) => {
+            const getSeverityCount = (pkg, severity) => { var _a; return ((_a = pkg.vulns) === null || _a === void 0 ? void 0 : _a.filter((vul) => vul.severity.value === severity).length) || 0; };
+            const severities = ['Critical', 'High', 'Medium', 'Low', 'Negligible'];
+            for (const severity of severities) {
+                const countA = getSeverityCount(a, severity);
+                const countB = getSeverityCount(b, severity);
+                if (countA !== countB) {
+                    return countB - countA;
+                }
+            }
+            return 0;
+        });
         core.summary.addTable([
             [
                 { data: 'Package', header: true },
@@ -968,7 +1029,7 @@ function addVulnsByLayerTableToSummary(data) {
                 { data: '⚪ Negligible', header: true },
                 { data: 'Exploit', header: true },
             ],
-            ...packagesWithVulns.map(layerPackage => {
+            ...orderedPackagesBySeverity.map(layerPackage => {
                 var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
                 let criticalVulns = (_b = (_a = layerPackage.vulns) === null || _a === void 0 ? void 0 : _a.filter(vuln => vuln.severity.value.toLowerCase() == 'critical').length) !== null && _b !== void 0 ? _b : 0;
                 let highVulns = (_d = (_c = layerPackage.vulns) === null || _c === void 0 ? void 0 : _c.filter(vuln => vuln.severity.value.toLowerCase() == 'high').length) !== null && _d !== void 0 ? _d : 0;
@@ -996,6 +1057,7 @@ function addReportToSummary(data) {
     let policyEvaluations = data.result.policyEvaluations;
     let packages = data.result.packages;
     policyEvaluations.forEach(policy => {
+        core.summary.addSeparator();
         core.summary.addHeading(`${EVALUATION[policy.evaluationResult]} Policy: ${policy.name}`, 2);
         if (policy.evaluationResult != "passed") {
             policy.bundles.forEach(bundle => {
