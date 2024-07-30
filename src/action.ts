@@ -1,5 +1,5 @@
 import * as core from '@actions/core';
-import { cliScannerResult, cliScannerURL, ComposeFlags, iacMode, scannerURLForVersion, vmMode } from './scanner';
+import { cliScannerResult, cliScannerURL, ComposeFlags, ScanMode, scannerURLForVersion } from './scanner';
 
 export const defaultSecureEndpoint = "https://secure.sysdig.com/"
 
@@ -23,7 +23,7 @@ interface ActionInputParameters {
   severityAtLeast?: string;
   groupByPackage: boolean;
   extraParameters: string;
-  mode: string;
+  mode: ScanMode;
   recursive: boolean;
   minimumSeverity: string;
   iacScanPath: string;
@@ -73,7 +73,7 @@ export class ActionInputs {
       severityAtLeast: core.getInput('severity-at-least') || undefined,
       groupByPackage: core.getInput('group-by-package') == 'true',
       extraParameters: core.getInput('extra-parameters'),
-      mode: core.getInput('mode') || vmMode,
+      mode: ScanMode.fromString(core.getInput('mode')) || ScanMode.vm,
       recursive: core.getInput('recursive') == 'true',
       minimumSeverity: core.getInput('minimum-severity'),
       iacScanPath: core.getInput('iac-scan-path') || './',
@@ -93,7 +93,7 @@ export class ActionInputs {
   }
 
   get mode() {
-    return this.params.mode || vmMode;
+    return this.params.mode;
   }
 
   get stopOnProcessingError() {
@@ -134,12 +134,12 @@ export class ActionInputs {
       throw new Error("Sysdig Secure Token is required for standard execution, please set your token or remove the standalone input.");
     }
 
-    if (params.mode && params.mode == vmMode && !params.imageTag) {
+    if (params.mode && params.mode == ScanMode.vm && !params.imageTag) {
       core.setFailed("image-tag is required for VM mode.");
       throw new Error("image-tag is required for VM mode.");
     }
 
-    if (params.mode && params.mode == iacMode && params.iacScanPath == "") {
+    if (params.mode && params.mode == ScanMode.iac && params.iacScanPath == "") {
       core.setFailed("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
       throw new Error("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
     }
@@ -196,25 +196,22 @@ export class ActionInputs {
       flags += ` ${this.params.extraParameters}`;
     }
 
-    if (this.params.mode && this.params.mode == iacMode) {
+    if (this.params.mode == ScanMode.iac) {
       flags += ` --iac`;
+
+      if (this.params.recursive) {
+        flags += ` -r`;
+      }
+      if (this.params.minimumSeverity) {
+        flags += ` -f=${this.params.minimumSeverity}`;
+      }
+
+      flags += ` ${this.params.iacScanPath}`;
     }
 
-    if (this.params.recursive && this.params.mode == iacMode) {
-      flags += ` -r`;
-    }
-
-    if (this.params.minimumSeverity && this.params.mode == iacMode) {
-      flags += ` -f=${this.params.minimumSeverity}`;
-    }
-
-    if (this.params.mode && this.params.mode == vmMode) {
+    if (this.params.mode == ScanMode.vm) {
       flags += ` --json-scan-result=${cliScannerResult}`
       flags += ` ${this.params.imageTag}`;
-    }
-
-    if (this.params.mode && this.params.mode == iacMode) {
-      flags += ` ${this.params.iacScanPath}`;
     }
 
     return {
