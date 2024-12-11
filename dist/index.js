@@ -231,6 +231,7 @@ class ActionInputs {
             recursive: core.getInput('recursive') == 'true',
             minimumSeverity: core.getInput('minimum-severity'),
             iacScanPath: core.getInput('iac-scan-path') || './',
+            inUseFilePath: core.getInput('in-use-file-path') || './in-use.txt',
         };
         const overridenParams = Object.assign(Object.assign({}, params), overrides);
         return ActionInputs.from(overridenParams);
@@ -264,6 +265,9 @@ class ActionInputs {
     }
     get overridePullString() {
         return this.params.overridePullString;
+    }
+    get inUseFilePath() {
+        return this.params.inUseFilePath;
     }
     static validateInputs(params) {
         if (!params.standalone && !params.sysdigSecureToken) {
@@ -316,6 +320,9 @@ class ActionInputs {
         }
         if (this.params.extraParameters) {
             flags += ` ${this.params.extraParameters}`;
+        }
+        if (this.params.inUseFilePath) {
+            flags += ` --in-use-packages-file=${this.params.inUseFilePath}`;
         }
         if (this.params.mode == scanner_1.ScanMode.iac) {
             flags += ` --iac`;
