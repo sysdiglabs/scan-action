@@ -154,6 +154,7 @@ function getRulePkgMessage(rule: Rule, packages: Package[]) {
     { data: 'CVSS Version', header: true },
     { data: 'CVSS Vector', header: true },
     { data: 'Fixed Version', header: true },
+    { data: 'InUse', header: true },
     { data: 'Exploitable', header: true }]];
 
   rule.failures?.forEach(failure => {
@@ -171,6 +172,7 @@ function getRulePkgMessage(rule: Rule, packages: Package[]) {
         { data: `${vuln.cvssScore.value.version}` },
         { data: `${vuln.cvssScore.value.vector}` },
         { data: `${pkg.suggestedFix || "No fix available"}` },
+        { data: `${pkg.running}` },
         { data: `${vuln.exploitable}` },
       ]);
     }
