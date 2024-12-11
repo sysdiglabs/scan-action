@@ -90,6 +90,7 @@ function addVulnsByLayerTableToSummary(data: Report) {
         { data: '🟠 Medium', header: true },
         { data: '🟡 Low', header: true },
         { data: '⚪ Negligible', header: true },
+        { data: 'In use', header: true },
         { data: 'Exploit', header: true },
       ],
       ...orderedPackagesBySeverity.map(layerPackage => {
@@ -109,6 +110,7 @@ function addVulnsByLayerTableToSummary(data: Report) {
           { data: mediumVulns.toString() },
           { data: lowVulns.toString() },
           { data: negligibleVulns.toString() },
+          { data: layerPackage.running ? '✅' : '❌' },
           { data: exploits.toString() },
         ]
       })
