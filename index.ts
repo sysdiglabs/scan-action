@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import fs from 'fs';
 import { generateSARIFReport } from './src/sarif';
-import { cliScannerName, cliScannerResult, cliScannerURL, executeScan, numericPriorityForSeverity, pullScanner, ScanExecutionResult, ScanMode } from './src/scanner';
+import { cliScannerName, cliScannerResult, defaultScannerURL, executeScan, numericPriorityForSeverity, ScanExecutionResult, ScanMode, Scanner } from './src/scanner';
 import { ActionInputs, defaultSecureEndpoint } from './src/action';
 import { generateSummary } from './src/summary';
 import { Report } from './src/report';
@@ -25,8 +25,12 @@ export async function run() {
     let scanFlags = opts.composeFlags();
 
     let scanResult: ScanExecutionResult;
+
+    let scanner = new Scanner(
+      Scanner.Options.withScannerURL(opts.cliScannerURL),
+    );
     // Download CLI Scanner from 'cliScannerURL'
-    let retCode = await pullScanner(opts.cliScannerURL);
+    let retCode = await scanner.pullScanner();
     if (retCode == 0) {
       // Execute Scanner
       scanResult = await executeScan(scanFlags);
@@ -103,9 +107,8 @@ export async function processScanResult(result: ScanExecutionResult, opts: Actio
 }
 
 export {
-  cliScannerURL,
+  defaultScannerURL,
   defaultSecureEndpoint,
-  pullScanner,
   cliScannerName,
   executeScan,
   cliScannerResult,

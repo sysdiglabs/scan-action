@@ -7,6 +7,7 @@ import * as report_test from "./fixtures/report-test.json";
 
 import { exec } from "@actions/exec";
 import { ActionInputs } from '../src/action';
+import { Scanner } from '../src/scanner';
 jest.mock("@actions/exec");
 const mockExec = jest.mocked(exec);
 
@@ -57,7 +58,7 @@ describe("input parsing", () => {
     let opts = ActionInputs.parseActionInputs();
 
     expect(opts.params).toEqual({
-      cliScannerURL: index.cliScannerURL,
+      cliScannerURL: index.defaultScannerURL,
       cliScannerVersion: "",
       registryUser: "",
       registryPassword: "",
@@ -207,7 +208,11 @@ describe("scanner pulling", () => {
   it("pulls the configured scanner", async () => {
     mockExec.mockImplementation(jest.fn());
 
-    await index.pullScanner("https://foo");
+    let scanner = new Scanner(
+      Scanner.Options.withScannerURL("https://foo"),
+    );
+
+    await scanner.pullScanner();
     expect(mockExec).toHaveBeenCalledTimes(1);
     expect(mockExec.mock.calls[0][0]).toMatch(`wget https://foo -O ./${index.cliScannerName}`);
   });
