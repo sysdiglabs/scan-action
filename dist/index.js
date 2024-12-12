@@ -231,6 +231,7 @@ class ActionInputs {
             recursive: core.getInput('recursive') == 'true',
             minimumSeverity: core.getInput('minimum-severity'),
             iacScanPath: core.getInput('iac-scan-path') || './',
+            inUseFilePath: core.getInput('in-use-file-path') || './in-use.txt',
         };
         const overridenParams = Object.assign(Object.assign({}, params), overrides);
         return ActionInputs.from(overridenParams);
@@ -264,6 +265,9 @@ class ActionInputs {
     }
     get overridePullString() {
         return this.params.overridePullString;
+    }
+    get inUseFilePath() {
+        return this.params.inUseFilePath;
     }
     static validateInputs(params) {
         if (!params.standalone && !params.sysdigSecureToken) {
@@ -316,6 +320,9 @@ class ActionInputs {
         }
         if (this.params.extraParameters) {
             flags += ` ${this.params.extraParameters}`;
+        }
+        if (this.params.inUseFilePath) {
+            flags += ` --in-use-packages-file=${this.params.inUseFilePath}`;
         }
         if (this.params.mode == scanner_1.ScanMode.iac) {
             flags += ` --iac`;
@@ -1039,6 +1046,7 @@ function addVulnsByLayerTableToSummary(data) {
                 { data: '🟠 Medium', header: true },
                 { data: '🟡 Low', header: true },
                 { data: '⚪ Negligible', header: true },
+                { data: 'In use', header: true },
                 { data: 'Exploit', header: true },
             ],
             ...orderedPackagesBySeverity.map(layerPackage => {
@@ -1059,6 +1067,7 @@ function addVulnsByLayerTableToSummary(data) {
                     { data: mediumVulns.toString() },
                     { data: lowVulns.toString() },
                     { data: negligibleVulns.toString() },
+                    { data: layerPackage.running ? '✅' : '❌' },
                     { data: exploits.toString() },
                 ];
             })
@@ -1099,6 +1108,7 @@ function getRulePkgMessage(rule, packages) {
             { data: 'CVSS Version', header: true },
             { data: 'CVSS Vector', header: true },
             { data: 'Fixed Version', header: true },
+            { data: 'InUse', header: true },
             { data: 'Exploitable', header: true }
         ]];
     (_a = rule.failures) === null || _a === void 0 ? void 0 : _a.forEach(failure => {
@@ -1115,6 +1125,7 @@ function getRulePkgMessage(rule, packages) {
                 { data: `${vuln.cvssScore.value.version}` },
                 { data: `${vuln.cvssScore.value.vector}` },
                 { data: `${pkg.suggestedFix || "No fix available"}` },
+                { data: `${pkg.running}` },
                 { data: `${vuln.exploitable}` },
             ]);
         }

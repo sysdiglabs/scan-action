@@ -65,6 +65,7 @@ export interface Package {
   path: string
   layerDigest?: string
   suggestedFix?: string
+  running?: boolean
   vulns?: Vuln[]
 }
 

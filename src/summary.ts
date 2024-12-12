@@ -90,6 +90,7 @@ function addVulnsByLayerTableToSummary(data: Report) {
         { data: '🟠 Medium', header: true },
         { data: '🟡 Low', header: true },
         { data: '⚪ Negligible', header: true },
+        { data: 'In use', header: true },
         { data: 'Exploit', header: true },
       ],
       ...orderedPackagesBySeverity.map(layerPackage => {
@@ -109,6 +110,7 @@ function addVulnsByLayerTableToSummary(data: Report) {
           { data: mediumVulns.toString() },
           { data: lowVulns.toString() },
           { data: negligibleVulns.toString() },
+          { data: layerPackage.running ? '✅' : '❌' },
           { data: exploits.toString() },
         ]
       })
@@ -154,6 +156,7 @@ function getRulePkgMessage(rule: Rule, packages: Package[]) {
     { data: 'CVSS Version', header: true },
     { data: 'CVSS Vector', header: true },
     { data: 'Fixed Version', header: true },
+    { data: 'InUse', header: true },
     { data: 'Exploitable', header: true }]];
 
   rule.failures?.forEach(failure => {
@@ -171,6 +174,7 @@ function getRulePkgMessage(rule: Rule, packages: Package[]) {
         { data: `${vuln.cvssScore.value.version}` },
         { data: `${vuln.cvssScore.value.vector}` },
         { data: `${pkg.suggestedFix || "No fix available"}` },
+        { data: `${pkg.running}` },
         { data: `${vuln.exploitable}` },
       ]);
     }

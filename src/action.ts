@@ -27,6 +27,7 @@ interface ActionInputParameters {
   recursive: boolean;
   minimumSeverity: string;
   iacScanPath: string;
+  inUseFilePath: string;
 }
 
 export class ActionInputs {
@@ -77,6 +78,7 @@ export class ActionInputs {
       recursive: core.getInput('recursive') == 'true',
       minimumSeverity: core.getInput('minimum-severity'),
       iacScanPath: core.getInput('iac-scan-path') || './',
+      inUseFilePath: core.getInput('in-use-file-path') || './in-use.txt',
     };
 
     const overridenParams = {
@@ -126,6 +128,10 @@ export class ActionInputs {
 
   get overridePullString() {
     return this.params.overridePullString
+  }
+
+  get inUseFilePath() {
+    return this.params.inUseFilePath
   }
 
   private static validateInputs(params: ActionInputParameters) {
@@ -194,6 +200,10 @@ export class ActionInputs {
 
     if (this.params.extraParameters) {
       flags += ` ${this.params.extraParameters}`;
+    }
+
+    if (this.params.inUseFilePath) {
+      flags += ` --in-use-packages-file=${this.params.inUseFilePath}`;
     }
 
     if (this.params.mode == ScanMode.iac) {
