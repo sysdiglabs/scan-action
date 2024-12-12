@@ -6,7 +6,7 @@ inputs:
     required: false
   cli-scanner-version:
     description: Custom sysdig-cli-scanner version to download
-    default: "1.13.0"
+    default: "1.18.0"
     required: false
   registry-user:
     description: Registry username.
