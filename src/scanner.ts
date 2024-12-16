@@ -61,7 +61,12 @@ export async function executeScan(scanFlags: ComposeFlags): Promise<ScanExecutio
 
 
   const scanOptions: exec.ExecOptions = {
-    env: envvars,
+    env: {
+    ...Object.fromEntries(
+      Object.entries(process.env).map(([key, value]) => [key, value ?? ""])
+    ),
+    ...envvars,
+  },
     silent: true,
     ignoreReturnCode: true,
     listeners: {
