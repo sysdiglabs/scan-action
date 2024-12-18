@@ -798,7 +798,7 @@ const exec = __importStar(__nccwpck_require__(1514));
 const os_1 = __importDefault(__nccwpck_require__(2037));
 const process_1 = __importDefault(__nccwpck_require__(7282));
 const performance = (__nccwpck_require__(4074).performance);
-const cliScannerVersion = "1.13.0";
+const cliScannerVersion = "1.18.0";
 const cliScannerOS = getRunOS();
 const cliScannerArch = getRunArch();
 const cliScannerURLBase = "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner";
@@ -845,7 +845,7 @@ function executeScan(scanFlags) {
         let execOutput = '';
         let errOutput = '';
         const scanOptions = {
-            env: envvars,
+            env: Object.assign(Object.assign({}, Object.fromEntries(Object.entries(process_1.default.env).map(([key, value]) => [key, value !== null && value !== void 0 ? value : ""]))), envvars),
             silent: true,
             ignoreReturnCode: true,
             listeners: {
