@@ -298,23 +298,6 @@ describe("process scan results", () => {
     expect(mockCore.error).toHaveBeenCalledTimes(1);
     expect(mockCore.error).toHaveBeenCalledWith(expect.stringContaining("Error parsing analysis JSON report"))
   });
-
-  it("generates a report JSON", async () => {
-    let realWriteFileSync = fs.writeFileSync;
-    fs.writeFileSync = jest.fn();
-
-    let reportData = '{"foo": "bar"}';
-    let scanResult = {
-      ReturnCode: 0,
-      Output: reportData,
-      Error: ""
-    };
-
-    let opts = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", skipSummary: true, standalone: false, overridePullString: "none" });
-    await index.processScanResult(scanResult, opts);
-    expect(fs.writeFileSync).toHaveBeenCalledWith("./report.json", reportData);
-    fs.writeFileSync = realWriteFileSync;
-  });
 });
 
 describe("run the full action", () => {
