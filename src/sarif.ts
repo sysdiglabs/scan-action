@@ -53,7 +53,7 @@ export function generateSARIFReport(data: Report, groupByPackage: boolean) {
   fs.writeFileSync("./sarif.json", JSON.stringify(sarifOutput, null, 2));
 }
 
-function vulnerabilities2SARIF(data: Report, groupByPackage: boolean) {
+export function vulnerabilities2SARIF(data: Report, groupByPackage: boolean) {
   let rules: SARIFRule[] = [];
   let results: SARIFResult[] = [];
 
@@ -61,10 +61,6 @@ function vulnerabilities2SARIF(data: Report, groupByPackage: boolean) {
     [rules, results] = vulnerabilities2SARIFResByPackage(data)
   } else {
     [rules, results] = vulnerabilities2SARIFRes(data)
-  }
-
-  if (!rules.length || !results.length) {
-    return {};
   }
 
   const runs = [{
