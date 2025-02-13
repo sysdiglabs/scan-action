@@ -405,6 +405,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.generateSARIFReport = generateSARIFReport;
+exports.vulnerabilities2SARIF = vulnerabilities2SARIF;
 const core = __importStar(__nccwpck_require__(2186));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 const package_json_1 = __nccwpck_require__(6625);
@@ -424,9 +425,6 @@ function vulnerabilities2SARIF(data, groupByPackage) {
     }
     else {
         [rules, results] = vulnerabilities2SARIFRes(data);
-    }
-    if (!rules.length || !results.length) {
-        return {};
     }
     const runs = [{
             tool: {
