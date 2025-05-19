@@ -64,11 +64,11 @@ export async function run() {
 }
 
 
-function filterResult(report: Report, severity: string) {
+export function filterResult(report: Report, severity: string) {
   let filter_num: number = numericPriorityForSeverity(severity) ?? 5;
 
   report.result.packages.forEach(pkg => {
-    if (pkg.vulns) pkg.vulns = pkg.vulns.filter((vuln) => numericPriorityForSeverity(vuln.severity.value) ?? 5 <= filter_num);
+    if (pkg.vulns) pkg.vulns = pkg.vulns.filter((vuln) => (numericPriorityForSeverity(vuln.severity.value) ?? 5) <= filter_num);
   });
   return report;
 }
