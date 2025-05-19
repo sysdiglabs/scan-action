@@ -7,8 +7,11 @@ import * as report_test from "./fixtures/report-test.json";
 
 import { exec } from "@actions/exec";
 import { ActionInputs } from '../src/action';
+import { Report } from '../src/report';
 jest.mock("@actions/exec");
 const mockExec = jest.mocked(exec);
+
+const fixtureReport : Report = require("../tests/fixtures/report-test.json"); // require is needed here, otherwise the import statement adds a .default attribute to the json
 
 interface TempDir {
   tmpDir: string;
@@ -297,6 +300,15 @@ describe("process scan results", () => {
     await expect(index.processScanResult(scanResult, opts)).rejects.toThrow(new index.ExecutionError('invalid JSON', ''));
     expect(mockCore.error).toHaveBeenCalledTimes(1);
     expect(mockCore.error).toHaveBeenCalledWith(expect.stringContaining("Error parsing analysis JSON report"))
+  });
+
+  it("correctly filters the result by severity", () => {
+    const someReport: Report  = fixtureReport;
+
+    const filteredResult =    index.filterResult(someReport, "critical");
+
+    expect(JSON.stringify(filteredResult)).toContain("CVE-2023-38545");
+    expect(JSON.stringify(filteredResult)).not.toContain("CVE-2023-38546")
   });
 });
 
