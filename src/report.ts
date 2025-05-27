@@ -217,6 +217,7 @@ function isSeverityGte(a: string, b: string): boolean {
 }
 
 export function filterPackages(pkgs: Package[], filters: FilterOptions): Package[] {
+  if (!Array.isArray(pkgs)) return [];
   return pkgs
     .filter(pkg => {
       const pkgType = pkg.type?.toLowerCase();

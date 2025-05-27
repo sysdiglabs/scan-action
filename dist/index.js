@@ -433,6 +433,8 @@ function isSeverityGte(a, b) {
     return severityOrder.indexOf(a.toLocaleLowerCase()) >= severityOrder.indexOf(b.toLocaleLowerCase());
 }
 function filterPackages(pkgs, filters) {
+    if (!Array.isArray(pkgs))
+        return [];
     return pkgs
         .filter(pkg => {
         var _a;
