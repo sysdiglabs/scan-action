@@ -1143,7 +1143,7 @@ function addVulnTableToSummary(data) {
     ]);
 }
 function addVulnsByLayerTableToSummary(data) {
-    if (!data.result.layers) {
+    if (!Array.isArray(data.result.layers) || data.result.layers.length === 0) {
         return;
     }
     core.summary.addSeparator();
@@ -1157,13 +1157,12 @@ function addVulnsByLayerTableToSummary(data) {
     });
     data.result.layers.forEach((layer, index) => {
         var _a;
-        core.summary.addCodeBlock(`LAYER ${index} - ${layer.command.replace(new RegExp('\$', 'g'), "&#36;").replace(new RegExp('\&', 'g'), '&amp;')}`);
+        core.summary.addCodeBlock(`LAYER ${index} - ${layer.command.replace(/\$/g, "&#36;").replace(/\&/g, '&amp;')}`);
         if (!layer.digest) {
             return;
         }
-        let packagesWithVulns = ((_a = packagesPerLayer[layer.digest]) !== null && _a !== void 0 ? _a : [])
-            .filter(pkg => pkg.vulns);
-        if (packagesWithVulns.length == 0) {
+        let packagesWithVulns = ((_a = packagesPerLayer[layer.digest]) !== null && _a !== void 0 ? _a : []).filter(pkg => pkg.vulns);
+        if (packagesWithVulns.length === 0) {
             return;
         }
         let orderedPackagesBySeverity = packagesWithVulns.sort((a, b) => {

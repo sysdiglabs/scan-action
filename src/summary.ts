@@ -60,28 +60,27 @@ function addVulnTableToSummary(data: Report) {
 }
 
 function addVulnsByLayerTableToSummary(data: Report) {
-  if (!data.result.layers) {
-    return
+  if (!Array.isArray(data.result.layers) || data.result.layers.length === 0) {
+    return;
   }
   core.summary.addSeparator();
-  core.summary.addHeading(`Package vulnerabilities per layer`)
+  core.summary.addHeading(`Package vulnerabilities per layer`);
 
-  let packagesPerLayer: { [key: string]: Package[] } = {}
+  let packagesPerLayer: { [key: string]: Package[] } = {};
   data.result.packages.forEach(layerPackage => {
     if (layerPackage.layerDigest) {
       packagesPerLayer[layerPackage.layerDigest] = (packagesPerLayer[layerPackage.layerDigest] ?? []).concat(layerPackage)
     }
-  })
+  });
 
   data.result.layers.forEach((layer, index) => {
-    core.summary.addCodeBlock(`LAYER ${index} - ${layer.command.replace(new RegExp('\$', 'g'), "&#36;").replace(new RegExp('\&', 'g'), '&amp;')}`);
+    core.summary.addCodeBlock(`LAYER ${index} - ${layer.command.replace(/\$/g, "&#36;").replace(/\&/g, '&amp;')}`);
     if (!layer.digest) {
       return;
     }
 
-    let packagesWithVulns = (packagesPerLayer[layer.digest] ?? [])
-      .filter(pkg => pkg.vulns);
-    if (packagesWithVulns.length == 0) {
+    let packagesWithVulns = (packagesPerLayer[layer.digest] ?? []).filter(pkg => pkg.vulns);
+    if (packagesWithVulns.length === 0) {
       return;
     }
 
@@ -98,7 +97,7 @@ function addVulnsByLayerTableToSummary(data: Report) {
         }
       }
       return 0;
-    })
+    });
 
     core.summary.addTable([
       [
@@ -133,8 +132,8 @@ function addVulnsByLayerTableToSummary(data: Report) {
           { data: exploits.toString() },
         ]
       })
-    ])
-  })
+    ]);
+  });
 }
 
 function addReportToSummary(data: Report) {
