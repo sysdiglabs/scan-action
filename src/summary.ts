@@ -32,8 +32,8 @@ function addVulnTableToSummary(data: Report) {
   core.summary.addBreak();
   core.summary.addTable([
     [{ data: '', header: true }, { data: '🟣 Critical', header: true }, { data: '🔴 High', header: true }, { data: '🟠 Medium', header: true }, { data: '🟡 Low', header: true }, { data: '⚪ Negligible', header: true }],
-    [{ data: '⚠️ Total Vulnerabilities', header: true }, `${totalVuln.critical}`, `${totalVuln.high}`, `${totalVuln.medium}`, `${totalVuln.low}`, `${totalVuln.negligible}`],
-    [{ data: '🔧 Fixable Vulnerabilities', header: true }, `${fixableVuln.critical}`, `${fixableVuln.high}`, `${fixableVuln.medium}`, `${fixableVuln.low}`, `${fixableVuln.negligible}`],
+    [{ data: '⚠️ Total Vulnerabilities', header: true }, `${totalVuln.critical ?? 0}`, `${totalVuln.high ?? 0}`, `${totalVuln.medium ?? 0}`, `${totalVuln.low ?? 0}`, `${totalVuln.negligible ?? 0}`],
+    [{ data: '🔧 Fixable Vulnerabilities', header: true }, `${fixableVuln.critical ?? 0}`, `${fixableVuln.high ?? 0}`, `${fixableVuln.medium ?? 0}`, `${fixableVuln.low ?? 0}`, `${fixableVuln.negligible ?? 0}`],
   ]);
 }
 
