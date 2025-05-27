@@ -141,7 +141,6 @@ function processScanResult(result, opts) {
             throw new ExecutionError(result.Output, result.Error);
         }
         if (report) {
-            // Prepara los filtros desde opts:
             const filters = {
                 minSeverity: (opts.severityAtLeast && opts.severityAtLeast.toLowerCase() !== "any")
                     ? opts.severityAtLeast.toLowerCase()

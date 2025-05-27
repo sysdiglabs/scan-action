@@ -79,8 +79,6 @@ export async function processScanResult(result: ScanExecutionResult, opts: Actio
   }
 
   if (report) {
-
-    // Prepara los filtros desde opts:
     const filters: FilterOptions = {
       minSeverity: (opts.severityAtLeast && opts.severityAtLeast.toLowerCase() !== "any")
         ? opts.severityAtLeast.toLowerCase() as Severity
