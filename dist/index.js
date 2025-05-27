@@ -650,7 +650,7 @@ function vulnerabilities2SARIFResByPackage(data) {
                     {
                         physicalLocation: {
                             artifactLocation: {
-                                uri: `file:///${data.result.metadata.pullString}`,
+                                uri: `file:///${sanitizeImageName(data.result.metadata.pullString)}`,
                                 uriBaseId: "ROOTPATH"
                             }
                         },
@@ -664,6 +664,10 @@ function vulnerabilities2SARIFResByPackage(data) {
         });
     }
     return [rules, results];
+}
+function sanitizeImageName(imageName) {
+    // Replace / and : with -
+    return imageName.replace(/[\/:]/g, '-');
 }
 function vulnerabilities2SARIFRes(data) {
     let results = [];
@@ -716,7 +720,7 @@ function vulnerabilities2SARIFRes(data) {
                         {
                             physicalLocation: {
                                 artifactLocation: {
-                                    uri: data.result.metadata.pullString,
+                                    uri: `file:///${sanitizeImageName(data.result.metadata.pullString)}`,
                                     uriBaseId: "ROOTPATH"
                                 }
                             },

@@ -3225,7 +3225,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3245,7 +3245,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3265,7 +3265,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3285,7 +3285,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3305,7 +3305,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3325,7 +3325,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3345,7 +3345,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3365,7 +3365,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3385,7 +3385,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3405,7 +3405,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3425,7 +3425,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3445,7 +3445,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3465,7 +3465,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3485,7 +3485,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3505,7 +3505,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3525,7 +3525,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3545,7 +3545,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3565,7 +3565,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3585,7 +3585,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3605,7 +3605,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3625,7 +3625,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3645,7 +3645,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3665,7 +3665,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3685,7 +3685,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3705,7 +3705,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3725,7 +3725,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3745,7 +3745,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3765,7 +3765,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3785,7 +3785,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3805,7 +3805,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3825,7 +3825,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3845,7 +3845,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3865,7 +3865,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3885,7 +3885,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3905,7 +3905,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3925,7 +3925,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3945,7 +3945,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3965,7 +3965,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -3985,7 +3985,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4005,7 +4005,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4025,7 +4025,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4045,7 +4045,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4065,7 +4065,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4085,7 +4085,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4105,7 +4105,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4125,7 +4125,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4145,7 +4145,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4165,7 +4165,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4185,7 +4185,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4205,7 +4205,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4225,7 +4225,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4245,7 +4245,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4265,7 +4265,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4285,7 +4285,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4305,7 +4305,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4325,7 +4325,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4345,7 +4345,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4365,7 +4365,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4385,7 +4385,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4405,7 +4405,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4425,7 +4425,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4445,7 +4445,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4465,7 +4465,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4485,7 +4485,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4505,7 +4505,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4525,7 +4525,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4545,7 +4545,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4565,7 +4565,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4585,7 +4585,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4605,7 +4605,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4625,7 +4625,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4645,7 +4645,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4665,7 +4665,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4685,7 +4685,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4705,7 +4705,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4725,7 +4725,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4745,7 +4745,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4765,7 +4765,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4785,7 +4785,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4805,7 +4805,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4825,7 +4825,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4845,7 +4845,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4865,7 +4865,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4885,7 +4885,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4905,7 +4905,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4925,7 +4925,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4945,7 +4945,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4965,7 +4965,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -4985,7 +4985,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5005,7 +5005,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5025,7 +5025,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5045,7 +5045,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5065,7 +5065,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5085,7 +5085,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5105,7 +5105,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5125,7 +5125,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5145,7 +5145,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5165,7 +5165,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5185,7 +5185,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5205,7 +5205,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5225,7 +5225,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5245,7 +5245,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5265,7 +5265,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5285,7 +5285,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5305,7 +5305,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5325,7 +5325,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5345,7 +5345,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5365,7 +5365,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5385,7 +5385,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5405,7 +5405,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5425,7 +5425,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5445,7 +5445,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5465,7 +5465,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5485,7 +5485,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5505,7 +5505,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5525,7 +5525,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5545,7 +5545,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5565,7 +5565,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5585,7 +5585,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5605,7 +5605,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5625,7 +5625,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5645,7 +5645,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5665,7 +5665,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5685,7 +5685,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5705,7 +5705,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5725,7 +5725,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5745,7 +5745,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5765,7 +5765,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5785,7 +5785,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5805,7 +5805,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5825,7 +5825,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5845,7 +5845,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },
@@ -5865,7 +5865,7 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "jenkins/jenkins:2.401.1-alpine",
+                  "uri": "file:///jenkins-jenkins-2.401.1-alpine",
                   "uriBaseId": "ROOTPATH"
                 }
               },

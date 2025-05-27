@@ -202,7 +202,7 @@ function vulnerabilities2SARIFResByPackage(data: Report): [SARIFRule[], SARIFRes
           {
             physicalLocation: {
               artifactLocation: {
-                uri: `file:///${data.result.metadata.pullString}`,
+                uri: `file:///${sanitizeImageName(data.result.metadata.pullString)}`,
                 uriBaseId: "ROOTPATH"
               }
             },
@@ -217,6 +217,12 @@ function vulnerabilities2SARIFResByPackage(data: Report): [SARIFRule[], SARIFRes
   }
 
   return [rules, results];
+}
+
+
+function sanitizeImageName(imageName: string) {
+  // Replace / and : with -
+  return imageName.replace(/[\/:]/g, '-');
 }
 
 
@@ -275,7 +281,7 @@ function vulnerabilities2SARIFRes(data: Report): [SARIFRule[], SARIFResult[]] {
             {
               physicalLocation: {
                 artifactLocation: {
-                  uri: data.result.metadata.pullString,
+                  uri: `file:///${sanitizeImageName(data.result.metadata.pullString)}`,
                   uriBaseId: "ROOTPATH"
                 }
               },
