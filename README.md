@@ -1,4 +1,3 @@
-
 # Sysdig Secure Inline Scan Action
 
 > 🚧 **Warning**: To use the Legacy Scanning Engine Action, please use version v3.* and visit the [previous README](./README.v3.md).
@@ -17,6 +16,9 @@ This action performs analysis on a specific container image and posts the result
 | `stop-on-failed-policy-eval` | Fail the job if the Policy Evaluation is Failed.                                                                                                                                                                                                                                                                         |                           |
 | `stop-on-processing-error`   | Fail the job if the Scanner terminates execution with errors.                                                                                                                                                                                                                                                            |                           |
 | `severity-at-least`          | Filtering option to only report vulnerabilities with at least the specified severity. Can take `critical`, `high`, `medium`, `low`, `negligible` or `any`. Default value "any" for no filtering. For example, if `severity-at-least` is set to `medium`, only Medium, High or Critical vulnerabilities will be reported. | `any`                     |
+| `package-types`              | Comma-separated list of package types to include in the report (e.g. `java,javascript`). Only vulnerabilities found in these types of packages will be included. If empty, no inclusion filter is applied.                                                                                                               |                           |
+| `not-package-types`          | Comma-separated list of package types to exclude from the report (e.g. `os`). Vulnerabilities found in these types of packages will be excluded. If empty, no exclusion filter is applied.                                                                                                                               |                           |
+| `exclude-accepted`           | Set to `true` to exclude vulnerabilities that have accepted risks (`acceptedRisks`). Useful to focus only on unresolved findings.                                                                                                                                                                                        |                           |
 | `group-by-package`           | Enable grouping the vulnerabilities in the SARIF report by package. Useful if you want to manage security per package or condense the number of findings.                                                                                                                                                                |                           |
 | `standalone`                 | Enable standalone mode. Do not depend on Sysdig backend for execution, avoiding the need of specifying 'sysdig-secure-token' and 'sysdig-secure-url'. Recommended when using runners with no access to the internet. May require to specify custom `cli-scanner-url` and `db-path`.                                      |                           |
 | `db-path`                    | Specify the directory for the vulnerabilities database to use while scanning. Useful when running in standalone mode.                                                                                                                                                                                                    |                           |
@@ -33,6 +35,23 @@ This action performs analysis on a specific container image and posts the result
 | `minimum-severity`           | Minimum severity to fail when scanning in IaC mode.                                                                                                                                                                                                                                                                      |                           |
 | `iac-scan-path`              | Path to the IaC files to scan.                                                                                                                                                                                                                                                                                           |                           |
 
+### Filtering Examples
+
+- **severity-at-least:**  
+  `medium` → Only Medium, High, and Critical findings will be reported.
+
+- **package-types:**  
+  `java,javascript` → Only vulnerabilities in Java or JavaScript packages will be included.
+
+- **not-package-types:**  
+  `os` → Excludes vulnerabilities found in OS packages.
+
+- **exclude-accepted:**  
+  `true` → Vulnerabilities that are marked as "accepted" (i.e., with risk acceptances) are excluded from the report.
+
+> ℹ️ You can combine these filters to focus the report on just what you care about!
+
+---
 
 ## SARIF Report
 

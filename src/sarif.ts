@@ -1,9 +1,8 @@
 import * as core from '@actions/core';
 import fs from 'fs';
-import { Package, Report, Vuln } from './report';
+import { Package, Report, FilterOptions, Vuln, filterPackages } from './report';
 
 import { version } from '../package.json';
-import { numericPriorityForSeverity } from './scanner';
 const toolVersion = `${version}`;
 const dottedQuadToolVersion = `${version}.0`;
 
@@ -47,20 +46,28 @@ interface SARIFRule {
   };
 }
 
-export function generateSARIFReport(data: Report, groupByPackage: boolean) {
-  let sarifOutput = vulnerabilities2SARIF(data, groupByPackage);
+export function generateSARIFReport(data: Report, groupByPackage: boolean, filters?: FilterOptions) {
+  let sarifOutput = vulnerabilities2SARIF(data, groupByPackage, filters);
   core.setOutput("sarifReport", "./sarif.json");
   fs.writeFileSync("./sarif.json", JSON.stringify(sarifOutput, null, 2));
 }
 
-export function vulnerabilities2SARIF(data: Report, groupByPackage: boolean) {
+export function vulnerabilities2SARIF(
+  data: Report,
+  groupByPackage: boolean,
+  filters?: FilterOptions
+) {
+
+  const filteredPackages = filterPackages(data.result.packages, filters ?? {});
+  const filteredData = { ...data, result: { ...data.result, packages: filteredPackages } };
+
   let rules: SARIFRule[] = [];
   let results: SARIFResult[] = [];
 
   if (groupByPackage) {
-    [rules, results] = vulnerabilities2SARIFResByPackage(data)
+    [rules, results] = vulnerabilities2SARIFResByPackage(filteredData)
   } else {
-    [rules, results] = vulnerabilities2SARIFRes(data)
+    [rules, results] = vulnerabilities2SARIFRes(filteredData)
   }
 
   const runs = [{
@@ -108,6 +115,22 @@ export function vulnerabilities2SARIF(data: Report, groupByPackage: boolean) {
   return (sarifOutput);
 }
 
+function numericPriorityForSeverity(severity: string): number | undefined {
+  switch (severity.toLowerCase()) {
+    case 'critical':
+      return 0
+    case 'high':
+      return 1
+    case 'medium':
+      return 2
+    case 'low':
+      return 3
+    case 'negligible':
+      return 4
+    case 'any':
+      return 5
+  }
+}
 
 function vulnerabilities2SARIFResByPackage(data: Report): [SARIFRule[], SARIFResult[]] {
   let rules: SARIFRule[] = [];

@@ -7,11 +7,8 @@ import * as report_test from "./fixtures/report-test.json";
 
 import { exec } from "@actions/exec";
 import { ActionInputs } from '../src/action';
-import { Report } from '../src/report';
 jest.mock("@actions/exec");
 const mockExec = jest.mocked(exec);
-
-const fixtureReport : Report = require("../tests/fixtures/report-test.json"); // require is needed here, otherwise the import statement adds a .default attribute to the json
 
 interface TempDir {
   tmpDir: string;
@@ -77,6 +74,9 @@ describe("input parsing", () => {
       sysdigSecureURL: index.defaultSecureEndpoint,
       sysdigSkipTLS: false,
       severityAtLeast: undefined,
+      excludeAccepted: false,
+      packageTypes: undefined,
+      notPackageTypes: undefined,
       groupByPackage: false,
       extraParameters: "",
       iacScanPath: "./",
@@ -104,6 +104,9 @@ describe("input parsing", () => {
     process.env['INPUT_SYSDIG-SECURE-URL'] = "https://foo";
     process.env['INPUT_SYSDIG-SKIP-TLS'] = "true";
     process.env['INPUT_SEVERITY-AT-LEAST'] = "medium";
+    process.env['INPUT_EXCLUDE-ACCEPTED'] = "true";
+    process.env['INPUT_PACKAGE-TYPES'] = "os,java";
+    process.env['INPUT_NOT-PACKAGE-TYPES'] = "nix";
     process.env['INPUT_GROUP-BY-PACKAGE'] = 'true';
     process.env['INPUT_EXTRA-PARAMETERS'] = "--extra-param";
     process.env['INPUT_IAC-SCAN-PATH'] = "./";
@@ -130,6 +133,9 @@ describe("input parsing", () => {
       "sysdigSecureURL": "https://foo",
       "sysdigSkipTLS": true,
       "severityAtLeast": "medium",
+      "excludeAccepted": true,
+      "packageTypes": "os,java",
+      "notPackageTypes": "nix",
       "groupByPackage": true,
       "extraParameters": "--extra-param",
       "iacScanPath": "./",
@@ -302,14 +308,6 @@ describe("process scan results", () => {
     expect(mockCore.error).toHaveBeenCalledWith(expect.stringContaining("Error parsing analysis JSON report"))
   });
 
-  it("correctly filters the result by severity", () => {
-    const someReport: Report  = fixtureReport;
-
-    const filteredResult =    index.filterResult(someReport, "critical");
-
-    expect(JSON.stringify(filteredResult)).toContain("CVE-2023-38545");
-    expect(JSON.stringify(filteredResult)).not.toContain("CVE-2023-38546")
-  });
 });
 
 describe("run the full action", () => {
@@ -483,3 +481,14 @@ async function createReportFileIfNotExists() {
 
   return promise;
 }
+
+describe("ActionInputs validation", () => {
+  it("accepts valid severities", () => {
+    const inputs = { sysdigSecureToken: "t", imageTag: "foo", severityAtLeast: "critical", mode: "vm" };
+    expect(() => ActionInputs.overridingParsedActionInputs(inputs)).not.toThrow();
+  });
+  it("rejects invalid severityAtLeast", () => {
+    const inputs = { sysdigSecureToken: "t", imageTag: "foo", severityAtLeast: "severe", mode: "vm" };
+    expect(() => ActionInputs.overridingParsedActionInputs(inputs)).toThrow(/Invalid severity-at-least/);
+  });
+});

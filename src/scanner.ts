@@ -116,23 +116,6 @@ export function scannerURLForVersion(version: string): string {
   return `${cliScannerURLBase}/${version}/${cliScannerOS}/${cliScannerArch}/${cliScannerName}`;
 
 }
-export function numericPriorityForSeverity(severity: string): number | undefined {
-  switch (severity.toLowerCase()) {
-    case 'critical':
-      return 0
-    case 'high':
-      return 1
-    case 'medium':
-      return 2
-    case 'low':
-      return 3
-    case 'negligible':
-      return 4
-    case 'any':
-      return 5
-  }
-}
-
 
 function getRunArch() {
   let arch = "unknown";

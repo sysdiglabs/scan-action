@@ -70,7 +70,7 @@ export interface Package {
 
 export interface Vuln {
   name: string
-  severity: Severity
+  severity: SarifSeverity
   cvssScore: CvssScore
   disclosureDate: string
   solutionDate?: string
@@ -81,10 +81,21 @@ export interface Vuln {
   acceptedRisks?: AcceptedRisk[]
 }
 
-export interface Severity {
+export interface FilterOptions {
+  minSeverity?: Severity;
+  packageTypes?: string[];
+  notPackageTypes?: string[];
+  excludeAccepted?: boolean;
+}
+
+
+export interface SarifSeverity {
   value: string
   sourceName: string
 }
+
+export const SeverityNames = ["critical", "high", "medium", "low", "negligible"] as const;
+export type Severity = typeof SeverityNames[number];
 
 export interface CvssScore {
   value: Value
@@ -199,3 +210,29 @@ export interface RiskAcceptanceDefinition {
   updatedAt: string
 }
 
+const severityOrder = ["negligible", "low", "medium", "high", "critical"];
+
+function isSeverityGte(a: string, b: string): boolean {
+  return severityOrder.indexOf(a.toLocaleLowerCase()) >= severityOrder.indexOf(b.toLocaleLowerCase());
+}
+
+export function filterPackages(pkgs: Package[], filters: FilterOptions): Package[] {
+  return pkgs
+    .filter(pkg => {
+      const pkgType = pkg.type?.toLowerCase();
+      if (filters.packageTypes && filters.packageTypes.length > 0 &&
+        !filters.packageTypes.map(t => t.toLowerCase()).includes(pkgType)) return false;
+      if (filters.notPackageTypes && filters.notPackageTypes.length > 0 &&
+        filters.notPackageTypes.map(t => t.toLowerCase()).includes(pkgType)) return false;
+      return true;
+    })
+    .map(pkg => {
+      let vulns = pkg.vulns?.filter(vuln => {
+        if (filters.minSeverity && !isSeverityGte(vuln.severity.value, filters.minSeverity)) return false;
+        if (filters.excludeAccepted && Array.isArray(vuln.acceptedRisks) && vuln.acceptedRisks.length > 0) return false;
+        return true;
+      }) || [];
+      return { ...pkg, vulns };
+    })
+    .filter(pkg => pkg.vulns && pkg.vulns.length > 0);
+}

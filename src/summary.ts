@@ -1,5 +1,5 @@
 import * as core from "@actions/core";
-import { Package, Report, Rule } from "./report";
+import { FilterOptions, filterPackages, Package, Report, Rule } from "./report";
 import { ActionInputs } from "./action";
 
 const EVALUATION: any = {
@@ -7,18 +7,18 @@ const EVALUATION: any = {
   "passed": "✅"
 }
 
-export async function generateSummary(opts: ActionInputs, data: Report) {
+export async function generateSummary(opts: ActionInputs, data: Report, filters?: FilterOptions) {
+  const filteredPkgs = filterPackages(data.result.packages, filters || {});
+  let filteredData = { ...data, result: { ...data.result, packages: filteredPkgs } };
+
   core.summary.emptyBuffer().clear();
   core.summary.addHeading(`Scan Results for ${opts.overridePullString || opts.imageTag}`);
 
-  addVulnTableToSummary(data);
-
-  addVulnsByLayerTableToSummary(data);
+  addVulnTableToSummary(filteredData);
+  addVulnsByLayerTableToSummary(filteredData);
 
   if (!opts.standalone) {
-    core.summary.addBreak()
-      .addRaw(`Policies evaluation: ${data.result.policyEvaluationsResult} ${EVALUATION[data.result.policyEvaluationsResult]}`);
-
+    core.summary.addBreak().addRaw(`Policies evaluation: ${data.result.policyEvaluationsResult} ${EVALUATION[data.result.policyEvaluationsResult]}`);
     addReportToSummary(data);
   }
 
@@ -29,7 +29,7 @@ function addVulnTableToSummary(data: Report) {
   let totalVuln = data.result.vulnTotalBySeverity;
   let fixableVuln = data.result.fixableVulnTotalBySeverity;
 
-  core.summary.addBreak;
+  core.summary.addBreak();
   core.summary.addTable([
     [{ data: '', header: true }, { data: '🟣 Critical', header: true }, { data: '🔴 High', header: true }, { data: '🟠 Medium', header: true }, { data: '🟡 Low', header: true }, { data: '⚪ Negligible', header: true }],
     [{ data: '⚠️ Total Vulnerabilities', header: true }, `${totalVuln.critical}`, `${totalVuln.high}`, `${totalVuln.medium}`, `${totalVuln.low}`, `${totalVuln.negligible}`],
