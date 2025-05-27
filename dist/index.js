@@ -1110,14 +1110,36 @@ function generateSummary(opts, data, filters) {
     });
 }
 function addVulnTableToSummary(data) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
-    let totalVuln = data.result.vulnTotalBySeverity;
-    let fixableVuln = data.result.fixableVulnTotalBySeverity;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
+    // Fallback to empty object if undefined
+    const totalVuln = (_a = data.result.vulnTotalBySeverity) !== null && _a !== void 0 ? _a : {};
+    const fixableVuln = (_b = data.result.fixableVulnTotalBySeverity) !== null && _b !== void 0 ? _b : {};
     core.summary.addBreak();
     core.summary.addTable([
-        [{ data: '', header: true }, { data: '🟣 Critical', header: true }, { data: '🔴 High', header: true }, { data: '🟠 Medium', header: true }, { data: '🟡 Low', header: true }, { data: '⚪ Negligible', header: true }],
-        [{ data: '⚠️ Total Vulnerabilities', header: true }, `${(_a = totalVuln.critical) !== null && _a !== void 0 ? _a : 0}`, `${(_b = totalVuln.high) !== null && _b !== void 0 ? _b : 0}`, `${(_c = totalVuln.medium) !== null && _c !== void 0 ? _c : 0}`, `${(_d = totalVuln.low) !== null && _d !== void 0 ? _d : 0}`, `${(_e = totalVuln.negligible) !== null && _e !== void 0 ? _e : 0}`],
-        [{ data: '🔧 Fixable Vulnerabilities', header: true }, `${(_f = fixableVuln.critical) !== null && _f !== void 0 ? _f : 0}`, `${(_g = fixableVuln.high) !== null && _g !== void 0 ? _g : 0}`, `${(_h = fixableVuln.medium) !== null && _h !== void 0 ? _h : 0}`, `${(_j = fixableVuln.low) !== null && _j !== void 0 ? _j : 0}`, `${(_k = fixableVuln.negligible) !== null && _k !== void 0 ? _k : 0}`],
+        [
+            { data: '', header: true },
+            { data: '🟣 Critical', header: true },
+            { data: '🔴 High', header: true },
+            { data: '🟠 Medium', header: true },
+            { data: '🟡 Low', header: true },
+            { data: '⚪ Negligible', header: true }
+        ],
+        [
+            { data: '⚠️ Total Vulnerabilities', header: true },
+            `${(_c = totalVuln.critical) !== null && _c !== void 0 ? _c : 0}`,
+            `${(_d = totalVuln.high) !== null && _d !== void 0 ? _d : 0}`,
+            `${(_e = totalVuln.medium) !== null && _e !== void 0 ? _e : 0}`,
+            `${(_f = totalVuln.low) !== null && _f !== void 0 ? _f : 0}`,
+            `${(_g = totalVuln.negligible) !== null && _g !== void 0 ? _g : 0}`
+        ],
+        [
+            { data: '🔧 Fixable Vulnerabilities', header: true },
+            `${(_h = fixableVuln.critical) !== null && _h !== void 0 ? _h : 0}`,
+            `${(_j = fixableVuln.high) !== null && _j !== void 0 ? _j : 0}`,
+            `${(_k = fixableVuln.medium) !== null && _k !== void 0 ? _k : 0}`,
+            `${(_l = fixableVuln.low) !== null && _l !== void 0 ? _l : 0}`,
+            `${(_m = fixableVuln.negligible) !== null && _m !== void 0 ? _m : 0}`
+        ],
     ]);
 }
 function addVulnsByLayerTableToSummary(data) {

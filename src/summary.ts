@@ -26,17 +26,38 @@ export async function generateSummary(opts: ActionInputs, data: Report, filters?
 }
 
 function addVulnTableToSummary(data: Report) {
-  let totalVuln = data.result.vulnTotalBySeverity;
-  let fixableVuln = data.result.fixableVulnTotalBySeverity;
+  // Fallback to empty object if undefined
+  const totalVuln = data.result.vulnTotalBySeverity ?? {};
+  const fixableVuln = data.result.fixableVulnTotalBySeverity ?? {};
 
   core.summary.addBreak();
   core.summary.addTable([
-    [{ data: '', header: true }, { data: '🟣 Critical', header: true }, { data: '🔴 High', header: true }, { data: '🟠 Medium', header: true }, { data: '🟡 Low', header: true }, { data: '⚪ Negligible', header: true }],
-    [{ data: '⚠️ Total Vulnerabilities', header: true }, `${totalVuln.critical ?? 0}`, `${totalVuln.high ?? 0}`, `${totalVuln.medium ?? 0}`, `${totalVuln.low ?? 0}`, `${totalVuln.negligible ?? 0}`],
-    [{ data: '🔧 Fixable Vulnerabilities', header: true }, `${fixableVuln.critical ?? 0}`, `${fixableVuln.high ?? 0}`, `${fixableVuln.medium ?? 0}`, `${fixableVuln.low ?? 0}`, `${fixableVuln.negligible ?? 0}`],
+    [
+      { data: '', header: true },
+      { data: '🟣 Critical', header: true },
+      { data: '🔴 High', header: true },
+      { data: '🟠 Medium', header: true },
+      { data: '🟡 Low', header: true },
+      { data: '⚪ Negligible', header: true }
+    ],
+    [
+      { data: '⚠️ Total Vulnerabilities', header: true },
+      `${totalVuln.critical ?? 0}`,
+      `${totalVuln.high ?? 0}`,
+      `${totalVuln.medium ?? 0}`,
+      `${totalVuln.low ?? 0}`,
+      `${totalVuln.negligible ?? 0}`
+    ],
+    [
+      { data: '🔧 Fixable Vulnerabilities', header: true },
+      `${fixableVuln.critical ?? 0}`,
+      `${fixableVuln.high ?? 0}`,
+      `${fixableVuln.medium ?? 0}`,
+      `${fixableVuln.low ?? 0}`,
+      `${fixableVuln.negligible ?? 0}`
+    ],
   ]);
 }
-
 
 function addVulnsByLayerTableToSummary(data: Report) {
   if (!data.result.layers) {
