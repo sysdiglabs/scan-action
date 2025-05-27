@@ -232,7 +232,7 @@ export class ActionInputs {
     }
 
     if (this.params.mode == ScanMode.vm) {
-      flags += ` --output=json-file=${cliScannerResult}`
+      flags += ` --json-scan-result=${cliScannerResult}`
       flags += ` ${this.params.imageTag}`;
     }
 

@@ -149,6 +149,7 @@ function processScanResult(result, opts) {
                 notPackageTypes: parseCsvList(opts.notPackageTypes),
                 excludeAccepted: opts.excludeAccepted,
             };
+            core.info("Generating SARIF Report...");
             (0, sarif_1.generateSARIFReport)(report, opts.groupByPackage, filters);
             if (!opts.skipSummary) {
                 core.info("Generating Summary...");
@@ -366,7 +367,7 @@ class ActionInputs {
             flags += ` ${this.params.iacScanPath}`;
         }
         if (this.params.mode == scanner_1.ScanMode.vm) {
-            flags += ` --output=json-file=${scanner_1.cliScannerResult}`;
+            flags += ` --json-scan-result=${scanner_1.cliScannerResult}`;
             flags += ` ${this.params.imageTag}`;
         }
         return {

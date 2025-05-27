@@ -219,12 +219,10 @@ function vulnerabilities2SARIFResByPackage(data: Report): [SARIFRule[], SARIFRes
   return [rules, results];
 }
 
-
 function sanitizeImageName(imageName: string) {
   // Replace / and : with -
   return imageName.replace(/[\/:]/g, '-');
 }
-
 
 function vulnerabilities2SARIFRes(data: Report): [SARIFRule[], SARIFResult[]] {
   let results: SARIFResult[] = [];

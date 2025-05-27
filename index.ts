@@ -88,6 +88,7 @@ export async function processScanResult(result: ScanExecutionResult, opts: Actio
       excludeAccepted: opts.excludeAccepted,
     };
 
+    core.info("Generating SARIF Report...")
     generateSARIFReport(report, opts.groupByPackage, filters);
 
     if (!opts.skipSummary) {
