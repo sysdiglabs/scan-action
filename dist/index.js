@@ -54,7 +54,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.cliScannerResult = exports.executeScan = exports.cliScannerName = exports.pullScanner = exports.defaultSecureEndpoint = exports.cliScannerURL = exports.ExecutionError = void 0;
 exports.run = run;
-exports.filterResult = filterResult;
 exports.processScanResult = processScanResult;
 const core = __importStar(__nccwpck_require__(2186));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
@@ -68,6 +67,11 @@ Object.defineProperty(exports, "pullScanner", ({ enumerable: true, get: function
 const action_1 = __nccwpck_require__(3761);
 Object.defineProperty(exports, "defaultSecureEndpoint", ({ enumerable: true, get: function () { return action_1.defaultSecureEndpoint; } }));
 const summary_1 = __nccwpck_require__(5389);
+function parseCsvList(str) {
+    if (!str)
+        return [];
+    return str.split(",").map(s => s.trim()).filter(s => !!s);
+}
 class ExecutionError extends Error {
     constructor(stdout, stderr) {
         super("execution error\n\nstdout: " + stdout + "\n\nstderr: " + stderr);
@@ -119,20 +123,11 @@ function run() {
         }
         catch (error) {
             if (core.getInput('stop-on-processing-error') == 'true') {
-                core.setFailed("Unexpected error");
+                core.setFailed(`Unexpected error: ${error instanceof Error ? error.stack : String(error)}`);
             }
-            core.error(error);
+            core.error(`Unexpected error: ${error instanceof Error ? error.stack : String(error)}`);
         }
     });
-}
-function filterResult(report, severity) {
-    var _a;
-    let filter_num = (_a = (0, scanner_1.numericPriorityForSeverity)(severity)) !== null && _a !== void 0 ? _a : 5;
-    report.result.packages.forEach(pkg => {
-        if (pkg.vulns)
-            pkg.vulns = pkg.vulns.filter((vuln) => { var _a; return ((_a = (0, scanner_1.numericPriorityForSeverity)(vuln.severity.value)) !== null && _a !== void 0 ? _a : 5) <= filter_num; });
-    });
-    return report;
 }
 function processScanResult(result, opts) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -146,13 +141,19 @@ function processScanResult(result, opts) {
             throw new ExecutionError(result.Output, result.Error);
         }
         if (report) {
-            if (opts.severityAtLeast) {
-                report = filterResult(report, opts.severityAtLeast);
-            }
-            (0, sarif_1.generateSARIFReport)(report, opts.groupByPackage);
+            // Prepara los filtros desde opts:
+            const filters = {
+                minSeverity: (opts.severityAtLeast && opts.severityAtLeast.toLowerCase() !== "any")
+                    ? opts.severityAtLeast.toLowerCase()
+                    : undefined,
+                packageTypes: parseCsvList(opts.packageTypes),
+                notPackageTypes: parseCsvList(opts.notPackageTypes),
+                excludeAccepted: opts.excludeAccepted,
+            };
+            (0, sarif_1.generateSARIFReport)(report, opts.groupByPackage, filters);
             if (!opts.skipSummary) {
                 core.info("Generating Summary...");
-                yield (0, summary_1.generateSummary)(opts, report);
+                yield (0, summary_1.generateSummary)(opts, report, filters);
             }
             else {
                 core.info("Skipping Summary...");
@@ -209,6 +210,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ActionInputs = exports.defaultSecureEndpoint = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const scanner_1 = __nccwpck_require__(491);
+const report_1 = __nccwpck_require__(7531);
 exports.defaultSecureEndpoint = "https://secure.sysdig.com/";
 class ActionInputs {
     get params() {
@@ -246,6 +248,9 @@ class ActionInputs {
             sysdigSecureURL: core.getInput('sysdig-secure-url') || exports.defaultSecureEndpoint,
             sysdigSkipTLS: core.getInput('sysdig-skip-tls') == 'true',
             severityAtLeast: core.getInput('severity-at-least') || undefined,
+            packageTypes: core.getInput('package-types') || undefined,
+            notPackageTypes: core.getInput('not-package-types') || undefined,
+            excludeAccepted: core.getInput('exclude-accepted') === 'true',
             groupByPackage: core.getInput('group-by-package') == 'true',
             extraParameters: core.getInput('extra-parameters'),
             mode: scanner_1.ScanMode.fromString(core.getInput('mode')) || scanner_1.ScanMode.vm,
@@ -280,6 +285,15 @@ class ActionInputs {
     get severityAtLeast() {
         return this.params.severityAtLeast;
     }
+    get packageTypes() {
+        return this.params.packageTypes;
+    }
+    get notPackageTypes() {
+        return this.params.notPackageTypes;
+    }
+    get excludeAccepted() {
+        return this.params.excludeAccepted;
+    }
     get imageTag() {
         return this.params.imageTag;
     }
@@ -298,6 +312,10 @@ class ActionInputs {
         if (params.mode && params.mode == scanner_1.ScanMode.iac && params.iacScanPath == "") {
             core.setFailed("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
             throw new Error("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
+        }
+        if (params.severityAtLeast && params.severityAtLeast != "any" && !report_1.SeverityNames.includes(params.severityAtLeast.toLowerCase())) {
+            core.setFailed(`Invalid severity-at-least value "${params.severityAtLeast}". Allowed values: any, critical, high, medium, low, negligible.`);
+            throw new Error(`Invalid severity-at-least value "${params.severityAtLeast}". Allowed values: any, critical, high, medium, low, negligible.`);
         }
     }
     // FIXME(fede) this also modifies the opts.cliScannerURL, which is something we don't want
@@ -349,7 +367,7 @@ class ActionInputs {
             flags += ` ${this.params.iacScanPath}`;
         }
         if (this.params.mode == scanner_1.ScanMode.vm) {
-            flags += ` --json-scan-result=${scanner_1.cliScannerResult}`;
+            flags += ` --output=json-file=${scanner_1.cliScannerResult}`;
             flags += ` ${this.params.imageTag}`;
         }
         return {
@@ -379,6 +397,15 @@ class ActionInputs {
         if (this.params.severityAtLeast) {
             core.info(`Severity level: ${this.params.severityAtLeast}`);
         }
+        if (this.params.packageTypes) {
+            core.info(`Package types included: ${this.params.packageTypes}`);
+        }
+        if (this.params.notPackageTypes) {
+            core.info(`Package types excluded: ${this.params.notPackageTypes}`);
+        }
+        if (this.params.excludeAccepted !== undefined) {
+            core.info(`Exclude vulnerabilities with accepted risks: ${this.params.excludeAccepted}`);
+        }
         core.info('Analyzing image: ' + this.params.imageTag);
         if (this.params.overridePullString) {
             core.info(` * Image PullString will be overwritten as ${this.params.overridePullString}`);
@@ -389,6 +416,49 @@ class ActionInputs {
     }
 }
 exports.ActionInputs = ActionInputs;
+
+
+/***/ }),
+
+/***/ 7531:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SeverityNames = void 0;
+exports.filterPackages = filterPackages;
+exports.SeverityNames = ["critical", "high", "medium", "low", "negligible"];
+const severityOrder = ["negligible", "low", "medium", "high", "critical"];
+function isSeverityGte(a, b) {
+    return severityOrder.indexOf(a.toLocaleLowerCase()) >= severityOrder.indexOf(b.toLocaleLowerCase());
+}
+function filterPackages(pkgs, filters) {
+    return pkgs
+        .filter(pkg => {
+        var _a;
+        const pkgType = (_a = pkg.type) === null || _a === void 0 ? void 0 : _a.toLowerCase();
+        if (filters.packageTypes && filters.packageTypes.length > 0 &&
+            !filters.packageTypes.map(t => t.toLowerCase()).includes(pkgType))
+            return false;
+        if (filters.notPackageTypes && filters.notPackageTypes.length > 0 &&
+            filters.notPackageTypes.map(t => t.toLowerCase()).includes(pkgType))
+            return false;
+        return true;
+    })
+        .map(pkg => {
+        var _a;
+        let vulns = ((_a = pkg.vulns) === null || _a === void 0 ? void 0 : _a.filter(vuln => {
+            if (filters.minSeverity && !isSeverityGte(vuln.severity.value, filters.minSeverity))
+                return false;
+            if (filters.excludeAccepted && Array.isArray(vuln.acceptedRisks) && vuln.acceptedRisks.length > 0)
+                return false;
+            return true;
+        })) || [];
+        return Object.assign(Object.assign({}, pkg), { vulns });
+    })
+        .filter(pkg => pkg.vulns && pkg.vulns.length > 0);
+}
 
 
 /***/ }),
@@ -439,23 +509,25 @@ exports.generateSARIFReport = generateSARIFReport;
 exports.vulnerabilities2SARIF = vulnerabilities2SARIF;
 const core = __importStar(__nccwpck_require__(2186));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
+const report_1 = __nccwpck_require__(7531);
 const package_json_1 = __nccwpck_require__(6625);
-const scanner_1 = __nccwpck_require__(491);
 const toolVersion = `${package_json_1.version}`;
 const dottedQuadToolVersion = `${package_json_1.version}.0`;
-function generateSARIFReport(data, groupByPackage) {
-    let sarifOutput = vulnerabilities2SARIF(data, groupByPackage);
+function generateSARIFReport(data, groupByPackage, filters) {
+    let sarifOutput = vulnerabilities2SARIF(data, groupByPackage, filters);
     core.setOutput("sarifReport", "./sarif.json");
     fs_1.default.writeFileSync("./sarif.json", JSON.stringify(sarifOutput, null, 2));
 }
-function vulnerabilities2SARIF(data, groupByPackage) {
+function vulnerabilities2SARIF(data, groupByPackage, filters) {
+    const filteredPackages = (0, report_1.filterPackages)(data.result.packages, filters !== null && filters !== void 0 ? filters : {});
+    const filteredData = Object.assign(Object.assign({}, data), { result: Object.assign(Object.assign({}, data.result), { packages: filteredPackages }) });
     let rules = [];
     let results = [];
     if (groupByPackage) {
-        [rules, results] = vulnerabilities2SARIFResByPackage(data);
+        [rules, results] = vulnerabilities2SARIFResByPackage(filteredData);
     }
     else {
-        [rules, results] = vulnerabilities2SARIFRes(data);
+        [rules, results] = vulnerabilities2SARIFRes(filteredData);
     }
     const runs = [{
             tool: {
@@ -498,6 +570,22 @@ function vulnerabilities2SARIF(data, groupByPackage) {
     };
     return (sarifOutput);
 }
+function numericPriorityForSeverity(severity) {
+    switch (severity.toLowerCase()) {
+        case 'critical':
+            return 0;
+        case 'high':
+            return 1;
+        case 'medium':
+            return 2;
+        case 'low':
+            return 3;
+        case 'negligible':
+            return 4;
+        case 'any':
+            return 5;
+    }
+}
 function vulnerabilities2SARIFResByPackage(data) {
     let rules = [];
     let results = [];
@@ -520,9 +608,9 @@ function vulnerabilities2SARIFResByPackage(data) {
             pkg.vulns.forEach(vuln => {
                 var _a, _b;
                 fullDescription += `${getSARIFVulnFullDescription(pkg, vuln)}\n\n\n`;
-                if ((_a = (0, scanner_1.numericPriorityForSeverity)(vuln.severity.value)) !== null && _a !== void 0 ? _a : 5 < severity_num) {
+                if ((_a = numericPriorityForSeverity(vuln.severity.value)) !== null && _a !== void 0 ? _a : 5 < severity_num) {
                     severity_level = vuln.severity.value.toLowerCase();
-                    severity_num = (_b = (0, scanner_1.numericPriorityForSeverity)(vuln.severity.value)) !== null && _b !== void 0 ? _b : 5;
+                    severity_num = (_b = numericPriorityForSeverity(vuln.severity.value)) !== null && _b !== void 0 ? _b : 5;
                 }
                 if (vuln.cvssScore.value.score > score) {
                     score = vuln.cvssScore.value.score;
@@ -831,13 +919,12 @@ exports.ScanMode = exports.cliScannerURL = exports.cliScannerResult = exports.cl
 exports.pullScanner = pullScanner;
 exports.executeScan = executeScan;
 exports.scannerURLForVersion = scannerURLForVersion;
-exports.numericPriorityForSeverity = numericPriorityForSeverity;
 const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
 const os_1 = __importDefault(__nccwpck_require__(2037));
 const process_1 = __importDefault(__nccwpck_require__(7282));
 const performance = (__nccwpck_require__(4074).performance);
-const cliScannerVersion = "1.18.0";
+const cliScannerVersion = "1.22.1";
 const cliScannerOS = getRunOS();
 const cliScannerArch = getRunArch();
 const cliScannerURLBase = "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner";
@@ -923,22 +1010,6 @@ function executeScan(scanFlags) {
 function scannerURLForVersion(version) {
     return `${cliScannerURLBase}/${version}/${cliScannerOS}/${cliScannerArch}/${exports.cliScannerName}`;
 }
-function numericPriorityForSeverity(severity) {
-    switch (severity.toLowerCase()) {
-        case 'critical':
-            return 0;
-        case 'high':
-            return 1;
-        case 'medium':
-            return 2;
-        case 'low':
-            return 3;
-        case 'negligible':
-            return 4;
-        case 'any':
-            return 5;
-    }
-}
 function getRunArch() {
     let arch = "unknown";
     if (os_1.default.arch() == "x64") {
@@ -1013,19 +1084,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.generateSummary = generateSummary;
 const core = __importStar(__nccwpck_require__(2186));
+const report_1 = __nccwpck_require__(7531);
 const EVALUATION = {
     "failed": "❌",
     "passed": "✅"
 };
-function generateSummary(opts, data) {
+function generateSummary(opts, data, filters) {
     return __awaiter(this, void 0, void 0, function* () {
+        const filteredPkgs = (0, report_1.filterPackages)(data.result.packages, filters || {});
+        let filteredData = Object.assign(Object.assign({}, data), { result: Object.assign(Object.assign({}, data.result), { packages: filteredPkgs }) });
         core.summary.emptyBuffer().clear();
         core.summary.addHeading(`Scan Results for ${opts.overridePullString || opts.imageTag}`);
-        addVulnTableToSummary(data);
-        addVulnsByLayerTableToSummary(data);
+        addVulnTableToSummary(filteredData);
+        addVulnsByLayerTableToSummary(filteredData);
         if (!opts.standalone) {
-            core.summary.addBreak()
-                .addRaw(`Policies evaluation: ${data.result.policyEvaluationsResult} ${EVALUATION[data.result.policyEvaluationsResult]}`);
+            core.summary.addBreak().addRaw(`Policies evaluation: ${data.result.policyEvaluationsResult} ${EVALUATION[data.result.policyEvaluationsResult]}`);
             addReportToSummary(data);
         }
         yield core.summary.write({ overwrite: true });
@@ -1034,7 +1107,7 @@ function generateSummary(opts, data) {
 function addVulnTableToSummary(data) {
     let totalVuln = data.result.vulnTotalBySeverity;
     let fixableVuln = data.result.fixableVulnTotalBySeverity;
-    core.summary.addBreak;
+    core.summary.addBreak();
     core.summary.addTable([
         [{ data: '', header: true }, { data: '🟣 Critical', header: true }, { data: '🔴 High', header: true }, { data: '🟠 Medium', header: true }, { data: '🟡 Low', header: true }, { data: '⚪ Negligible', header: true }],
         [{ data: '⚠️ Total Vulnerabilities', header: true }, `${totalVuln.critical}`, `${totalVuln.high}`, `${totalVuln.medium}`, `${totalVuln.low}`, `${totalVuln.negligible}`],
@@ -28710,7 +28783,7 @@ module.exports = parseParams
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"5.1.3","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint . --ignore-pattern \'build/*\'","build":"tsc","prepare":"npm run build && ncc build build/index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^5.0.0"},"devDependencies":{"@types/jest":"^29.5.12","@types/tmp":"^0.2.6","@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^29.7.0","tmp":"^0.2.1","ts-jest":"^29.2.3","typescript":"^5.5.4"}}');
+module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"5.2.0","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint . --ignore-pattern \'build/*\'","build":"tsc","prepare":"npm run build && ncc build build/index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^5.0.0"},"devDependencies":{"@types/jest":"^29.5.12","@types/tmp":"^0.2.6","@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^29.7.0","tmp":"^0.2.1","ts-jest":"^29.2.3","typescript":"^5.5.4"}}');
 
 /***/ })
 
