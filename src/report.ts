@@ -212,7 +212,7 @@ export interface RiskAcceptanceDefinition {
 
 const severityOrder = ["negligible", "low", "medium", "high", "critical"];
 
-function isSeverityGte(a: string, b: string): boolean {
+export function isSeverityGte(a: string, b: string): boolean {
   return severityOrder.indexOf(a.toLocaleLowerCase()) >= severityOrder.indexOf(b.toLocaleLowerCase());
 }
 

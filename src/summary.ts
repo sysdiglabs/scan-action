@@ -1,5 +1,5 @@
 import * as core from "@actions/core";
-import { FilterOptions, filterPackages, Package, Report, Rule } from "./report";
+import { FilterOptions, filterPackages, Package, Severity, isSeverityGte, Report, Rule } from "./report";
 import { ActionInputs } from "./action";
 
 const EVALUATION: any = {
@@ -24,36 +24,70 @@ export async function generateSummary(opts: ActionInputs, data: Report, filters?
   await core.summary.write({ overwrite: true });
 }
 
-function addVulnTableToSummary(data: Report) {
-  // Fallback to empty object if undefined
-  const totalVuln = data.result.vulnTotalBySeverity ?? {};
-  const fixableVuln = data.result.fixableVulnTotalBySeverity ?? {};
+const SEVERITY_LABELS: Record<Severity, string> = {
+  critical: "🟣 Critical",
+  high: "🔴 High",
+  medium: "🟠 Medium",
+  low: "🟡 Low",
+  negligible: "⚪ Negligible"
+};
+
+function countVulnsBySeverity(
+  packages: Package[],
+  minSeverity?: Severity
+): {
+  total: Record<Severity, number>;
+  fixable: Record<Severity, number>;
+} {
+  // Inicializamos todas las severidades
+  const result = {
+    total: { critical: 0, high: 0, medium: 0, low: 0, negligible: 0 },
+    fixable: { critical: 0, high: 0, medium: 0, low: 0, negligible: 0 }
+  };
+
+  for (const pkg of packages) {
+    for (const vuln of pkg.vulns ?? []) {
+      const sev = vuln.severity.value.toLowerCase() as Severity;
+      // Solo cuenta si cumple el minSeverity (o no hay minSeverity)
+      if (!minSeverity || isSeverityGte(sev, minSeverity)) {
+        result.total[sev]++;
+        if (vuln.fixedInVersion || pkg.suggestedFix) {
+          result.fixable[sev]++;
+        }
+      }
+    }
+  }
+  return result;
+}
+
+function addVulnTableToSummary(
+  data: Report,
+  minSeverity?: Severity
+) {
+  const pkgs = data.result.packages;
+  // Lista completa de severidades en orden, de mayor a menor
+  const SEVERITY_ORDER: Severity[] = ["critical", "high", "medium", "low", "negligible"];
+
+  // Solo mostramos las severidades >= minSeverity
+  const visibleSeverities = SEVERITY_ORDER.filter(sev =>
+    !minSeverity || isSeverityGte(sev, minSeverity)
+  );
+
+  const totalVulns = countVulnsBySeverity(pkgs, minSeverity);
 
   core.summary.addHeading(`Vulnerabilities summary`, 2);
   core.summary.addTable([
     [
       { data: '', header: true },
-      { data: '🟣 Critical', header: true },
-      { data: '🔴 High', header: true },
-      { data: '🟠 Medium', header: true },
-      { data: '🟡 Low', header: true },
-      { data: '⚪ Negligible', header: true }
+      ...visibleSeverities.map(s => ({ data: SEVERITY_LABELS[s], header: true }))
     ],
     [
       { data: '⚠️ Total Vulnerabilities', header: true },
-      `${totalVuln.critical ?? 0}`,
-      `${totalVuln.high ?? 0}`,
-      `${totalVuln.medium ?? 0}`,
-      `${totalVuln.low ?? 0}`,
-      `${totalVuln.negligible ?? 0}`
+      ...visibleSeverities.map(s => `${totalVulns.total[s] ?? 0}`)
     ],
     [
       { data: '🔧 Fixable Vulnerabilities', header: true },
-      `${fixableVuln.critical ?? 0}`,
-      `${fixableVuln.high ?? 0}`,
-      `${fixableVuln.medium ?? 0}`,
-      `${fixableVuln.low ?? 0}`,
-      `${fixableVuln.negligible ?? 0}`
+      ...visibleSeverities.map(s => `${totalVulns.fixable[s] ?? 0}`)
     ],
   ]);
 }
@@ -166,7 +200,7 @@ function addReportToSummary(data: Report) {
         core.summary.addHeading(`Rule Bundle: ${bundle.name}`, 4)
 
         bundle.rules.forEach(rule => {
-          core.summary.addHeading(`${EVALUATION[rule.evaluationResult]} Rule: ${rule.description}`, 5)
+          core.summary.addHeading(`Rule: ${rule.description}`, 5)
 
           if (rule.evaluationResult != "passed") {
             if (rule.failureType == "pkgVulnFailure") {

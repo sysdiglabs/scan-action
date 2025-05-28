@@ -427,6 +427,7 @@ exports.ActionInputs = ActionInputs;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SeverityNames = void 0;
+exports.isSeverityGte = isSeverityGte;
 exports.filterPackages = filterPackages;
 exports.SeverityNames = ["critical", "high", "medium", "low", "negligible"];
 const severityOrder = ["negligible", "low", "medium", "high", "critical"];
@@ -1109,36 +1110,54 @@ function generateSummary(opts, data, filters) {
         yield core.summary.write({ overwrite: true });
     });
 }
-function addVulnTableToSummary(data) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
-    // Fallback to empty object if undefined
-    const totalVuln = (_a = data.result.vulnTotalBySeverity) !== null && _a !== void 0 ? _a : {};
-    const fixableVuln = (_b = data.result.fixableVulnTotalBySeverity) !== null && _b !== void 0 ? _b : {};
+const SEVERITY_LABELS = {
+    critical: "🟣 Critical",
+    high: "🔴 High",
+    medium: "🟠 Medium",
+    low: "🟡 Low",
+    negligible: "⚪ Negligible"
+};
+function countVulnsBySeverity(packages, minSeverity) {
+    var _a;
+    // Inicializamos todas las severidades
+    const result = {
+        total: { critical: 0, high: 0, medium: 0, low: 0, negligible: 0 },
+        fixable: { critical: 0, high: 0, medium: 0, low: 0, negligible: 0 }
+    };
+    for (const pkg of packages) {
+        for (const vuln of (_a = pkg.vulns) !== null && _a !== void 0 ? _a : []) {
+            const sev = vuln.severity.value.toLowerCase();
+            // Solo cuenta si cumple el minSeverity (o no hay minSeverity)
+            if (!minSeverity || (0, report_1.isSeverityGte)(sev, minSeverity)) {
+                result.total[sev]++;
+                if (vuln.fixedInVersion || pkg.suggestedFix) {
+                    result.fixable[sev]++;
+                }
+            }
+        }
+    }
+    return result;
+}
+function addVulnTableToSummary(data, minSeverity) {
+    const pkgs = data.result.packages;
+    // Lista completa de severidades en orden, de mayor a menor
+    const SEVERITY_ORDER = ["critical", "high", "medium", "low", "negligible"];
+    // Solo mostramos las severidades >= minSeverity
+    const visibleSeverities = SEVERITY_ORDER.filter(sev => !minSeverity || (0, report_1.isSeverityGte)(sev, minSeverity));
+    const totalVulns = countVulnsBySeverity(pkgs, minSeverity);
     core.summary.addHeading(`Vulnerabilities summary`, 2);
     core.summary.addTable([
         [
             { data: '', header: true },
-            { data: '🟣 Critical', header: true },
-            { data: '🔴 High', header: true },
-            { data: '🟠 Medium', header: true },
-            { data: '🟡 Low', header: true },
-            { data: '⚪ Negligible', header: true }
+            ...visibleSeverities.map(s => ({ data: SEVERITY_LABELS[s], header: true }))
         ],
         [
             { data: '⚠️ Total Vulnerabilities', header: true },
-            `${(_c = totalVuln.critical) !== null && _c !== void 0 ? _c : 0}`,
-            `${(_d = totalVuln.high) !== null && _d !== void 0 ? _d : 0}`,
-            `${(_e = totalVuln.medium) !== null && _e !== void 0 ? _e : 0}`,
-            `${(_f = totalVuln.low) !== null && _f !== void 0 ? _f : 0}`,
-            `${(_g = totalVuln.negligible) !== null && _g !== void 0 ? _g : 0}`
+            ...visibleSeverities.map(s => { var _a; return `${(_a = totalVulns.total[s]) !== null && _a !== void 0 ? _a : 0}`; })
         ],
         [
             { data: '🔧 Fixable Vulnerabilities', header: true },
-            `${(_h = fixableVuln.critical) !== null && _h !== void 0 ? _h : 0}`,
-            `${(_j = fixableVuln.high) !== null && _j !== void 0 ? _j : 0}`,
-            `${(_k = fixableVuln.medium) !== null && _k !== void 0 ? _k : 0}`,
-            `${(_l = fixableVuln.low) !== null && _l !== void 0 ? _l : 0}`,
-            `${(_m = fixableVuln.negligible) !== null && _m !== void 0 ? _m : 0}`
+            ...visibleSeverities.map(s => { var _a; return `${(_a = totalVulns.fixable[s]) !== null && _a !== void 0 ? _a : 0}`; })
         ],
     ]);
 }
@@ -1236,7 +1255,7 @@ function addReportToSummary(data) {
             policy.bundles.forEach(bundle => {
                 core.summary.addHeading(`Rule Bundle: ${bundle.name}`, 4);
                 bundle.rules.forEach(rule => {
-                    core.summary.addHeading(`${EVALUATION[rule.evaluationResult]} Rule: ${rule.description}`, 5);
+                    core.summary.addHeading(`Rule: ${rule.description}`, 5);
                     if (rule.evaluationResult != "passed") {
                         if (rule.failureType == "pkgVulnFailure") {
                             getRulePkgMessage(rule, packages);
