@@ -1146,7 +1146,6 @@ function addVulnsByLayerTableToSummary(data) {
     if (!Array.isArray(data.result.layers) || data.result.layers.length === 0) {
         return;
     }
-    core.summary.addSeparator();
     core.summary.addHeading(`Package vulnerabilities per layer`, 2);
     let packagesPerLayer = {};
     data.result.packages.forEach(layerPackage => {
@@ -1217,12 +1216,23 @@ function addVulnsByLayerTableToSummary(data) {
 function addReportToSummary(data) {
     let policyEvaluations = data.result.policyEvaluations;
     let packages = data.result.packages;
-    core.summary.addHeading("Policies evaluation", 2);
+    core.summary.addHeading("Policy evaluation summary", 2);
     core.summary.addRaw(`Evaluation result: ${data.result.policyEvaluationsResult} ${EVALUATION[data.result.policyEvaluationsResult]}`);
+    let table = [[
+            { data: 'Policy', header: true },
+            { data: 'Evaluation', header: true },
+        ]];
     policyEvaluations.forEach(policy => {
-        core.summary.addSeparator();
-        core.summary.addHeading(`${EVALUATION[policy.evaluationResult]} Policy: ${policy.name}`, 3);
+        table.push([
+            { data: `${policy.name}` },
+            { data: `${EVALUATION[policy.evaluationResult]}` },
+        ]);
+    });
+    core.summary.addTable(table);
+    core.summary.addHeading("Policy failures", 2);
+    policyEvaluations.forEach(policy => {
         if (policy.evaluationResult != "passed") {
+            core.summary.addHeading(`Policy: ${policy.name}`, 3);
             policy.bundles.forEach(bundle => {
                 core.summary.addHeading(`Rule Bundle: ${bundle.name}`, 4);
                 bundle.rules.forEach(rule => {
