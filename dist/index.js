@@ -1103,13 +1103,14 @@ function generateSummary(opts, data, filters) {
         core.summary.emptyBuffer().clear();
         core.summary.addHeading(`Scan Results for ${opts.overridePullString || opts.imageTag}`);
         addVulnTableToSummary(filteredData, filters === null || filters === void 0 ? void 0 : filters.minSeverity);
-        addVulnsByLayerTableToSummary(filteredData);
+        addVulnsByLayerTableToSummary(filteredData, filters === null || filters === void 0 ? void 0 : filters.minSeverity);
         if (!opts.standalone) {
             addReportToSummary(data);
         }
         yield core.summary.write({ overwrite: true });
     });
 }
+const SEVERITY_ORDER = ["critical", "high", "medium", "low", "negligible"];
 const SEVERITY_LABELS = {
     critical: "🟣 Critical",
     high: "🔴 High",
@@ -1140,9 +1141,6 @@ function countVulnsBySeverity(packages, minSeverity) {
 }
 function addVulnTableToSummary(data, minSeverity) {
     const pkgs = data.result.packages;
-    // Lista completa de severidades en orden, de mayor a menor
-    const SEVERITY_ORDER = ["critical", "high", "medium", "low", "negligible"];
-    // Solo mostramos las severidades >= minSeverity
     const visibleSeverities = SEVERITY_ORDER.filter(sev => !minSeverity || (0, report_1.isSeverityGte)(sev, minSeverity));
     const totalVulns = countVulnsBySeverity(pkgs, minSeverity);
     core.summary.addHeading(`Vulnerabilities summary`, 2);
@@ -1161,10 +1159,11 @@ function addVulnTableToSummary(data, minSeverity) {
         ],
     ]);
 }
-function addVulnsByLayerTableToSummary(data) {
+function addVulnsByLayerTableToSummary(data, minSeverity) {
     if (!Array.isArray(data.result.layers) || data.result.layers.length === 0) {
         return;
     }
+    const visibleSeverities = SEVERITY_ORDER.filter(sev => !minSeverity || (0, report_1.isSeverityGte)(sev, minSeverity));
     core.summary.addHeading(`Package vulnerabilities per layer`, 2);
     let packagesPerLayer = {};
     data.result.packages.forEach(layerPackage => {
@@ -1201,32 +1200,21 @@ function addVulnsByLayerTableToSummary(data) {
                 { data: 'Type', header: true },
                 { data: 'Version', header: true },
                 { data: 'Suggested fix', header: true },
-                { data: '🟣 Critical', header: true },
-                { data: '🔴 High', header: true },
-                { data: '🟠 Medium', header: true },
-                { data: '🟡 Low', header: true },
-                { data: '⚪ Negligible', header: true },
+                ...visibleSeverities.map(s => ({ data: SEVERITY_LABELS[s], header: true })),
                 { data: 'Exploit', header: true },
             ],
             ...orderedPackagesBySeverity.map(layerPackage => {
-                var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
-                let criticalVulns = (_b = (_a = layerPackage.vulns) === null || _a === void 0 ? void 0 : _a.filter(vuln => vuln.severity.value.toLowerCase() == 'critical').length) !== null && _b !== void 0 ? _b : 0;
-                let highVulns = (_d = (_c = layerPackage.vulns) === null || _c === void 0 ? void 0 : _c.filter(vuln => vuln.severity.value.toLowerCase() == 'high').length) !== null && _d !== void 0 ? _d : 0;
-                let mediumVulns = (_f = (_e = layerPackage.vulns) === null || _e === void 0 ? void 0 : _e.filter(vuln => vuln.severity.value.toLowerCase() == 'medium').length) !== null && _f !== void 0 ? _f : 0;
-                let lowVulns = (_h = (_g = layerPackage.vulns) === null || _g === void 0 ? void 0 : _g.filter(vuln => vuln.severity.value.toLowerCase() == 'low').length) !== null && _h !== void 0 ? _h : 0;
-                let negligibleVulns = (_k = (_j = layerPackage.vulns) === null || _j === void 0 ? void 0 : _j.filter(vuln => vuln.severity.value.toLowerCase() == 'negligible').length) !== null && _k !== void 0 ? _k : 0;
-                let exploits = (_m = (_l = layerPackage.vulns) === null || _l === void 0 ? void 0 : _l.filter(vuln => vuln.exploitable).length) !== null && _m !== void 0 ? _m : 0;
+                var _a, _b;
                 return [
                     { data: layerPackage.name },
                     { data: layerPackage.type },
                     { data: layerPackage.version },
                     { data: layerPackage.suggestedFix || "" },
-                    { data: criticalVulns.toString() },
-                    { data: highVulns.toString() },
-                    { data: mediumVulns.toString() },
-                    { data: lowVulns.toString() },
-                    { data: negligibleVulns.toString() },
-                    { data: exploits.toString() },
+                    ...visibleSeverities.map(s => {
+                        var _a, _b;
+                        return `${(_b = (_a = layerPackage.vulns) === null || _a === void 0 ? void 0 : _a.filter(vuln => vuln.severity.value.toLowerCase() === s).length) !== null && _b !== void 0 ? _b : 0}`;
+                    }),
+                    `${(_b = (_a = layerPackage.vulns) === null || _a === void 0 ? void 0 : _a.filter(vuln => vuln.exploitable).length) !== null && _b !== void 0 ? _b : 0}`,
                 ];
             })
         ]);
