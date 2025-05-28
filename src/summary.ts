@@ -18,7 +18,6 @@ export async function generateSummary(opts: ActionInputs, data: Report, filters?
   addVulnsByLayerTableToSummary(filteredData);
 
   if (!opts.standalone) {
-    core.summary.addBreak().addRaw(`Policies evaluation: ${data.result.policyEvaluationsResult} ${EVALUATION[data.result.policyEvaluationsResult]}`);
     addReportToSummary(data);
   }
 
@@ -30,7 +29,7 @@ function addVulnTableToSummary(data: Report) {
   const totalVuln = data.result.vulnTotalBySeverity ?? {};
   const fixableVuln = data.result.fixableVulnTotalBySeverity ?? {};
 
-  core.summary.addBreak();
+  core.summary.addHeading(`Vulnerabilities summary`, 2);
   core.summary.addTable([
     [
       { data: '', header: true },
@@ -64,7 +63,7 @@ function addVulnsByLayerTableToSummary(data: Report) {
     return;
   }
   core.summary.addSeparator();
-  core.summary.addHeading(`Package vulnerabilities per layer`);
+  core.summary.addHeading(`Package vulnerabilities per layer`, 2);
 
   let packagesPerLayer: { [key: string]: Package[] } = {};
   data.result.packages.forEach(layerPackage => {
@@ -140,13 +139,16 @@ function addReportToSummary(data: Report) {
   let policyEvaluations = data.result.policyEvaluations;
   let packages = data.result.packages;
 
+  core.summary.addHeading("Policies evaluation", 2)
+  core.summary.addRaw(`Evaluation result: ${data.result.policyEvaluationsResult} ${EVALUATION[data.result.policyEvaluationsResult]}`);
+
   policyEvaluations.forEach(policy => {
     core.summary.addSeparator()
-    core.summary.addHeading(`${EVALUATION[policy.evaluationResult]} Policy: ${policy.name}`, 2)
+    core.summary.addHeading(`${EVALUATION[policy.evaluationResult]} Policy: ${policy.name}`, 3)
 
     if (policy.evaluationResult != "passed") {
       policy.bundles.forEach(bundle => {
-        core.summary.addHeading(`Rule Bundle: ${bundle.name}`, 3)
+        core.summary.addHeading(`Rule Bundle: ${bundle.name}`, 4)
 
         bundle.rules.forEach(rule => {
           core.summary.addHeading(`${EVALUATION[rule.evaluationResult]} Rule: ${rule.description}`, 5)
@@ -158,7 +160,6 @@ function addReportToSummary(data: Report) {
               getRuleImageMessage(rule)
             }
           }
-          core.summary.addBreak()
         });
       });
     }
