@@ -1102,7 +1102,7 @@ function generateSummary(opts, data, filters) {
         let filteredData = Object.assign(Object.assign({}, data), { result: Object.assign(Object.assign({}, data.result), { packages: filteredPkgs }) });
         core.summary.emptyBuffer().clear();
         core.summary.addHeading(`Scan Results for ${opts.overridePullString || opts.imageTag}`);
-        addVulnTableToSummary(filteredData);
+        addVulnTableToSummary(filteredData, filters === null || filters === void 0 ? void 0 : filters.minSeverity);
         addVulnsByLayerTableToSummary(filteredData);
         if (!opts.standalone) {
             addReportToSummary(data);

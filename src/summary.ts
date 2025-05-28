@@ -14,7 +14,7 @@ export async function generateSummary(opts: ActionInputs, data: Report, filters?
   core.summary.emptyBuffer().clear();
   core.summary.addHeading(`Scan Results for ${opts.overridePullString || opts.imageTag}`);
 
-  addVulnTableToSummary(filteredData);
+  addVulnTableToSummary(filteredData, filters?.minSeverity);
   addVulnsByLayerTableToSummary(filteredData);
 
   if (!opts.standalone) {
