@@ -100,7 +100,6 @@ export async function processScanResult(result: ScanExecutionResult, opts: Actio
   }
 }
 
-
 export {
   cliScannerURL,
   defaultSecureEndpoint,
@@ -109,7 +108,6 @@ export {
   executeScan,
   cliScannerResult,
 };
-
 
 if (require.main === module) {
   run();

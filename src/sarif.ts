@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import fs from 'fs';
-import { Package, Report, FilterOptions, Vuln, filterPackages } from './report';
+import { Package, Report, FilterOptions, Vuln, filterPackages, SeverityNames } from './report';
 
 import { version } from '../package.json';
 const toolVersion = `${version}`;
@@ -115,23 +115,6 @@ export function vulnerabilities2SARIF(
   return (sarifOutput);
 }
 
-function numericPriorityForSeverity(severity: string): number | undefined {
-  switch (severity.toLowerCase()) {
-    case 'critical':
-      return 0
-    case 'high':
-      return 1
-    case 'medium':
-      return 2
-    case 'low':
-      return 3
-    case 'negligible':
-      return 4
-    case 'any':
-      return 5
-  }
-}
-
 function vulnerabilities2SARIFResByPackage(data: Report): [SARIFRule[], SARIFResult[]] {
   let rules: SARIFRule[] = [];
   let results: SARIFResult[] = [];
@@ -157,9 +140,12 @@ function vulnerabilities2SARIFResByPackage(data: Report): [SARIFRule[], SARIFRes
       pkg.vulns.forEach(vuln => {
         fullDescription += `${getSARIFVulnFullDescription(pkg, vuln)}\n\n\n`;
 
-        if (numericPriorityForSeverity(vuln.severity.value) ?? 5 < severity_num) {
+        let sevNum = SeverityNames.indexOf(vuln.severity.value.toLowerCase() as any);
+        sevNum = sevNum === -1 ? 5 : sevNum;
+
+        if (sevNum < severity_num) {
           severity_level = vuln.severity.value.toLowerCase();
-          severity_num = numericPriorityForSeverity(vuln.severity.value) ?? 5;
+          severity_num = sevNum;
         }
 
         if (vuln.cvssScore.value.score > score) {

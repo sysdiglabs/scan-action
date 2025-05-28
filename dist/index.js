@@ -573,22 +573,6 @@ function vulnerabilities2SARIF(data, groupByPackage, filters) {
     };
     return (sarifOutput);
 }
-function numericPriorityForSeverity(severity) {
-    switch (severity.toLowerCase()) {
-        case 'critical':
-            return 0;
-        case 'high':
-            return 1;
-        case 'medium':
-            return 2;
-        case 'low':
-            return 3;
-        case 'negligible':
-            return 4;
-        case 'any':
-            return 5;
-    }
-}
 function vulnerabilities2SARIFResByPackage(data) {
     let rules = [];
     let results = [];
@@ -609,11 +593,12 @@ function vulnerabilities2SARIFResByPackage(data) {
             let severity_num = 5;
             let score = 0.0;
             pkg.vulns.forEach(vuln => {
-                var _a, _b;
                 fullDescription += `${getSARIFVulnFullDescription(pkg, vuln)}\n\n\n`;
-                if ((_a = numericPriorityForSeverity(vuln.severity.value)) !== null && _a !== void 0 ? _a : 5 < severity_num) {
+                let sevNum = report_1.SeverityNames.indexOf(vuln.severity.value.toLowerCase());
+                sevNum = sevNum === -1 ? 5 : sevNum;
+                if (sevNum < severity_num) {
                     severity_level = vuln.severity.value.toLowerCase();
-                    severity_num = (_b = numericPriorityForSeverity(vuln.severity.value)) !== null && _b !== void 0 ? _b : 5;
+                    severity_num = sevNum;
                 }
                 if (vuln.cvssScore.value.score > score) {
                     score = vuln.cvssScore.value.score;
