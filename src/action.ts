@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import { cliScannerResult, cliScannerURL, ComposeFlags, ScanMode, scannerURLForVersion } from './scanner';
+import { Severity, SeverityNames } from './report';
 
 export const defaultSecureEndpoint = "https://secure.sysdig.com/"
 
@@ -21,6 +22,9 @@ interface ActionInputParameters {
   sysdigSecureURL: string;
   sysdigSkipTLS: boolean;
   severityAtLeast?: string;
+  packageTypes?: string;
+  notPackageTypes?: string;
+  excludeAccepted?: boolean;
   groupByPackage: boolean;
   extraParameters: string;
   mode: ScanMode;
@@ -71,6 +75,9 @@ export class ActionInputs {
       sysdigSecureURL: core.getInput('sysdig-secure-url') || defaultSecureEndpoint,
       sysdigSkipTLS: core.getInput('sysdig-skip-tls') == 'true',
       severityAtLeast: core.getInput('severity-at-least') || undefined,
+      packageTypes: core.getInput('package-types') || undefined,
+      notPackageTypes: core.getInput('not-package-types') || undefined,
+      excludeAccepted: core.getInput('exclude-accepted') === 'true',
       groupByPackage: core.getInput('group-by-package') == 'true',
       extraParameters: core.getInput('extra-parameters'),
       mode: ScanMode.fromString(core.getInput('mode')) || ScanMode.vm,
@@ -120,6 +127,16 @@ export class ActionInputs {
     return this.params.severityAtLeast
   }
 
+  get packageTypes() {
+    return this.params.packageTypes;
+  }
+  get notPackageTypes() {
+    return this.params.notPackageTypes;
+  }
+  get excludeAccepted() {
+    return this.params.excludeAccepted;
+  }
+
   get imageTag() {
     return this.params.imageTag
   }
@@ -142,6 +159,11 @@ export class ActionInputs {
     if (params.mode && params.mode == ScanMode.iac && params.iacScanPath == "") {
       core.setFailed("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
       throw new Error("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
+    }
+
+    if (params.severityAtLeast && params.severityAtLeast != "any" && !SeverityNames.includes(params.severityAtLeast.toLowerCase() as Severity)) {
+      core.setFailed(`Invalid severity-at-least value "${params.severityAtLeast}". Allowed values: any, critical, high, medium, low, negligible.`);
+      throw new Error(`Invalid severity-at-least value "${params.severityAtLeast}". Allowed values: any, critical, high, medium, low, negligible.`);
     }
   }
 
@@ -210,7 +232,7 @@ export class ActionInputs {
     }
 
     if (this.params.mode == ScanMode.vm) {
-      flags += ` --output=json-file=${cliScannerResult}`
+      flags += ` --json-scan-result=${cliScannerResult}`
       flags += ` ${this.params.imageTag}`;
     }
 
@@ -249,6 +271,18 @@ export class ActionInputs {
 
     if (this.params.severityAtLeast) {
       core.info(`Severity level: ${this.params.severityAtLeast}`);
+    }
+
+    if (this.params.packageTypes) {
+      core.info(`Package types included: ${this.params.packageTypes}`);
+    }
+
+    if (this.params.notPackageTypes) {
+      core.info(`Package types excluded: ${this.params.notPackageTypes}`);
+    }
+
+    if (this.params.excludeAccepted !== undefined) {
+      core.info(`Exclude vulnerabilities with accepted risks: ${this.params.excludeAccepted}`);
     }
 
     core.info('Analyzing image: ' + this.params.imageTag);

@@ -30,9 +30,9 @@ describe("input parsing", () => {
               name: "sysdig-cli-scanner",
               fullName: "Sysdig Vulnerability CLI Scanner",
               informationUri: "https://docs.sysdig.com/en/docs/installation/sysdig-secure/install-vulnerability-cli-scanner",
-              version: "5.1.3",
-              semanticVersion: "5.1.3",
-              dottedQuadFileVersion: "5.1.3.0",
+              version: "5.2.0",
+              semanticVersion: "5.2.0",
+              dottedQuadFileVersion: "5.2.0.0",
               rules: []
             }
           },
@@ -64,10 +64,39 @@ describe("input parsing", () => {
 })
 
 const removeVulnsFromReport = (report: Report): Report => {
-  report.result.packages = report.result.packages.map(pkg => ({
-    ...pkg,
-    vulns: [],
-  }));
-  return report;
+  return {
+    ...report,
+    result: {
+      ...report.result,
+      packages: report.result.packages.map(pkg => ({
+        ...pkg,
+        vulns: [],
+      }))
+    }
+  };
+};
 
-}
+
+describe("SARIF filtering", () => {
+  it("respects minSeverity", () => {
+    const sarif = vulnerabilities2SARIF(fixtureReport, false, { minSeverity: "critical" });
+
+    expect(JSON.stringify(sarif)).toContain("Critical");
+    expect(JSON.stringify(sarif)).toContain("CVE-2023-38545");
+    expect(JSON.stringify(sarif)).not.toContain("High");
+    expect(JSON.stringify(sarif)).not.toContain("CVE-2023-38039");
+    expect(JSON.stringify(sarif)).not.toContain("Medium");
+    expect(JSON.stringify(sarif)).not.toContain("CVE-2023-42364");
+  });
+
+  it("respects packageTypes", () => {
+    const sarif = vulnerabilities2SARIF(fixtureReport, false, { packageTypes: ["os"] });
+    expect(JSON.stringify(sarif)).toContain("CVE-2023-42365");
+    expect(JSON.stringify(sarif)).not.toContain("CVE-2023-42503");
+  });
+
+  it("respects excludeAccepted", () => {
+    const sarif = vulnerabilities2SARIF(fixtureReport, false, { excludeAccepted: true });
+    expect(JSON.stringify(sarif)).not.toContain("CVE-2016-1000027");
+  });
+});

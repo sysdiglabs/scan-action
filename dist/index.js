@@ -54,7 +54,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.cliScannerResult = exports.executeScan = exports.cliScannerName = exports.pullScanner = exports.defaultSecureEndpoint = exports.cliScannerURL = exports.ExecutionError = void 0;
 exports.run = run;
-exports.filterResult = filterResult;
 exports.processScanResult = processScanResult;
 const core = __importStar(__nccwpck_require__(2186));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
@@ -68,6 +67,11 @@ Object.defineProperty(exports, "pullScanner", ({ enumerable: true, get: function
 const action_1 = __nccwpck_require__(3761);
 Object.defineProperty(exports, "defaultSecureEndpoint", ({ enumerable: true, get: function () { return action_1.defaultSecureEndpoint; } }));
 const summary_1 = __nccwpck_require__(5389);
+function parseCsvList(str) {
+    if (!str)
+        return [];
+    return str.split(",").map(s => s.trim()).filter(s => !!s);
+}
 class ExecutionError extends Error {
     constructor(stdout, stderr) {
         super("execution error\n\nstdout: " + stdout + "\n\nstderr: " + stderr);
@@ -119,20 +123,11 @@ function run() {
         }
         catch (error) {
             if (core.getInput('stop-on-processing-error') == 'true') {
-                core.setFailed("Unexpected error");
+                core.setFailed(`Unexpected error: ${error instanceof Error ? error.stack : String(error)}`);
             }
-            core.error(error);
+            core.error(`Unexpected error: ${error instanceof Error ? error.stack : String(error)}`);
         }
     });
-}
-function filterResult(report, severity) {
-    var _a;
-    let filter_num = (_a = (0, scanner_1.numericPriorityForSeverity)(severity)) !== null && _a !== void 0 ? _a : 5;
-    report.result.packages.forEach(pkg => {
-        if (pkg.vulns)
-            pkg.vulns = pkg.vulns.filter((vuln) => { var _a; return ((_a = (0, scanner_1.numericPriorityForSeverity)(vuln.severity.value)) !== null && _a !== void 0 ? _a : 5) <= filter_num; });
-    });
-    return report;
 }
 function processScanResult(result, opts) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -146,13 +141,19 @@ function processScanResult(result, opts) {
             throw new ExecutionError(result.Output, result.Error);
         }
         if (report) {
-            if (opts.severityAtLeast) {
-                report = filterResult(report, opts.severityAtLeast);
-            }
-            (0, sarif_1.generateSARIFReport)(report, opts.groupByPackage);
+            const filters = {
+                minSeverity: (opts.severityAtLeast && opts.severityAtLeast.toLowerCase() !== "any")
+                    ? opts.severityAtLeast.toLowerCase()
+                    : undefined,
+                packageTypes: parseCsvList(opts.packageTypes),
+                notPackageTypes: parseCsvList(opts.notPackageTypes),
+                excludeAccepted: opts.excludeAccepted,
+            };
+            core.info("Generating SARIF Report...");
+            (0, sarif_1.generateSARIFReport)(report, opts.groupByPackage, filters);
             if (!opts.skipSummary) {
                 core.info("Generating Summary...");
-                yield (0, summary_1.generateSummary)(opts, report);
+                yield (0, summary_1.generateSummary)(opts, report, filters);
             }
             else {
                 core.info("Skipping Summary...");
@@ -209,6 +210,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ActionInputs = exports.defaultSecureEndpoint = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const scanner_1 = __nccwpck_require__(491);
+const report_1 = __nccwpck_require__(7531);
 exports.defaultSecureEndpoint = "https://secure.sysdig.com/";
 class ActionInputs {
     get params() {
@@ -246,6 +248,9 @@ class ActionInputs {
             sysdigSecureURL: core.getInput('sysdig-secure-url') || exports.defaultSecureEndpoint,
             sysdigSkipTLS: core.getInput('sysdig-skip-tls') == 'true',
             severityAtLeast: core.getInput('severity-at-least') || undefined,
+            packageTypes: core.getInput('package-types') || undefined,
+            notPackageTypes: core.getInput('not-package-types') || undefined,
+            excludeAccepted: core.getInput('exclude-accepted') === 'true',
             groupByPackage: core.getInput('group-by-package') == 'true',
             extraParameters: core.getInput('extra-parameters'),
             mode: scanner_1.ScanMode.fromString(core.getInput('mode')) || scanner_1.ScanMode.vm,
@@ -280,6 +285,15 @@ class ActionInputs {
     get severityAtLeast() {
         return this.params.severityAtLeast;
     }
+    get packageTypes() {
+        return this.params.packageTypes;
+    }
+    get notPackageTypes() {
+        return this.params.notPackageTypes;
+    }
+    get excludeAccepted() {
+        return this.params.excludeAccepted;
+    }
     get imageTag() {
         return this.params.imageTag;
     }
@@ -298,6 +312,10 @@ class ActionInputs {
         if (params.mode && params.mode == scanner_1.ScanMode.iac && params.iacScanPath == "") {
             core.setFailed("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
             throw new Error("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
+        }
+        if (params.severityAtLeast && params.severityAtLeast != "any" && !report_1.SeverityNames.includes(params.severityAtLeast.toLowerCase())) {
+            core.setFailed(`Invalid severity-at-least value "${params.severityAtLeast}". Allowed values: any, critical, high, medium, low, negligible.`);
+            throw new Error(`Invalid severity-at-least value "${params.severityAtLeast}". Allowed values: any, critical, high, medium, low, negligible.`);
         }
     }
     // FIXME(fede) this also modifies the opts.cliScannerURL, which is something we don't want
@@ -379,6 +397,15 @@ class ActionInputs {
         if (this.params.severityAtLeast) {
             core.info(`Severity level: ${this.params.severityAtLeast}`);
         }
+        if (this.params.packageTypes) {
+            core.info(`Package types included: ${this.params.packageTypes}`);
+        }
+        if (this.params.notPackageTypes) {
+            core.info(`Package types excluded: ${this.params.notPackageTypes}`);
+        }
+        if (this.params.excludeAccepted !== undefined) {
+            core.info(`Exclude vulnerabilities with accepted risks: ${this.params.excludeAccepted}`);
+        }
         core.info('Analyzing image: ' + this.params.imageTag);
         if (this.params.overridePullString) {
             core.info(` * Image PullString will be overwritten as ${this.params.overridePullString}`);
@@ -389,6 +416,52 @@ class ActionInputs {
     }
 }
 exports.ActionInputs = ActionInputs;
+
+
+/***/ }),
+
+/***/ 7531:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SeverityNames = void 0;
+exports.isSeverityGte = isSeverityGte;
+exports.filterPackages = filterPackages;
+exports.SeverityNames = ["critical", "high", "medium", "low", "negligible"];
+const severityOrder = ["negligible", "low", "medium", "high", "critical"];
+function isSeverityGte(a, b) {
+    return severityOrder.indexOf(a.toLocaleLowerCase()) >= severityOrder.indexOf(b.toLocaleLowerCase());
+}
+function filterPackages(pkgs, filters) {
+    if (!Array.isArray(pkgs))
+        return [];
+    return pkgs
+        .filter(pkg => {
+        var _a;
+        const pkgType = (_a = pkg.type) === null || _a === void 0 ? void 0 : _a.toLowerCase();
+        if (filters.packageTypes && filters.packageTypes.length > 0 &&
+            !filters.packageTypes.map(t => t.toLowerCase()).includes(pkgType))
+            return false;
+        if (filters.notPackageTypes && filters.notPackageTypes.length > 0 &&
+            filters.notPackageTypes.map(t => t.toLowerCase()).includes(pkgType))
+            return false;
+        return true;
+    })
+        .map(pkg => {
+        var _a;
+        let vulns = ((_a = pkg.vulns) === null || _a === void 0 ? void 0 : _a.filter(vuln => {
+            if (filters.minSeverity && !isSeverityGte(vuln.severity.value, filters.minSeverity))
+                return false;
+            if (filters.excludeAccepted && Array.isArray(vuln.acceptedRisks) && vuln.acceptedRisks.length > 0)
+                return false;
+            return true;
+        })) || [];
+        return Object.assign(Object.assign({}, pkg), { vulns });
+    })
+        .filter(pkg => pkg.vulns && pkg.vulns.length > 0);
+}
 
 
 /***/ }),
@@ -439,23 +512,25 @@ exports.generateSARIFReport = generateSARIFReport;
 exports.vulnerabilities2SARIF = vulnerabilities2SARIF;
 const core = __importStar(__nccwpck_require__(2186));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
+const report_1 = __nccwpck_require__(7531);
 const package_json_1 = __nccwpck_require__(6625);
-const scanner_1 = __nccwpck_require__(491);
 const toolVersion = `${package_json_1.version}`;
 const dottedQuadToolVersion = `${package_json_1.version}.0`;
-function generateSARIFReport(data, groupByPackage) {
-    let sarifOutput = vulnerabilities2SARIF(data, groupByPackage);
+function generateSARIFReport(data, groupByPackage, filters) {
+    let sarifOutput = vulnerabilities2SARIF(data, groupByPackage, filters);
     core.setOutput("sarifReport", "./sarif.json");
     fs_1.default.writeFileSync("./sarif.json", JSON.stringify(sarifOutput, null, 2));
 }
-function vulnerabilities2SARIF(data, groupByPackage) {
+function vulnerabilities2SARIF(data, groupByPackage, filters) {
+    const filteredPackages = (0, report_1.filterPackages)(data.result.packages, filters !== null && filters !== void 0 ? filters : {});
+    const filteredData = Object.assign(Object.assign({}, data), { result: Object.assign(Object.assign({}, data.result), { packages: filteredPackages }) });
     let rules = [];
     let results = [];
     if (groupByPackage) {
-        [rules, results] = vulnerabilities2SARIFResByPackage(data);
+        [rules, results] = vulnerabilities2SARIFResByPackage(filteredData);
     }
     else {
-        [rules, results] = vulnerabilities2SARIFRes(data);
+        [rules, results] = vulnerabilities2SARIFRes(filteredData);
     }
     const runs = [{
             tool: {
@@ -498,6 +573,11 @@ function vulnerabilities2SARIF(data, groupByPackage) {
     };
     return (sarifOutput);
 }
+function numericPriorityForSeverity(severity) {
+    let sevNum = report_1.SeverityNames.indexOf(severity.toLowerCase());
+    sevNum = sevNum === -1 ? 5 : sevNum;
+    return sevNum;
+}
 function vulnerabilities2SARIFResByPackage(data) {
     let rules = [];
     let results = [];
@@ -514,15 +594,15 @@ function vulnerabilities2SARIFResByPackage(data) {
             }
             let helpUri = "";
             let fullDescription = "";
-            let severity_level = "";
-            let severity_num = 5;
+            let severityLevel = "";
+            let minSeverityNum = 5;
             let score = 0.0;
             pkg.vulns.forEach(vuln => {
-                var _a, _b;
                 fullDescription += `${getSARIFVulnFullDescription(pkg, vuln)}\n\n\n`;
-                if ((_a = (0, scanner_1.numericPriorityForSeverity)(vuln.severity.value)) !== null && _a !== void 0 ? _a : 5 < severity_num) {
-                    severity_level = vuln.severity.value.toLowerCase();
-                    severity_num = (_b = (0, scanner_1.numericPriorityForSeverity)(vuln.severity.value)) !== null && _b !== void 0 ? _b : 5;
+                const sevNum = numericPriorityForSeverity(vuln.severity.value);
+                if (sevNum < minSeverityNum) {
+                    severityLevel = vuln.severity.value.toLowerCase();
+                    minSeverityNum = sevNum;
                 }
                 if (vuln.cvssScore.value.score > score) {
                     score = vuln.cvssScore.value.score;
@@ -547,14 +627,14 @@ function vulnerabilities2SARIFResByPackage(data) {
                     tags: [
                         'vulnerability',
                         'security',
-                        severity_level
+                        severityLevel
                     ]
                 }
             };
             rules.push(rule);
             let result = {
                 ruleId: pkg.name,
-                level: check_level(severity_level),
+                level: check_level(severityLevel),
                 message: {
                     text: getSARIFReportMessageByPackage(data, pkg, baseUrl)
                 },
@@ -562,7 +642,7 @@ function vulnerabilities2SARIFResByPackage(data) {
                     {
                         physicalLocation: {
                             artifactLocation: {
-                                uri: `file:///${data.result.metadata.pullString}`,
+                                uri: `file:///${sanitizeImageName(data.result.metadata.pullString)}`,
                                 uriBaseId: "ROOTPATH"
                             }
                         },
@@ -576,6 +656,10 @@ function vulnerabilities2SARIFResByPackage(data) {
         });
     }
     return [rules, results];
+}
+function sanitizeImageName(imageName) {
+    // Replace / and : with -
+    return imageName.replace(/[\/:]/g, '-');
 }
 function vulnerabilities2SARIFRes(data) {
     let results = [];
@@ -628,7 +712,7 @@ function vulnerabilities2SARIFRes(data) {
                         {
                             physicalLocation: {
                                 artifactLocation: {
-                                    uri: data.result.metadata.pullString,
+                                    uri: `file:///${sanitizeImageName(data.result.metadata.pullString)}`,
                                     uriBaseId: "ROOTPATH"
                                 }
                             },
@@ -831,13 +915,12 @@ exports.ScanMode = exports.cliScannerURL = exports.cliScannerResult = exports.cl
 exports.pullScanner = pullScanner;
 exports.executeScan = executeScan;
 exports.scannerURLForVersion = scannerURLForVersion;
-exports.numericPriorityForSeverity = numericPriorityForSeverity;
 const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
 const os_1 = __importDefault(__nccwpck_require__(2037));
 const process_1 = __importDefault(__nccwpck_require__(7282));
 const performance = (__nccwpck_require__(4074).performance);
-const cliScannerVersion = "1.18.0";
+const cliScannerVersion = "1.22.1";
 const cliScannerOS = getRunOS();
 const cliScannerArch = getRunArch();
 const cliScannerURLBase = "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner";
@@ -923,22 +1006,6 @@ function executeScan(scanFlags) {
 function scannerURLForVersion(version) {
     return `${cliScannerURLBase}/${version}/${cliScannerOS}/${cliScannerArch}/${exports.cliScannerName}`;
 }
-function numericPriorityForSeverity(severity) {
-    switch (severity.toLowerCase()) {
-        case 'critical':
-            return 0;
-        case 'high':
-            return 1;
-        case 'medium':
-            return 2;
-        case 'low':
-            return 3;
-        case 'negligible':
-            return 4;
-        case 'any':
-            return 5;
-    }
-}
 function getRunArch() {
     let arch = "unknown";
     if (os_1.default.arch() == "x64") {
@@ -1013,40 +1080,78 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.generateSummary = generateSummary;
 const core = __importStar(__nccwpck_require__(2186));
+const report_1 = __nccwpck_require__(7531);
 const EVALUATION = {
     "failed": "❌",
     "passed": "✅"
 };
-function generateSummary(opts, data) {
+function generateSummary(opts, data, filters) {
     return __awaiter(this, void 0, void 0, function* () {
+        const filteredPkgs = (0, report_1.filterPackages)(data.result.packages, filters || {});
+        let filteredData = Object.assign(Object.assign({}, data), { result: Object.assign(Object.assign({}, data.result), { packages: filteredPkgs }) });
         core.summary.emptyBuffer().clear();
         core.summary.addHeading(`Scan Results for ${opts.overridePullString || opts.imageTag}`);
-        addVulnTableToSummary(data);
-        addVulnsByLayerTableToSummary(data);
+        addVulnTableToSummary(filteredData, filters === null || filters === void 0 ? void 0 : filters.minSeverity);
+        addVulnsByLayerTableToSummary(filteredData, filters === null || filters === void 0 ? void 0 : filters.minSeverity);
         if (!opts.standalone) {
-            core.summary.addBreak()
-                .addRaw(`Policies evaluation: ${data.result.policyEvaluationsResult} ${EVALUATION[data.result.policyEvaluationsResult]}`);
             addReportToSummary(data);
         }
         yield core.summary.write({ overwrite: true });
     });
 }
-function addVulnTableToSummary(data) {
-    let totalVuln = data.result.vulnTotalBySeverity;
-    let fixableVuln = data.result.fixableVulnTotalBySeverity;
-    core.summary.addBreak;
+const SEVERITY_ORDER = ["critical", "high", "medium", "low", "negligible"];
+const SEVERITY_LABELS = {
+    critical: "🟣 Critical",
+    high: "🔴 High",
+    medium: "🟠 Medium",
+    low: "🟡 Low",
+    negligible: "⚪ Negligible"
+};
+function countVulnsBySeverity(packages, minSeverity) {
+    var _a;
+    const result = {
+        total: { critical: 0, high: 0, medium: 0, low: 0, negligible: 0 },
+        fixable: { critical: 0, high: 0, medium: 0, low: 0, negligible: 0 }
+    };
+    for (const pkg of packages) {
+        for (const vuln of (_a = pkg.vulns) !== null && _a !== void 0 ? _a : []) {
+            const sev = vuln.severity.value.toLowerCase();
+            if (!minSeverity || (0, report_1.isSeverityGte)(sev, minSeverity)) {
+                result.total[sev]++;
+                if (vuln.fixedInVersion || pkg.suggestedFix) {
+                    result.fixable[sev]++;
+                }
+            }
+        }
+    }
+    return result;
+}
+function addVulnTableToSummary(data, minSeverity) {
+    const pkgs = data.result.packages;
+    const visibleSeverities = SEVERITY_ORDER.filter(sev => !minSeverity || (0, report_1.isSeverityGte)(sev, minSeverity));
+    const totalVulns = countVulnsBySeverity(pkgs, minSeverity);
+    core.summary.addHeading(`Vulnerabilities summary`, 2);
     core.summary.addTable([
-        [{ data: '', header: true }, { data: '🟣 Critical', header: true }, { data: '🔴 High', header: true }, { data: '🟠 Medium', header: true }, { data: '🟡 Low', header: true }, { data: '⚪ Negligible', header: true }],
-        [{ data: '⚠️ Total Vulnerabilities', header: true }, `${totalVuln.critical}`, `${totalVuln.high}`, `${totalVuln.medium}`, `${totalVuln.low}`, `${totalVuln.negligible}`],
-        [{ data: '🔧 Fixable Vulnerabilities', header: true }, `${fixableVuln.critical}`, `${fixableVuln.high}`, `${fixableVuln.medium}`, `${fixableVuln.low}`, `${fixableVuln.negligible}`],
+        [
+            { data: '', header: true },
+            ...visibleSeverities.map(s => ({ data: SEVERITY_LABELS[s], header: true }))
+        ],
+        [
+            { data: '⚠️ Total Vulnerabilities', header: true },
+            ...visibleSeverities.map(s => { var _a; return `${(_a = totalVulns.total[s]) !== null && _a !== void 0 ? _a : 0}`; })
+        ],
+        [
+            { data: '🔧 Fixable Vulnerabilities', header: true },
+            ...visibleSeverities.map(s => { var _a; return `${(_a = totalVulns.fixable[s]) !== null && _a !== void 0 ? _a : 0}`; })
+        ],
     ]);
 }
-function addVulnsByLayerTableToSummary(data) {
-    if (!data.result.layers) {
+function addVulnsByLayerTableToSummary(data, minSeverity) {
+    if (!Array.isArray(data.result.layers) || data.result.layers.length === 0) {
         return;
     }
-    core.summary.addSeparator();
-    core.summary.addHeading(`Package vulnerabilities per layer`);
+    const visibleSeverities = SEVERITY_ORDER.filter(sev => !minSeverity || (0, report_1.isSeverityGte)(sev, minSeverity));
+    core.summary.addHeading(`Package vulnerabilities per layer`, 2);
     let packagesPerLayer = {};
     data.result.packages.forEach(layerPackage => {
         var _a;
@@ -1056,13 +1161,12 @@ function addVulnsByLayerTableToSummary(data) {
     });
     data.result.layers.forEach((layer, index) => {
         var _a;
-        core.summary.addCodeBlock(`LAYER ${index} - ${layer.command.replace(new RegExp('\$', 'g'), "&#36;").replace(new RegExp('\&', 'g'), '&amp;')}`);
+        core.summary.addCodeBlock(`LAYER ${index} - ${layer.command.replace(/\$/g, "&#36;").replace(/\&/g, '&amp;')}`);
         if (!layer.digest) {
             return;
         }
-        let packagesWithVulns = ((_a = packagesPerLayer[layer.digest]) !== null && _a !== void 0 ? _a : [])
-            .filter(pkg => pkg.vulns);
-        if (packagesWithVulns.length == 0) {
+        let packagesWithVulns = ((_a = packagesPerLayer[layer.digest]) !== null && _a !== void 0 ? _a : []).filter(pkg => pkg.vulns);
+        if (packagesWithVulns.length === 0) {
             return;
         }
         let orderedPackagesBySeverity = packagesWithVulns.sort((a, b) => {
@@ -1083,32 +1187,21 @@ function addVulnsByLayerTableToSummary(data) {
                 { data: 'Type', header: true },
                 { data: 'Version', header: true },
                 { data: 'Suggested fix', header: true },
-                { data: '🟣 Critical', header: true },
-                { data: '🔴 High', header: true },
-                { data: '🟠 Medium', header: true },
-                { data: '🟡 Low', header: true },
-                { data: '⚪ Negligible', header: true },
+                ...visibleSeverities.map(s => ({ data: SEVERITY_LABELS[s], header: true })),
                 { data: 'Exploit', header: true },
             ],
             ...orderedPackagesBySeverity.map(layerPackage => {
-                var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
-                let criticalVulns = (_b = (_a = layerPackage.vulns) === null || _a === void 0 ? void 0 : _a.filter(vuln => vuln.severity.value.toLowerCase() == 'critical').length) !== null && _b !== void 0 ? _b : 0;
-                let highVulns = (_d = (_c = layerPackage.vulns) === null || _c === void 0 ? void 0 : _c.filter(vuln => vuln.severity.value.toLowerCase() == 'high').length) !== null && _d !== void 0 ? _d : 0;
-                let mediumVulns = (_f = (_e = layerPackage.vulns) === null || _e === void 0 ? void 0 : _e.filter(vuln => vuln.severity.value.toLowerCase() == 'medium').length) !== null && _f !== void 0 ? _f : 0;
-                let lowVulns = (_h = (_g = layerPackage.vulns) === null || _g === void 0 ? void 0 : _g.filter(vuln => vuln.severity.value.toLowerCase() == 'low').length) !== null && _h !== void 0 ? _h : 0;
-                let negligibleVulns = (_k = (_j = layerPackage.vulns) === null || _j === void 0 ? void 0 : _j.filter(vuln => vuln.severity.value.toLowerCase() == 'negligible').length) !== null && _k !== void 0 ? _k : 0;
-                let exploits = (_m = (_l = layerPackage.vulns) === null || _l === void 0 ? void 0 : _l.filter(vuln => vuln.exploitable).length) !== null && _m !== void 0 ? _m : 0;
+                var _a, _b;
                 return [
                     { data: layerPackage.name },
                     { data: layerPackage.type },
                     { data: layerPackage.version },
                     { data: layerPackage.suggestedFix || "" },
-                    { data: criticalVulns.toString() },
-                    { data: highVulns.toString() },
-                    { data: mediumVulns.toString() },
-                    { data: lowVulns.toString() },
-                    { data: negligibleVulns.toString() },
-                    { data: exploits.toString() },
+                    ...visibleSeverities.map(s => {
+                        var _a, _b;
+                        return `${(_b = (_a = layerPackage.vulns) === null || _a === void 0 ? void 0 : _a.filter(vuln => vuln.severity.value.toLowerCase() === s).length) !== null && _b !== void 0 ? _b : 0}`;
+                    }),
+                    `${(_b = (_a = layerPackage.vulns) === null || _a === void 0 ? void 0 : _a.filter(vuln => vuln.exploitable).length) !== null && _b !== void 0 ? _b : 0}`,
                 ];
             })
         ]);
@@ -1117,14 +1210,27 @@ function addVulnsByLayerTableToSummary(data) {
 function addReportToSummary(data) {
     let policyEvaluations = data.result.policyEvaluations;
     let packages = data.result.packages;
+    core.summary.addHeading("Policy evaluation summary", 2);
+    core.summary.addRaw(`Evaluation result: ${data.result.policyEvaluationsResult} ${EVALUATION[data.result.policyEvaluationsResult]}`);
+    let table = [[
+            { data: 'Policy', header: true },
+            { data: 'Evaluation', header: true },
+        ]];
     policyEvaluations.forEach(policy => {
-        core.summary.addSeparator();
-        core.summary.addHeading(`${EVALUATION[policy.evaluationResult]} Policy: ${policy.name}`, 2);
+        table.push([
+            { data: `${policy.name}` },
+            { data: `${EVALUATION[policy.evaluationResult]}` },
+        ]);
+    });
+    core.summary.addTable(table);
+    core.summary.addHeading("Policy failures", 2);
+    policyEvaluations.forEach(policy => {
         if (policy.evaluationResult != "passed") {
+            core.summary.addHeading(`Policy: ${policy.name}`, 3);
             policy.bundles.forEach(bundle => {
-                core.summary.addHeading(`Rule Bundle: ${bundle.name}`, 3);
+                core.summary.addHeading(`Rule Bundle: ${bundle.name}`, 4);
                 bundle.rules.forEach(rule => {
-                    core.summary.addHeading(`${EVALUATION[rule.evaluationResult]} Rule: ${rule.description}`, 5);
+                    core.summary.addHeading(`Rule: ${rule.description}`, 5);
                     if (rule.evaluationResult != "passed") {
                         if (rule.failureType == "pkgVulnFailure") {
                             getRulePkgMessage(rule, packages);
@@ -1133,7 +1239,6 @@ function addReportToSummary(data) {
                             getRuleImageMessage(rule);
                         }
                     }
-                    core.summary.addBreak();
                 });
             });
         }
@@ -28710,7 +28815,7 @@ module.exports = parseParams
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"5.1.3","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint . --ignore-pattern \'build/*\'","build":"tsc","prepare":"npm run build && ncc build build/index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^5.0.0"},"devDependencies":{"@types/jest":"^29.5.12","@types/tmp":"^0.2.6","@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^29.7.0","tmp":"^0.2.1","ts-jest":"^29.2.3","typescript":"^5.5.4"}}');
+module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"5.2.0","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint . --ignore-pattern \'build/*\'","build":"tsc","prepare":"npm run build && ncc build build/index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^5.0.0"},"devDependencies":{"@types/jest":"^29.5.12","@types/tmp":"^0.2.6","@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^29.7.0","tmp":"^0.2.1","ts-jest":"^29.2.3","typescript":"^5.5.4"}}');
 
 /***/ })
 

@@ -1,9 +1,8 @@
 import * as core from '@actions/core';
 import fs from 'fs';
-import { Package, Report, Vuln } from './report';
+import { Package, Report, FilterOptions, Vuln, filterPackages, SeverityNames } from './report';
 
 import { version } from '../package.json';
-import { numericPriorityForSeverity } from './scanner';
 const toolVersion = `${version}`;
 const dottedQuadToolVersion = `${version}.0`;
 
@@ -47,20 +46,28 @@ interface SARIFRule {
   };
 }
 
-export function generateSARIFReport(data: Report, groupByPackage: boolean) {
-  let sarifOutput = vulnerabilities2SARIF(data, groupByPackage);
+export function generateSARIFReport(data: Report, groupByPackage: boolean, filters?: FilterOptions) {
+  let sarifOutput = vulnerabilities2SARIF(data, groupByPackage, filters);
   core.setOutput("sarifReport", "./sarif.json");
   fs.writeFileSync("./sarif.json", JSON.stringify(sarifOutput, null, 2));
 }
 
-export function vulnerabilities2SARIF(data: Report, groupByPackage: boolean) {
+export function vulnerabilities2SARIF(
+  data: Report,
+  groupByPackage: boolean,
+  filters?: FilterOptions
+) {
+
+  const filteredPackages = filterPackages(data.result.packages, filters ?? {});
+  const filteredData = { ...data, result: { ...data.result, packages: filteredPackages } };
+
   let rules: SARIFRule[] = [];
   let results: SARIFResult[] = [];
 
   if (groupByPackage) {
-    [rules, results] = vulnerabilities2SARIFResByPackage(data)
+    [rules, results] = vulnerabilities2SARIFResByPackage(filteredData)
   } else {
-    [rules, results] = vulnerabilities2SARIFRes(data)
+    [rules, results] = vulnerabilities2SARIFRes(filteredData)
   }
 
   const runs = [{
@@ -108,6 +115,11 @@ export function vulnerabilities2SARIF(data: Report, groupByPackage: boolean) {
   return (sarifOutput);
 }
 
+function numericPriorityForSeverity(severity: string): number {
+  let sevNum = SeverityNames.indexOf(severity.toLowerCase() as any);
+  sevNum = sevNum === -1 ? 5 : sevNum;
+  return sevNum;
+}
 
 function vulnerabilities2SARIFResByPackage(data: Report): [SARIFRule[], SARIFResult[]] {
   let rules: SARIFRule[] = [];
@@ -128,15 +140,17 @@ function vulnerabilities2SARIFResByPackage(data: Report): [SARIFRule[], SARIFRes
 
       let helpUri = "";
       let fullDescription = "";
-      let severity_level = "";
-      let severity_num = 5;
+      let severityLevel = "";
+      let minSeverityNum = 5;
       let score = 0.0;
       pkg.vulns.forEach(vuln => {
         fullDescription += `${getSARIFVulnFullDescription(pkg, vuln)}\n\n\n`;
 
-        if (numericPriorityForSeverity(vuln.severity.value) ?? 5 < severity_num) {
-          severity_level = vuln.severity.value.toLowerCase();
-          severity_num = numericPriorityForSeverity(vuln.severity.value) ?? 5;
+        const sevNum = numericPriorityForSeverity(vuln.severity.value);
+
+        if (sevNum < minSeverityNum) {
+          severityLevel = vuln.severity.value.toLowerCase();
+          minSeverityNum = sevNum;
         }
 
         if (vuln.cvssScore.value.score > score) {
@@ -163,7 +177,7 @@ function vulnerabilities2SARIFResByPackage(data: Report): [SARIFRule[], SARIFRes
           tags: [
             'vulnerability',
             'security',
-            severity_level
+            severityLevel
           ]
         }
       }
@@ -171,7 +185,7 @@ function vulnerabilities2SARIFResByPackage(data: Report): [SARIFRule[], SARIFRes
 
       let result: SARIFResult = {
         ruleId: pkg.name,
-        level: check_level(severity_level),
+        level: check_level(severityLevel),
         message: {
           text: getSARIFReportMessageByPackage(data, pkg, baseUrl)
         },
@@ -179,7 +193,7 @@ function vulnerabilities2SARIFResByPackage(data: Report): [SARIFRule[], SARIFRes
           {
             physicalLocation: {
               artifactLocation: {
-                uri: `file:///${data.result.metadata.pullString}`,
+                uri: `file:///${sanitizeImageName(data.result.metadata.pullString)}`,
                 uriBaseId: "ROOTPATH"
               }
             },
@@ -196,6 +210,10 @@ function vulnerabilities2SARIFResByPackage(data: Report): [SARIFRule[], SARIFRes
   return [rules, results];
 }
 
+function sanitizeImageName(imageName: string) {
+  // Replace / and : with -
+  return imageName.replace(/[\/:]/g, '-');
+}
 
 function vulnerabilities2SARIFRes(data: Report): [SARIFRule[], SARIFResult[]] {
   let results: SARIFResult[] = [];
@@ -252,7 +270,7 @@ function vulnerabilities2SARIFRes(data: Report): [SARIFRule[], SARIFResult[]] {
             {
               physicalLocation: {
                 artifactLocation: {
-                  uri: data.result.metadata.pullString,
+                  uri: `file:///${sanitizeImageName(data.result.metadata.pullString)}`,
                   uriBaseId: "ROOTPATH"
                 }
               },

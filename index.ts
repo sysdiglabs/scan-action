@@ -1,10 +1,15 @@
 import * as core from '@actions/core';
 import fs from 'fs';
 import { generateSARIFReport } from './src/sarif';
-import { cliScannerName, cliScannerResult, cliScannerURL, executeScan, numericPriorityForSeverity, pullScanner, ScanExecutionResult, ScanMode } from './src/scanner';
+import { cliScannerName, cliScannerResult, cliScannerURL, executeScan, pullScanner, ScanExecutionResult, ScanMode } from './src/scanner';
 import { ActionInputs, defaultSecureEndpoint } from './src/action';
 import { generateSummary } from './src/summary';
-import { Report } from './src/report';
+import { Report, FilterOptions, Severity } from './src/report';
+
+function parseCsvList(str?: string): string[] {
+  if (!str) return [];
+  return str.split(",").map(s => s.trim()).filter(s => !!s);
+}
 
 export class ExecutionError extends Error {
   constructor(stdout: string, stderr: string) {
@@ -34,7 +39,6 @@ export async function run() {
       retCode = scanResult.ReturnCode;
       if (retCode == 0 || retCode == 1) {
         // Transform Scan Results to other formats such as SARIF
-
         if (opts.mode == ScanMode.vm) {
           await processScanResult(scanResult, opts);
         }
@@ -57,20 +61,10 @@ export async function run() {
 
   } catch (error) {
     if (core.getInput('stop-on-processing-error') == 'true') {
-      core.setFailed("Unexpected error");
+      core.setFailed(`Unexpected error: ${error instanceof Error ? error.stack : String(error)}`);
     }
-    core.error(error as string);
+    core.error(`Unexpected error: ${error instanceof Error ? error.stack : String(error)}`);
   }
-}
-
-
-export function filterResult(report: Report, severity: string) {
-  let filter_num: number = numericPriorityForSeverity(severity) ?? 5;
-
-  report.result.packages.forEach(pkg => {
-    if (pkg.vulns) pkg.vulns = pkg.vulns.filter((vuln) => (numericPriorityForSeverity(vuln.severity.value) ?? 5) <= filter_num);
-  });
-  return report;
 }
 
 export async function processScanResult(result: ScanExecutionResult, opts: ActionInputs) {
@@ -85,17 +79,21 @@ export async function processScanResult(result: ScanExecutionResult, opts: Actio
   }
 
   if (report) {
-    if (opts.severityAtLeast) {
-      report = filterResult(report, opts.severityAtLeast);
-    }
+    const filters: FilterOptions = {
+      minSeverity: (opts.severityAtLeast && opts.severityAtLeast.toLowerCase() !== "any")
+        ? opts.severityAtLeast.toLowerCase() as Severity
+        : undefined,
+      packageTypes: parseCsvList(opts.packageTypes),
+      notPackageTypes: parseCsvList(opts.notPackageTypes),
+      excludeAccepted: opts.excludeAccepted,
+    };
 
-    generateSARIFReport(report, opts.groupByPackage);
+    core.info("Generating SARIF Report...")
+    generateSARIFReport(report, opts.groupByPackage, filters);
 
     if (!opts.skipSummary) {
       core.info("Generating Summary...")
-
-      await generateSummary(opts, report);
-
+      await generateSummary(opts, report, filters);
     } else {
       core.info("Skipping Summary...")
     }

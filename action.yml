@@ -47,6 +47,16 @@ inputs:
     description: Filtering option to only report vulnerabilities with at least the specified severity. Can take [critical|high|medium|low|negligible|any]. Default value "any" for no filtering.
     default: any
     required: false
+  package-types:
+    description: "Comma-separated list of package types to include in the SARIF/summary report. Example: \"java,javascript\""
+    required: false
+  not-package-types:
+    description: "Comma-separated list of package types to exclude from the SARIF/summary report. Example: \"os,alpine\""
+    required: false
+  exclude-accepted:
+    description: "Exclude vulnerabilities that have accepted risks from SARIF/summary report. true/false"
+    default: "false"
+    required: false
   group-by-package:
     description: Enable grouping the vulnerabilities in the SARIF report by package.
     default: "false"
