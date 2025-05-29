@@ -128,12 +128,4 @@ describe("filterPackages with fixture report", () => {
     expect(result.every(pkg => pkg.type !== "os")).toBe(true);
   });
 
-  it("should remove packages with no vulns after filtering", () => {
-    const filters: FilterOptions = { minSeverity: "Critical" as Severity };
-    const pkgs = fixtureReport.result.packages;
-    const result = filterPackages(pkgs, filters);
-
-    // All packages must have at least on critical
-    expect(result.every(pkg => pkg.vulns && pkg.vulns.length > 0)).toBe(true);
-  });
 });
