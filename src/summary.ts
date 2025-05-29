@@ -49,7 +49,6 @@ function countVulnsBySeverity(
   for (const pkg of packages) {
     for (const vuln of pkg.vulns ?? []) {
       const sev = vuln.severity.value.toLowerCase() as Severity;
-      // Solo cuenta si cumple el minSeverity (o no hay minSeverity)
       if (!minSeverity || isSeverityGte(sev, minSeverity)) {
         result.total[sev]++;
         if (vuln.fixedInVersion || pkg.suggestedFix) {

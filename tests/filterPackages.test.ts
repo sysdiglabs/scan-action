@@ -97,16 +97,15 @@ describe("filterPackages with fixture report", () => {
     const pkgs = fixtureReport.result.packages;
     const result = filterPackages(pkgs, filters);
 
-    // Todos los paquetes devueltos deberían tener al menos una vuln crítica
     expect(
       result.every(pkg => 
         pkg.vulns?.some(v => v.severity.value.toLowerCase() === "critical")
       )
     ).toBe(true);
 
-    // El CVE-2023-38545 está presente (es crítico)
+    // CVE-2023-38545 is critical
     expect(JSON.stringify(result)).toContain("CVE-2023-38545");
-    // El CVE-2023-38546 no (es low)
+    // CVE-2023-38546 is low
     expect(JSON.stringify(result)).not.toContain("CVE-2023-38546");
   });
 
@@ -115,7 +114,7 @@ describe("filterPackages with fixture report", () => {
     const pkgs = fixtureReport.result.packages;
     const result = filterPackages(pkgs, filters);
 
-    // No debe aparecer la vuln que sólo tiene acceptedRisks
+    // Vuln with accepted risks should be removed
     expect(
       result.some(pkg =>
         pkg.vulns?.some(v => (v.acceptedRisks && v.acceptedRisks.length > 0))
@@ -128,7 +127,7 @@ describe("filterPackages with fixture report", () => {
     const pkgs = fixtureReport.result.packages;
     const result = filterPackages(pkgs, filters);
 
-    // Todos los paquetes deben ser "os"
+    // All packages must be "os"
     expect(result.every(pkg => pkg.type === "os")).toBe(true);
   });
 
@@ -137,7 +136,7 @@ describe("filterPackages with fixture report", () => {
     const pkgs = fixtureReport.result.packages;
     const result = filterPackages(pkgs, filters);
 
-    // Ningún paquete debe ser "os"
+    // No package must be "os"
     expect(result.every(pkg => pkg.type !== "os")).toBe(true);
   });
 
@@ -146,7 +145,7 @@ describe("filterPackages with fixture report", () => {
     const pkgs = fixtureReport.result.packages;
     const result = filterPackages(pkgs, filters);
 
-    // Todos los paquetes que quedan tienen al menos una vuln crítica
+    // All packages must have at least on critical
     expect(result.every(pkg => pkg.vulns && pkg.vulns.length > 0)).toBe(true);
   });
 });
