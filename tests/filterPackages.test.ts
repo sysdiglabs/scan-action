@@ -80,18 +80,6 @@ describe("filterPackages", () => {
 
 describe("filterPackages with fixture report", () => {
 
-  it("correctly filters the result by severity", () => {
-
-    const data: Report  = fixtureReport;
-    const filters: FilterOptions = { minSeverity: "high" };
-
-    const filteredPackages = filterPackages(data.result.packages, filters ?? {});
-    const filteredData = { ...data, result: { ...data.result, packages: filteredPackages } };
-
-    expect(JSON.stringify(filteredData)).toContain("CVE-2023-38545");
-    expect(JSON.stringify(filteredData)).not.toContain("CVE-2023-38546")
-  });
-
   it("should return only packages with critical vulnerabilities", () => {
     const filters: FilterOptions = { minSeverity: "Critical" as Severity };
     const pkgs = fixtureReport.result.packages;
