@@ -1105,7 +1105,6 @@ const SEVERITY_LABELS = {
 };
 function countVulnsBySeverity(packages, minSeverity) {
     var _a;
-    // Inicializamos todas las severidades
     const result = {
         total: { critical: 0, high: 0, medium: 0, low: 0, negligible: 0 },
         fixable: { critical: 0, high: 0, medium: 0, low: 0, negligible: 0 }
