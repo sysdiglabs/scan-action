@@ -573,6 +573,11 @@ function vulnerabilities2SARIF(data, groupByPackage, filters) {
     };
     return (sarifOutput);
 }
+function numericPriorityForSeverity(severity) {
+    let sevNum = report_1.SeverityNames.indexOf(severity.toLowerCase());
+    sevNum = sevNum === -1 ? 5 : sevNum;
+    return sevNum;
+}
 function vulnerabilities2SARIFResByPackage(data) {
     let rules = [];
     let results = [];
@@ -589,16 +594,15 @@ function vulnerabilities2SARIFResByPackage(data) {
             }
             let helpUri = "";
             let fullDescription = "";
-            let severity_level = "";
-            let severity_num = 5;
+            let severityLevel = "";
+            let minSeverityNum = 5;
             let score = 0.0;
             pkg.vulns.forEach(vuln => {
                 fullDescription += `${getSARIFVulnFullDescription(pkg, vuln)}\n\n\n`;
-                let sevNum = report_1.SeverityNames.indexOf(vuln.severity.value.toLowerCase());
-                sevNum = sevNum === -1 ? 5 : sevNum;
-                if (sevNum < severity_num) {
-                    severity_level = vuln.severity.value.toLowerCase();
-                    severity_num = sevNum;
+                const sevNum = numericPriorityForSeverity(vuln.severity.value);
+                if (sevNum < minSeverityNum) {
+                    severityLevel = vuln.severity.value.toLowerCase();
+                    minSeverityNum = sevNum;
                 }
                 if (vuln.cvssScore.value.score > score) {
                     score = vuln.cvssScore.value.score;
@@ -623,14 +627,14 @@ function vulnerabilities2SARIFResByPackage(data) {
                     tags: [
                         'vulnerability',
                         'security',
-                        severity_level
+                        severityLevel
                     ]
                 }
             };
             rules.push(rule);
             let result = {
                 ruleId: pkg.name,
-                level: check_level(severity_level),
+                level: check_level(severityLevel),
                 message: {
                     text: getSARIFReportMessageByPackage(data, pkg, baseUrl)
                 },
