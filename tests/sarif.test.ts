@@ -30,9 +30,9 @@ describe("input parsing", () => {
               name: "sysdig-cli-scanner",
               fullName: "Sysdig Vulnerability CLI Scanner",
               informationUri: "https://docs.sysdig.com/en/docs/installation/sysdig-secure/install-vulnerability-cli-scanner",
-              version: "5.2.0",
-              semanticVersion: "5.2.0",
-              dottedQuadFileVersion: "5.2.0.0",
+              version: "5.3.0",
+              semanticVersion: "5.3.0",
+              dottedQuadFileVersion: "5.3.0.0",
               rules: []
             }
           },
@@ -53,8 +53,8 @@ describe("input parsing", () => {
             layersCount: 12,
             os: "linux",
             pullString: "jenkins/jenkins:2.401.1-alpine",
-            resultId: "17e69f1c42f0d322164d17ab30e34730",
-            resultUrl: "https://secure.sysdig.com/#/vulnerabilities/results/17e69f1c42f0d322164d17ab30e34730/overview",
+            resultId: "184768d4478313583b17d46eaebf6010",
+            resultUrl: "https://us2.app.sysdig.com/secure/#/vulnerabilities/results/184768d4478313583b17d46eaebf6010/overview",
             size: 259845632,
           }
         }]
