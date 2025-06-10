@@ -4,7 +4,7 @@ import os from 'os';
 import process from 'process';
 const performance = require('perf_hooks').performance;
 
-const cliScannerVersion = "1.22.1"
+const cliScannerVersion = "1.22.2"
 const cliScannerOS = getRunOS()
 const cliScannerArch = getRunArch()
 const cliScannerURLBase = "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner";
