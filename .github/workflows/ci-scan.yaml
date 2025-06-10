@@ -91,7 +91,7 @@ jobs:
         continue-on-error: true
         with:
           # Old scanner version
-          cli-scanner-version: 1.8.1
+          cli-scanner-version: 1.18.0
           # Tag of the image to analyse
           image-tag: sysdiglabs/dummy-vuln-app:latest
           # API token for Sysdig Scanning auth
