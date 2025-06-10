@@ -1150,26 +1150,24 @@ function addVulnTableToSummary(data, minSeverity) {
     ]);
 }
 function addVulnsByLayerTableToSummary(data, minSeverity) {
-    if (!Array.isArray(data.result.layers) || data.result.layers.length === 0) {
-        return;
-    }
     const visibleSeverities = SEVERITY_ORDER.filter(sev => !minSeverity || (0, report_1.isSeverityGte)(sev, minSeverity));
     core.summary.addHeading(`Package vulnerabilities per layer`, 2);
     let packagesPerLayer = {};
-    Object.values(data.result.packages).forEach(layerPackage => {
+    Object.values(data.result.packages).forEach(pkg => {
         var _a;
-        const layerDigest = data.result.layers[layerPackage.layerRef].digest;
-        if (layerDigest) {
-            packagesPerLayer[layerDigest] = ((_a = packagesPerLayer[layerDigest]) !== null && _a !== void 0 ? _a : []).concat(layerPackage);
+        const layer = pkg.layerRef ? data.result.layers[pkg.layerRef] : undefined;
+        if (layer && layer.digest) {
+            packagesPerLayer[layer.digest] = ((_a = packagesPerLayer[layer.digest]) !== null && _a !== void 0 ? _a : []).concat(pkg);
         }
     });
-    data.result.layers.forEach((layer, index) => {
+    const orderedLayers = Object.values(data.result.layers).sort((a, b) => a.index - b.index);
+    orderedLayers.forEach(layer => {
         var _a;
-        core.summary.addCodeBlock(`LAYER ${index} - ${layer.command.replace(/\$/g, "&#36;").replace(/\&/g, '&amp;')}`);
+        core.summary.addCodeBlock(`LAYER ${layer.index} - ${layer.command.replace(/\$/g, "&#36;").replace(/\&/g, '&amp;')}`);
         if (!layer.digest) {
             return;
         }
-        let packagesWithVulns = ((_a = packagesPerLayer[layer.digest]) !== null && _a !== void 0 ? _a : []).filter(pkg => pkg.vulnerabilitiesRefs);
+        let packagesWithVulns = ((_a = packagesPerLayer[layer.digest]) !== null && _a !== void 0 ? _a : []).filter(pkg => pkg.vulnerabilitiesRefs && pkg.vulnerabilitiesRefs.length > 0);
         if (packagesWithVulns.length === 0) {
             return;
         }
@@ -1200,21 +1198,21 @@ function addVulnsByLayerTableToSummary(data, minSeverity) {
                 ...visibleSeverities.map(s => ({ data: SEVERITY_LABELS[s], header: true })),
                 { data: 'Exploit', header: true },
             ],
-            ...orderedPackagesBySeverity.map(layerPackage => {
+            ...orderedPackagesBySeverity.map(pkg => {
                 var _a;
                 return [
-                    { data: layerPackage.name },
-                    { data: layerPackage.type },
-                    { data: layerPackage.version },
-                    { data: layerPackage.suggestedFix || "" },
+                    { data: pkg.name },
+                    { data: pkg.type },
+                    { data: pkg.version },
+                    { data: pkg.suggestedFix || "" },
                     ...visibleSeverities.map(s => {
                         var _a;
-                        return `${(_a = layerPackage.vulnerabilitiesRefs.filter(vulnRef => {
+                        return `${(_a = pkg.vulnerabilitiesRefs.filter(vulnRef => {
                             const vuln = data.result.vulnerabilities[vulnRef];
                             return vuln.severity.toLowerCase() === s;
                         }).length) !== null && _a !== void 0 ? _a : 0}`;
                     }),
-                    `${(_a = layerPackage.vulnerabilitiesRefs.filter(vulnRef => {
+                    `${(_a = pkg.vulnerabilitiesRefs.filter(vulnRef => {
                         const vuln = data.result.vulnerabilities[vulnRef];
                         return vuln.exploitable;
                     }).length) !== null && _a !== void 0 ? _a : 0}`,
@@ -1266,6 +1264,7 @@ function getRulePkgMessage(rule, packages, vulns) {
     let table = [[
             { data: 'Severity', header: true },
             { data: 'Package', header: true },
+            { data: 'CVE ID', header: true },
             { data: 'CVSS Score', header: true },
             { data: 'CVSS Version', header: true },
             { data: 'CVSS Vector', header: true },
@@ -1282,6 +1281,7 @@ function getRulePkgMessage(rule, packages, vulns) {
             table.push([
                 { data: `${vuln.severity}` },
                 { data: `${pkg.name}` },
+                { data: `${vuln.name}` },
                 { data: `${vuln.cvssScore.score}` },
                 { data: `${vuln.cvssScore.version}` },
                 { data: `${vuln.cvssScore.vector}` },

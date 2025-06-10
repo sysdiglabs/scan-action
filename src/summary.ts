@@ -93,31 +93,29 @@ function addVulnTableToSummary(
 }
 
 function addVulnsByLayerTableToSummary(data: Report, minSeverity?: Severity) {
-  if (!Array.isArray(data.result.layers) || data.result.layers.length === 0) {
-    return;
-  }
-
   const visibleSeverities = SEVERITY_ORDER.filter(sev =>
     !minSeverity || isSeverityGte(sev, minSeverity)
   );
 
   core.summary.addHeading(`Package vulnerabilities per layer`, 2);
 
-  let packagesPerLayer: { [key: string]: Package[] } = {};
-  Object.values(data.result.packages).forEach(layerPackage => {
-    const layerDigest = data.result.layers[layerPackage.layerRef].digest
-    if (layerDigest) {
-      packagesPerLayer[layerDigest] = (packagesPerLayer[layerDigest] ?? []).concat(layerPackage)
+  let packagesPerLayer: { [digest: string]: Package[] } = {};
+  Object.values(data.result.packages).forEach(pkg => {
+    const layer = pkg.layerRef ? data.result.layers[pkg.layerRef] : undefined;
+    if (layer && layer.digest) {
+      packagesPerLayer[layer.digest] = (packagesPerLayer[layer.digest] ?? []).concat(pkg);
     }
   });
 
-  data.result.layers.forEach((layer, index) => {
-    core.summary.addCodeBlock(`LAYER ${index} - ${layer.command.replace(/\$/g, "&#36;").replace(/\&/g, '&amp;')}`);
+  const orderedLayers = Object.values(data.result.layers).sort((a, b) => a.index - b.index);
+
+  orderedLayers.forEach(layer => {
+    core.summary.addCodeBlock(`LAYER ${layer.index} - ${layer.command.replace(/\$/g, "&#36;").replace(/\&/g, '&amp;')}`);
     if (!layer.digest) {
       return;
     }
 
-    let packagesWithVulns = (packagesPerLayer[layer.digest] ?? []).filter(pkg => pkg.vulnerabilitiesRefs);
+    let packagesWithVulns = (packagesPerLayer[layer.digest] ?? []).filter(pkg => pkg.vulnerabilitiesRefs && pkg.vulnerabilitiesRefs.length > 0);
     if (packagesWithVulns.length === 0) {
       return;
     }
@@ -149,24 +147,24 @@ function addVulnsByLayerTableToSummary(data: Report, minSeverity?: Severity) {
         ...visibleSeverities.map(s => ({ data: SEVERITY_LABELS[s], header: true })),
         { data: 'Exploit', header: true },
       ],
-      ...orderedPackagesBySeverity.map(layerPackage => {
+      ...orderedPackagesBySeverity.map(pkg => {
         return [
-          { data: layerPackage.name },
-          { data: layerPackage.type },
-          { data: layerPackage.version },
-          { data: layerPackage.suggestedFix || "" },
+          { data: pkg.name },
+          { data: pkg.type },
+          { data: pkg.version },
+          { data: pkg.suggestedFix || "" },
           ...visibleSeverities.map(s =>
             `${
-              layerPackage.vulnerabilitiesRefs.filter(vulnRef => {
+              pkg.vulnerabilitiesRefs.filter(vulnRef => {
                 const vuln = data.result.vulnerabilities[vulnRef];
                 return vuln.severity.toLowerCase() === s;
               }).length ?? 0
             }`
           ),
-          `${layerPackage.vulnerabilitiesRefs.filter(vulnRef => {
+          `${pkg.vulnerabilitiesRefs.filter(vulnRef => {
               const vuln = data.result.vulnerabilities[vulnRef];
-              return vuln.exploitable}
-          ).length ?? 0}`,
+              return vuln.exploitable;
+          }).length ?? 0}`,
         ];
       })
     ]);
@@ -225,6 +223,7 @@ function getRulePkgMessage(rule: Rule, packages: { [key:string]: Package}, vulns
   let table: { data: string, header?: boolean }[][] = [[
     { data: 'Severity', header: true },
     { data: 'Package', header: true },
+    { data: 'CVE ID', header: true },
     { data: 'CVSS Score', header: true },
     { data: 'CVSS Version', header: true },
     { data: 'CVSS Vector', header: true },
@@ -242,6 +241,7 @@ function getRulePkgMessage(rule: Rule, packages: { [key:string]: Package}, vulns
       table.push([
         { data: `${vuln.severity}` },
         { data: `${pkg.name}` },
+        { data: `${vuln.name}` },
         { data: `${vuln.cvssScore.score}` },
         { data: `${vuln.cvssScore.version}` },
         { data: `${vuln.cvssScore.vector}` },
