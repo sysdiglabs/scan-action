@@ -3,7 +3,7 @@ import process from 'process';
 import tmp from 'tmp';
 import * as index from "..";
 import * as core from "@actions/core";
-import * as report_test from "./fixtures/report-test.json";
+import * as report_test from "./fixtures/report-test-v1.json";
 
 import { exec } from "@actions/exec";
 import { ActionInputs } from '../src/action';
@@ -396,7 +396,6 @@ describe("run the full action", () => {
     });
 
     mockExec.mockImplementationOnce((cmdline, args, options) => {
-      options?.listeners?.stdout?.(Buffer.from(exampleReport));
       return Promise.resolve(0);
     });
 
@@ -407,6 +406,8 @@ describe("run the full action", () => {
 
   it("fails if scanner has wrong parameters and stopOnProcessingError is true", async () => {
     process.env['INPUT_STOP-ON-PROCESSING-ERROR'] = "true";
+
+    setupExecMocks();
 
     mockExec.mockImplementationOnce((cmdline, args, options) => {
       return Promise.resolve(2);
@@ -423,7 +424,6 @@ describe("run the full action", () => {
     setupExecMocks();
 
     mockExec.mockImplementationOnce((cmdline, args, options) => {
-      options?.listeners?.stdout?.(Buffer.from(exampleReport));
       return Promise.resolve(123);
     });
 
@@ -460,7 +460,7 @@ describe("run the full action", () => {
 
     await index.run();
     expect(mockExec).toHaveBeenCalledTimes(4);
-    expect(mockExec.mock.calls[2][0]).toMatch(`${index.cliScannerName}  --apiurl https://secure.sysdig.com/ --override-pullstring=my-custom-image:latest --json-scan-result=scan-result.json image:tag`);
+    expect(mockExec.mock.calls[2][0]).toMatch(`${index.cliScannerName}  --apiurl https://secure.sysdig.com/ --override-pullstring=my-custom-image:latest --output=json-file=scan-result.json image:tag`);
   });
 });
 
