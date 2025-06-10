@@ -1,5 +1,5 @@
 import * as core from "@actions/core";
-import { FilterOptions, filterPackages, Package, Vulnerability, Severity, isSeverityGte, Report, Rule, Layer } from "./report";
+import { FilterOptions, filterPackages, Package, Vulnerability, Severity, isSeverityGte, Report, Rule, Layer, SeverityNames } from "./report";
 import { ActionInputs } from "./action";
 
 const EVALUATION: any = {
@@ -131,33 +131,26 @@ function addVulnsByLayerTableToSummary(data: Report, minSeverity?: Severity) {
     }
 
     let orderedPackagesBySeverity = packagesWithVulns.sort((a, b) => {
-      const getSeverityCount = (pkg: Package, severity: string) =>
-        pkg.vulnerabilitiesRefs?.filter((vulnRef: string) => {
-          const vul = data.result.vulnerabilities[vulnRef];
-          return vul.severity === severity;
-        }).length || 0;
+      const getSeverityVector = (pkg: Package) =>
+        SeverityNames.map(severity =>
+          pkg.vulnerabilitiesRefs?.filter(ref => {
+            const vul = data.result.vulnerabilities[ref];
+            return vul.severity.toLowerCase() === severity;
+          }).length ?? 0
+        );
 
-      const severities = ['Critical', 'High', 'Medium', 'Low', 'Negligible'];
-      for (const severity of severities) {
-        const countA = getSeverityCount(a, severity);
-        const countB = getSeverityCount(b, severity);
-        if (countA !== countB) {
-          return countB - countA;
+      const aVector = getSeverityVector(a);
+      const bVector = getSeverityVector(b);
+
+      for (let i = 0; i < SeverityNames.length; i++) {
+        if (aVector[i] !== bVector[i]) {
+          return bVector[i] - aVector[i];
         }
       }
       return 0;
     });
 
-    core.summary.addTable([
-      [
-        { data: 'Package', header: true },
-        { data: 'Type', header: true },
-        { data: 'Version', header: true },
-        { data: 'Suggested fix', header: true },
-        ...visibleSeverities.map(s => ({ data: SEVERITY_LABELS[s], header: true })),
-        { data: 'Exploit', header: true },
-      ],
-      ...orderedPackagesBySeverity.map(pkg => {
+    let tableData = orderedPackagesBySeverity.map(pkg => {
         return [
           { data: pkg.name },
           { data: pkg.type },
@@ -176,7 +169,18 @@ function addVulnsByLayerTableToSummary(data: Report, minSeverity?: Severity) {
               return vuln.exploitable;
           }).length ?? 0}`,
         ];
-      })
+      });
+
+    core.summary.addTable([
+      [
+        { data: 'Package', header: true },
+        { data: 'Type', header: true },
+        { data: 'Version', header: true },
+        { data: 'Suggested fix', header: true },
+        ...visibleSeverities.map(s => ({ data: SEVERITY_LABELS[s], header: true })),
+        { data: 'Exploit', header: true },
+      ],
+      ...tableData
     ]);
   });
 }

@@ -1180,22 +1180,41 @@ function addVulnsByLayerTableToSummary(data, minSeverity) {
             return;
         }
         let orderedPackagesBySeverity = packagesWithVulns.sort((a, b) => {
-            const getSeverityCount = (pkg, severity) => {
-                var _a;
-                return ((_a = pkg.vulnerabilitiesRefs) === null || _a === void 0 ? void 0 : _a.filter((vulnRef) => {
-                    const vul = data.result.vulnerabilities[vulnRef];
-                    return vul.severity === severity;
-                }).length) || 0;
-            };
-            const severities = ['Critical', 'High', 'Medium', 'Low', 'Negligible'];
-            for (const severity of severities) {
-                const countA = getSeverityCount(a, severity);
-                const countB = getSeverityCount(b, severity);
-                if (countA !== countB) {
-                    return countB - countA;
+            const getSeverityVector = (pkg) => report_1.SeverityNames.map(severity => {
+                var _a, _b;
+                return (_b = (_a = pkg.vulnerabilitiesRefs) === null || _a === void 0 ? void 0 : _a.filter(ref => {
+                    const vul = data.result.vulnerabilities[ref];
+                    return vul.severity.toLowerCase() === severity;
+                }).length) !== null && _b !== void 0 ? _b : 0;
+            });
+            const aVector = getSeverityVector(a);
+            const bVector = getSeverityVector(b);
+            for (let i = 0; i < report_1.SeverityNames.length; i++) {
+                if (aVector[i] !== bVector[i]) {
+                    return bVector[i] - aVector[i];
                 }
             }
             return 0;
+        });
+        let tableData = orderedPackagesBySeverity.map(pkg => {
+            var _a;
+            return [
+                { data: pkg.name },
+                { data: pkg.type },
+                { data: pkg.version },
+                { data: pkg.suggestedFix || "" },
+                ...visibleSeverities.map(s => {
+                    var _a;
+                    return `${(_a = pkg.vulnerabilitiesRefs.filter(vulnRef => {
+                        const vuln = data.result.vulnerabilities[vulnRef];
+                        return vuln.severity.toLowerCase() === s;
+                    }).length) !== null && _a !== void 0 ? _a : 0}`;
+                }),
+                `${(_a = pkg.vulnerabilitiesRefs.filter(vulnRef => {
+                    const vuln = data.result.vulnerabilities[vulnRef];
+                    return vuln.exploitable;
+                }).length) !== null && _a !== void 0 ? _a : 0}`,
+            ];
         });
         core.summary.addTable([
             [
@@ -1206,26 +1225,7 @@ function addVulnsByLayerTableToSummary(data, minSeverity) {
                 ...visibleSeverities.map(s => ({ data: SEVERITY_LABELS[s], header: true })),
                 { data: 'Exploit', header: true },
             ],
-            ...orderedPackagesBySeverity.map(pkg => {
-                var _a;
-                return [
-                    { data: pkg.name },
-                    { data: pkg.type },
-                    { data: pkg.version },
-                    { data: pkg.suggestedFix || "" },
-                    ...visibleSeverities.map(s => {
-                        var _a;
-                        return `${(_a = pkg.vulnerabilitiesRefs.filter(vulnRef => {
-                            const vuln = data.result.vulnerabilities[vulnRef];
-                            return vuln.severity.toLowerCase() === s;
-                        }).length) !== null && _a !== void 0 ? _a : 0}`;
-                    }),
-                    `${(_a = pkg.vulnerabilitiesRefs.filter(vulnRef => {
-                        const vuln = data.result.vulnerabilities[vulnRef];
-                        return vuln.exploitable;
-                    }).length) !== null && _a !== void 0 ? _a : 0}`,
-                ];
-            })
+            ...tableData
         ]);
     });
 }
