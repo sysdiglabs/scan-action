@@ -1,5 +1,5 @@
 import * as core from "@actions/core";
-import { FilterOptions, filterPackages, Package, Vulnerability, Severity, isSeverityGte, Report, Rule } from "./report";
+import { FilterOptions, filterPackages, Package, Vulnerability, Severity, isSeverityGte, Report, Rule, Layer } from "./report";
 import { ActionInputs } from "./action";
 
 const EVALUATION: any = {
@@ -92,6 +92,16 @@ function addVulnTableToSummary(
   ]);
 }
 
+function findLayerByDigestOrRef(data: Report, refOrDigest: string): (Layer | undefined) {
+    const layer = refOrDigest ? data.result.layers[refOrDigest] : undefined;
+    if (layer) return layer;
+
+    return Object.values(data.result.layers).find(layer => {
+      return layer.digest && layer.digest === refOrDigest;
+    });
+
+}
+
 function addVulnsByLayerTableToSummary(data: Report, minSeverity?: Severity) {
   const visibleSeverities = SEVERITY_ORDER.filter(sev =>
     !minSeverity || isSeverityGte(sev, minSeverity)
@@ -101,7 +111,7 @@ function addVulnsByLayerTableToSummary(data: Report, minSeverity?: Severity) {
 
   let packagesPerLayer: { [digest: string]: Package[] } = {};
   Object.values(data.result.packages).forEach(pkg => {
-    const layer = pkg.layerRef ? data.result.layers[pkg.layerRef] : undefined;
+    const layer = findLayerByDigestOrRef(data, pkg.layerRef);
     if (layer && layer.digest) {
       packagesPerLayer[layer.digest] = (packagesPerLayer[layer.digest] ?? []).concat(pkg);
     }

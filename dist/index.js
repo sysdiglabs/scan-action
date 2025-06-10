@@ -1149,13 +1149,21 @@ function addVulnTableToSummary(data, minSeverity) {
         ],
     ]);
 }
+function findLayerByDigestOrRef(data, refOrDigest) {
+    const layer = refOrDigest ? data.result.layers[refOrDigest] : undefined;
+    if (layer)
+        return layer;
+    return Object.values(data.result.layers).find(layer => {
+        return layer.digest && layer.digest === refOrDigest;
+    });
+}
 function addVulnsByLayerTableToSummary(data, minSeverity) {
     const visibleSeverities = SEVERITY_ORDER.filter(sev => !minSeverity || (0, report_1.isSeverityGte)(sev, minSeverity));
     core.summary.addHeading(`Package vulnerabilities per layer`, 2);
     let packagesPerLayer = {};
     Object.values(data.result.packages).forEach(pkg => {
         var _a;
-        const layer = pkg.layerRef ? data.result.layers[pkg.layerRef] : undefined;
+        const layer = findLayerByDigestOrRef(data, pkg.layerRef);
         if (layer && layer.digest) {
             packagesPerLayer[layer.digest] = ((_a = packagesPerLayer[layer.digest]) !== null && _a !== void 0 ? _a : []).concat(pkg);
         }
