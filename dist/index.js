@@ -367,7 +367,7 @@ class ActionInputs {
             flags += ` ${this.params.iacScanPath}`;
         }
         if (this.params.mode == scanner_1.ScanMode.vm) {
-            flags += ` --json-scan-result=${scanner_1.cliScannerResult}`;
+            flags += ` --output=json-file=${scanner_1.cliScannerResult}`;
             flags += ` ${this.params.imageTag}`;
         }
         return {
@@ -434,11 +434,9 @@ const severityOrder = ["negligible", "low", "medium", "high", "critical"];
 function isSeverityGte(a, b) {
     return severityOrder.indexOf(a.toLocaleLowerCase()) >= severityOrder.indexOf(b.toLocaleLowerCase());
 }
-function filterPackages(pkgs, filters) {
-    if (!Array.isArray(pkgs))
-        return [];
-    return pkgs
-        .filter(pkg => {
+function filterPackages(pkgs, vulns, filters) {
+    const filteredPackages = Object.entries(pkgs)
+        .filter(([key, pkg]) => {
         var _a;
         const pkgType = (_a = pkg.type) === null || _a === void 0 ? void 0 : _a.toLowerCase();
         if (filters.packageTypes && filters.packageTypes.length > 0 &&
@@ -448,19 +446,23 @@ function filterPackages(pkgs, filters) {
             filters.notPackageTypes.map(t => t.toLowerCase()).includes(pkgType))
             return false;
         return true;
-    })
-        .map(pkg => {
+    });
+    return Object.fromEntries(filteredPackages
+        .map(([key, pkg]) => {
         var _a;
-        let vulns = ((_a = pkg.vulns) === null || _a === void 0 ? void 0 : _a.filter(vuln => {
-            if (filters.minSeverity && !isSeverityGte(vuln.severity.value, filters.minSeverity))
+        let vulnRefs = (_a = pkg.vulnerabilitiesRefs) === null || _a === void 0 ? void 0 : _a.filter((vulnRef) => {
+            const vuln = vulns[vulnRef];
+            if (filters.minSeverity && vuln && !isSeverityGte(vuln.severity, filters.minSeverity)) {
                 return false;
-            if (filters.excludeAccepted && Array.isArray(vuln.acceptedRisks) && vuln.acceptedRisks.length > 0)
+            }
+            if (filters.excludeAccepted && vuln && Array.isArray(vuln.riskAcceptRefs) && vuln.riskAcceptRefs.length > 0)
                 return false;
             return true;
-        })) || [];
-        return Object.assign(Object.assign({}, pkg), { vulns });
+        });
+        const filteredPackage = Object.assign(Object.assign({}, pkg), { vulnerabilitiesRefs: vulnRefs });
+        return [key, filteredPackage];
     })
-        .filter(pkg => pkg.vulns && pkg.vulns.length > 0);
+        .filter(([key, pkg]) => pkg.vulnerabilitiesRefs && pkg.vulnerabilitiesRefs.length > 0));
 }
 
 
@@ -522,7 +524,7 @@ function generateSARIFReport(data, groupByPackage, filters) {
     fs_1.default.writeFileSync("./sarif.json", JSON.stringify(sarifOutput, null, 2));
 }
 function vulnerabilities2SARIF(data, groupByPackage, filters) {
-    const filteredPackages = (0, report_1.filterPackages)(data.result.packages, filters !== null && filters !== void 0 ? filters : {});
+    const filteredPackages = (0, report_1.filterPackages)(data.result.packages, data.result.vulnerabilities, filters !== null && filters !== void 0 ? filters : {});
     const filteredData = Object.assign(Object.assign({}, data), { result: Object.assign(Object.assign({}, data.result), { packages: filteredPackages }) });
     let rules = [];
     let results = [];
@@ -561,13 +563,13 @@ function vulnerabilities2SARIF(data, groupByPackage, filters) {
                 baseOs: data.result.metadata.baseOs,
                 os: data.result.metadata.os,
                 size: data.result.metadata.size,
-                layersCount: data.result.metadata.layersCount,
+                layersCount: Object.values(data.result.layers).length,
                 resultUrl: data.info.resultUrl || "",
                 resultId: data.info.resultId || "",
             }
         }];
     const sarifOutput = {
-        "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+        "$schema": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/errata01/os/schemas/sarif-schema-2.1.0.json",
         version: "2.1.0",
         runs: runs
     };
@@ -588,24 +590,22 @@ function vulnerabilities2SARIFResByPackage(data) {
             resultUrl = data.info.resultUrl;
             baseUrl = resultUrl.slice(0, resultUrl.lastIndexOf('/'));
         }
-        data.result.packages.forEach(pkg => {
-            if (!pkg.vulns) {
-                return;
-            }
+        Object.values(data.result.packages).forEach(pkg => {
             let helpUri = "";
             let fullDescription = "";
             let severityLevel = "";
             let minSeverityNum = 5;
             let score = 0.0;
-            pkg.vulns.forEach(vuln => {
+            pkg.vulnerabilitiesRefs.forEach(vulnRef => {
+                const vuln = data.result.vulnerabilities[vulnRef];
                 fullDescription += `${getSARIFVulnFullDescription(pkg, vuln)}\n\n\n`;
-                const sevNum = numericPriorityForSeverity(vuln.severity.value);
+                const sevNum = numericPriorityForSeverity(vuln.severity);
                 if (sevNum < minSeverityNum) {
-                    severityLevel = vuln.severity.value.toLowerCase();
+                    severityLevel = vuln.severity.toLowerCase();
                     minSeverityNum = sevNum;
                 }
-                if (vuln.cvssScore.value.score > score) {
-                    score = vuln.cvssScore.value.score;
+                if (vuln.cvssScore.score > score) {
+                    score = vuln.cvssScore.score;
                 }
             });
             if (baseUrl)
@@ -620,7 +620,7 @@ function vulnerabilities2SARIFResByPackage(data) {
                     text: fullDescription
                 },
                 helpUri: helpUri,
-                help: getSARIFPkgHelp(pkg),
+                help: getSARIFPkgHelp(pkg, data.result.vulnerabilities),
                 properties: {
                     precision: "very-high",
                     'security-severity': `${score}`,
@@ -672,11 +672,9 @@ function vulnerabilities2SARIFRes(data) {
             resultUrl = data.info.resultUrl;
             baseUrl = resultUrl.slice(0, resultUrl.lastIndexOf('/'));
         }
-        data.result.packages.forEach(pkg => {
-            if (!pkg.vulns) {
-                return;
-            }
-            pkg.vulns.forEach(vuln => {
+        Object.values(data.result.packages).forEach(pkg => {
+            pkg.vulnerabilitiesRefs.forEach(vulnRef => {
+                const vuln = data.result.vulnerabilities[vulnRef];
                 if (!(vuln.name in ruleIds)) {
                     ruleIds.push(vuln.name);
                     let rule = {
@@ -692,11 +690,11 @@ function vulnerabilities2SARIFRes(data) {
                         help: getSARIFVulnHelp(pkg, vuln),
                         properties: {
                             precision: "very-high",
-                            'security-severity': `${vuln.cvssScore.value.score}`,
+                            'security-severity': `${vuln.cvssScore.score}`,
                             tags: [
                                 'vulnerability',
                                 'security',
-                                vuln.severity.value
+                                vuln.severity
                             ]
                         }
                     };
@@ -704,7 +702,7 @@ function vulnerabilities2SARIFRes(data) {
                 }
                 let result = {
                     ruleId: vuln.name,
-                    level: check_level(vuln.severity.value),
+                    level: check_level(vuln.severity),
                     message: {
                         text: getSARIFReportMessage(data, vuln, pkg, baseUrl)
                     },
@@ -729,26 +727,26 @@ function vulnerabilities2SARIFRes(data) {
     return [rules, results];
 }
 function getSARIFVulnShortDescription(pkg, vuln) {
-    return `${vuln.name} Severity: ${vuln.severity.value} Package: ${pkg.name}`;
+    return `${vuln.name} Severity: ${vuln.severity} Package: ${pkg.name}`;
 }
 function getSARIFVulnFullDescription(pkg, vuln) {
     return `${vuln.name}
-Severity: ${vuln.severity.value}
+Severity: ${vuln.severity}
 Package: ${pkg.name}
 Type: ${pkg.type}
 Fix: ${pkg.suggestedFix || "No fix available"}
 URL: https://nvd.nist.gov/vuln/detail/${vuln.name}`;
 }
-function getSARIFPkgHelp(pkg) {
-    var _a, _b;
+function getSARIFPkgHelp(pkg, vulns) {
     let text = "";
-    (_a = pkg.vulns) === null || _a === void 0 ? void 0 : _a.forEach(vuln => {
+    pkg.vulnerabilitiesRefs.forEach(vulnRef => {
+        const vuln = vulns[vulnRef];
         text += `Vulnerability ${vuln.name}
-  Severity: ${vuln.severity.value}
+  Severity: ${vuln.severity}
   Package: ${pkg.name}
-  CVSS Score: ${vuln.cvssScore.value.score}
-  CVSS Version: ${vuln.cvssScore.value.version}
-  CVSS Vector: ${vuln.cvssScore.value.vector}
+  CVSS Score: ${vuln.cvssScore.score}
+  CVSS Version: ${vuln.cvssScore.version}
+  CVSS Vector: ${vuln.cvssScore.vector}
   Version: ${pkg.version}
   Fix Version: ${pkg.suggestedFix || "No fix available"}
   Exploitable: ${vuln.exploitable}
@@ -758,7 +756,10 @@ function getSARIFPkgHelp(pkg) {
     });
     let markdown = `| Vulnerability | Severity | CVSS Score | CVSS Version | CVSS Vector | Exploitable |
   | -------- | ------- | ---------- | ------------ | -----------  | ----------- |\n`;
-    (_b = pkg.vulns) === null || _b === void 0 ? void 0 : _b.forEach(vuln => { markdown += `| ${vuln.name} | ${vuln.severity.value} | ${vuln.cvssScore.value.score} | ${vuln.cvssScore.value.version} | ${vuln.cvssScore.value.vector} | ${vuln.exploitable} |\n`; });
+    pkg.vulnerabilitiesRefs.forEach(vulnRef => {
+        const vuln = vulns[vulnRef];
+        markdown += `| ${vuln.name} | ${vuln.severity} | ${vuln.cvssScore.score} | ${vuln.cvssScore.version} | ${vuln.cvssScore.vector} | ${vuln.exploitable} |\n`;
+    });
     return {
         text: text,
         markdown: markdown
@@ -767,11 +768,11 @@ function getSARIFPkgHelp(pkg) {
 function getSARIFVulnHelp(pkg, vuln) {
     return {
         text: `Vulnerability ${vuln.name}
-Severity: ${vuln.severity.value}
+Severity: ${vuln.severity}
 Package: ${pkg.name}
-CVSS Score: ${vuln.cvssScore.value.score}
-CVSS Version: ${vuln.cvssScore.value.version}
-CVSS Vector: ${vuln.cvssScore.value.vector}
+CVSS Score: ${vuln.cvssScore.score}
+CVSS Version: ${vuln.cvssScore.version}
+CVSS Vector: ${vuln.cvssScore.vector}
 Version: ${pkg.version}
 Fix Version: ${pkg.suggestedFix || "No fix available"}
 Exploitable: ${vuln.exploitable}
@@ -782,11 +783,10 @@ URL: https://nvd.nist.gov/vuln/detail/${vuln.name}`,
 **Vulnerability [${vuln.name}](https://nvd.nist.gov/vuln/detail/${vuln.name})**
 | Severity | Package | CVSS Score | CVSS Version | CVSS Vector | Fixed Version | Exploitable |
 | -------- | ------- | ---------- | ------------ | ----------- | ------------- | ----------- |
-| ${vuln.severity.value} | ${pkg.name} | ${vuln.cvssScore.value.score} | ${vuln.cvssScore.value.version} | ${vuln.cvssScore.value.vector} | ${pkg.suggestedFix || "None"} | ${vuln.exploitable} |`
+| ${vuln.severity} | ${pkg.name} | ${vuln.cvssScore.score} | ${vuln.cvssScore.version} | ${vuln.cvssScore.vector} | ${pkg.suggestedFix || "None"} | ${vuln.exploitable} |`
     };
 }
 function getSARIFReportMessageByPackage(data, pkg, baseUrl) {
-    var _a;
     let message = `Full image scan results in Sysdig UI: [${data.result.metadata.pullString} scan result](${data.info.resultUrl})\n`;
     if (baseUrl) {
         message += `Package: [${pkg.name}](${baseUrl}/content?filter=freeText+in+("${pkg.name}"))\n`;
@@ -797,7 +797,8 @@ function getSARIFReportMessageByPackage(data, pkg, baseUrl) {
     message += `Package type: ${pkg.type}
   Installed Version: ${pkg.version}
   Package path: ${pkg.path}\n`;
-    (_a = pkg.vulns) === null || _a === void 0 ? void 0 : _a.forEach(vuln => {
+    pkg.vulnerabilitiesRefs.forEach(vulnRef => {
+        const vuln = data.result.vulnerabilities[vulnRef];
         message += `.\n`;
         if (baseUrl) {
             message += `Vulnerability: [${vuln.name}](${baseUrl}/vulnerabilities?filter=freeText+in+("${vuln.name}"))\n`;
@@ -805,11 +806,11 @@ function getSARIFReportMessageByPackage(data, pkg, baseUrl) {
         else {
             message += `Vulnerability: ${vuln.name}\n`;
         }
-        message += `Severity: ${vuln.severity.value}
-    CVSS Score: ${vuln.cvssScore.value.score}
-    CVSS Version: ${vuln.cvssScore.value.version}
-    CVSS Vector: ${vuln.cvssScore.value.vector}
-    Fixed Version: ${(vuln.fixedInVersion || 'No fix available')}
+        message += `Severity: ${vuln.severity}
+    CVSS Score: ${vuln.cvssScore.score}
+    CVSS Version: ${vuln.cvssScore.version}
+    CVSS Vector: ${vuln.cvssScore.vector}
+    Fixed Version: ${(vuln.fixVersion || 'No fix available')}
     Exploitable: ${vuln.exploitable}
     Link to NVD: [${vuln.name}](https://nvd.nist.gov/vuln/detail/${vuln.name})\n`;
     });
@@ -832,11 +833,11 @@ function getSARIFReportMessage(data, vuln, pkg, baseUrl) {
     else {
         message += `Vulnerability: ${vuln.name}\n`;
     }
-    message += `Severity: ${vuln.severity.value}
-  CVSS Score: ${vuln.cvssScore.value.score}
-  CVSS Version: ${vuln.cvssScore.value.version}
-  CVSS Vector: ${vuln.cvssScore.value.vector}
-  Fixed Version: ${(vuln.fixedInVersion || 'No fix available')}
+    message += `Severity: ${vuln.severity}
+  CVSS Score: ${vuln.cvssScore.score}
+  CVSS Version: ${vuln.cvssScore.version}
+  CVSS Vector: ${vuln.cvssScore.vector}
+  Fixed Version: ${(vuln.fixVersion || 'No fix available')}
   Exploitable: ${vuln.exploitable}
   Link to NVD: [${vuln.name}](https://nvd.nist.gov/vuln/detail/${vuln.name})`;
     return message;
@@ -920,7 +921,7 @@ const exec = __importStar(__nccwpck_require__(1514));
 const os_1 = __importDefault(__nccwpck_require__(2037));
 const process_1 = __importDefault(__nccwpck_require__(7282));
 const performance = (__nccwpck_require__(4074).performance);
-const cliScannerVersion = "1.22.1";
+const cliScannerVersion = "1.22.3";
 const cliScannerOS = getRunOS();
 const cliScannerArch = getRunArch();
 const cliScannerURLBase = "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner";
@@ -1087,7 +1088,7 @@ const EVALUATION = {
 };
 function generateSummary(opts, data, filters) {
     return __awaiter(this, void 0, void 0, function* () {
-        const filteredPkgs = (0, report_1.filterPackages)(data.result.packages, filters || {});
+        const filteredPkgs = (0, report_1.filterPackages)(data.result.packages, data.result.vulnerabilities, filters || {});
         let filteredData = Object.assign(Object.assign({}, data), { result: Object.assign(Object.assign({}, data.result), { packages: filteredPkgs }) });
         core.summary.emptyBuffer().clear();
         core.summary.addHeading(`Scan Results for ${opts.overridePullString || opts.imageTag}`);
@@ -1107,18 +1108,19 @@ const SEVERITY_LABELS = {
     low: "🟡 Low",
     negligible: "⚪ Negligible"
 };
-function countVulnsBySeverity(packages, minSeverity) {
+function countVulnsBySeverity(packages, vulnerabilities, minSeverity) {
     var _a;
     const result = {
         total: { critical: 0, high: 0, medium: 0, low: 0, negligible: 0 },
         fixable: { critical: 0, high: 0, medium: 0, low: 0, negligible: 0 }
     };
-    for (const pkg of packages) {
-        for (const vuln of (_a = pkg.vulns) !== null && _a !== void 0 ? _a : []) {
-            const sev = vuln.severity.value.toLowerCase();
+    for (const pkg of Object.values(packages)) {
+        for (const vulnRef of (_a = pkg.vulnerabilitiesRefs) !== null && _a !== void 0 ? _a : []) {
+            const vuln = vulnerabilities[vulnRef];
+            const sev = vuln.severity.toLowerCase();
             if (!minSeverity || (0, report_1.isSeverityGte)(sev, minSeverity)) {
                 result.total[sev]++;
-                if (vuln.fixedInVersion || pkg.suggestedFix) {
+                if (vuln.fixVersion || pkg.suggestedFix) {
                     result.fixable[sev]++;
                 }
             }
@@ -1128,8 +1130,9 @@ function countVulnsBySeverity(packages, minSeverity) {
 }
 function addVulnTableToSummary(data, minSeverity) {
     const pkgs = data.result.packages;
+    const vulns = data.result.vulnerabilities;
     const visibleSeverities = SEVERITY_ORDER.filter(sev => !minSeverity || (0, report_1.isSeverityGte)(sev, minSeverity));
-    const totalVulns = countVulnsBySeverity(pkgs, minSeverity);
+    const totalVulns = countVulnsBySeverity(pkgs, vulns, minSeverity);
     core.summary.addHeading(`Vulnerabilities summary`, 2);
     core.summary.addTable([
         [
@@ -1146,40 +1149,72 @@ function addVulnTableToSummary(data, minSeverity) {
         ],
     ]);
 }
+function findLayerByDigestOrRef(data, refOrDigest) {
+    const layer = refOrDigest ? data.result.layers[refOrDigest] : undefined;
+    if (layer)
+        return layer;
+    return Object.values(data.result.layers).find(layer => {
+        return layer.digest && layer.digest === refOrDigest;
+    });
+}
 function addVulnsByLayerTableToSummary(data, minSeverity) {
-    if (!Array.isArray(data.result.layers) || data.result.layers.length === 0) {
-        return;
-    }
     const visibleSeverities = SEVERITY_ORDER.filter(sev => !minSeverity || (0, report_1.isSeverityGte)(sev, minSeverity));
     core.summary.addHeading(`Package vulnerabilities per layer`, 2);
     let packagesPerLayer = {};
-    data.result.packages.forEach(layerPackage => {
+    Object.values(data.result.packages).forEach(pkg => {
         var _a;
-        if (layerPackage.layerDigest) {
-            packagesPerLayer[layerPackage.layerDigest] = ((_a = packagesPerLayer[layerPackage.layerDigest]) !== null && _a !== void 0 ? _a : []).concat(layerPackage);
+        const layer = findLayerByDigestOrRef(data, pkg.layerRef);
+        if (layer && layer.digest) {
+            packagesPerLayer[layer.digest] = ((_a = packagesPerLayer[layer.digest]) !== null && _a !== void 0 ? _a : []).concat(pkg);
         }
     });
-    data.result.layers.forEach((layer, index) => {
+    const orderedLayers = Object.values(data.result.layers).sort((a, b) => a.index - b.index);
+    orderedLayers.forEach(layer => {
         var _a;
-        core.summary.addCodeBlock(`LAYER ${index} - ${layer.command.replace(/\$/g, "&#36;").replace(/\&/g, '&amp;')}`);
+        core.summary.addCodeBlock(`LAYER ${layer.index} - ${layer.command.replace(/\$/g, "&#36;").replace(/\&/g, '&amp;')}`);
         if (!layer.digest) {
             return;
         }
-        let packagesWithVulns = ((_a = packagesPerLayer[layer.digest]) !== null && _a !== void 0 ? _a : []).filter(pkg => pkg.vulns);
+        let packagesWithVulns = ((_a = packagesPerLayer[layer.digest]) !== null && _a !== void 0 ? _a : []).filter(pkg => pkg.vulnerabilitiesRefs && pkg.vulnerabilitiesRefs.length > 0);
         if (packagesWithVulns.length === 0) {
             return;
         }
         let orderedPackagesBySeverity = packagesWithVulns.sort((a, b) => {
-            const getSeverityCount = (pkg, severity) => { var _a; return ((_a = pkg.vulns) === null || _a === void 0 ? void 0 : _a.filter((vul) => vul.severity.value === severity).length) || 0; };
-            const severities = ['Critical', 'High', 'Medium', 'Low', 'Negligible'];
-            for (const severity of severities) {
-                const countA = getSeverityCount(a, severity);
-                const countB = getSeverityCount(b, severity);
-                if (countA !== countB) {
-                    return countB - countA;
+            const getSeverityVector = (pkg) => report_1.SeverityNames.map(severity => {
+                var _a, _b;
+                return (_b = (_a = pkg.vulnerabilitiesRefs) === null || _a === void 0 ? void 0 : _a.filter(ref => {
+                    const vul = data.result.vulnerabilities[ref];
+                    return vul.severity.toLowerCase() === severity;
+                }).length) !== null && _b !== void 0 ? _b : 0;
+            });
+            const aVector = getSeverityVector(a);
+            const bVector = getSeverityVector(b);
+            for (let i = 0; i < report_1.SeverityNames.length; i++) {
+                if (aVector[i] !== bVector[i]) {
+                    return bVector[i] - aVector[i];
                 }
             }
             return 0;
+        });
+        let tableData = orderedPackagesBySeverity.map(pkg => {
+            var _a;
+            return [
+                { data: pkg.name },
+                { data: pkg.type },
+                { data: pkg.version },
+                { data: pkg.suggestedFix || "" },
+                ...visibleSeverities.map(s => {
+                    var _a;
+                    return `${(_a = pkg.vulnerabilitiesRefs.filter(vulnRef => {
+                        const vuln = data.result.vulnerabilities[vulnRef];
+                        return vuln.severity.toLowerCase() === s;
+                    }).length) !== null && _a !== void 0 ? _a : 0}`;
+                }),
+                `${(_a = pkg.vulnerabilitiesRefs.filter(vulnRef => {
+                    const vuln = data.result.vulnerabilities[vulnRef];
+                    return vuln.exploitable;
+                }).length) !== null && _a !== void 0 ? _a : 0}`,
+            ];
         });
         core.summary.addTable([
             [
@@ -1190,28 +1225,16 @@ function addVulnsByLayerTableToSummary(data, minSeverity) {
                 ...visibleSeverities.map(s => ({ data: SEVERITY_LABELS[s], header: true })),
                 { data: 'Exploit', header: true },
             ],
-            ...orderedPackagesBySeverity.map(layerPackage => {
-                var _a, _b;
-                return [
-                    { data: layerPackage.name },
-                    { data: layerPackage.type },
-                    { data: layerPackage.version },
-                    { data: layerPackage.suggestedFix || "" },
-                    ...visibleSeverities.map(s => {
-                        var _a, _b;
-                        return `${(_b = (_a = layerPackage.vulns) === null || _a === void 0 ? void 0 : _a.filter(vuln => vuln.severity.value.toLowerCase() === s).length) !== null && _b !== void 0 ? _b : 0}`;
-                    }),
-                    `${(_b = (_a = layerPackage.vulns) === null || _a === void 0 ? void 0 : _a.filter(vuln => vuln.exploitable).length) !== null && _b !== void 0 ? _b : 0}`,
-                ];
-            })
+            ...tableData
         ]);
     });
 }
 function addReportToSummary(data) {
-    let policyEvaluations = data.result.policyEvaluations;
+    let policyEvaluations = data.result.policies.evaluations;
     let packages = data.result.packages;
+    let vulns = data.result.vulnerabilities;
     core.summary.addHeading("Policy evaluation summary", 2);
-    core.summary.addRaw(`Evaluation result: ${data.result.policyEvaluationsResult} ${EVALUATION[data.result.policyEvaluationsResult]}`);
+    core.summary.addRaw(`Evaluation result: ${data.result.policies.globalEvaluation} ${EVALUATION[data.result.policies.globalEvaluation]}`);
     let table = [[
             { data: 'Policy', header: true },
             { data: 'Evaluation', header: true },
@@ -1219,13 +1242,13 @@ function addReportToSummary(data) {
     policyEvaluations.forEach(policy => {
         table.push([
             { data: `${policy.name}` },
-            { data: `${EVALUATION[policy.evaluationResult]}` },
+            { data: `${EVALUATION[policy.evaluation]}` },
         ]);
     });
     core.summary.addTable(table);
     core.summary.addHeading("Policy failures", 2);
     policyEvaluations.forEach(policy => {
-        if (policy.evaluationResult != "passed") {
+        if (policy.evaluation != "passed") {
             core.summary.addHeading(`Policy: ${policy.name}`, 3);
             policy.bundles.forEach(bundle => {
                 core.summary.addHeading(`Rule Bundle: ${bundle.name}`, 4);
@@ -1233,7 +1256,7 @@ function addReportToSummary(data) {
                     core.summary.addHeading(`Rule: ${rule.description}`, 5);
                     if (rule.evaluationResult != "passed") {
                         if (rule.failureType == "pkgVulnFailure") {
-                            getRulePkgMessage(rule, packages);
+                            getRulePkgMessage(rule, packages, vulns);
                         }
                         else {
                             getRuleImageMessage(rule);
@@ -1244,11 +1267,12 @@ function addReportToSummary(data) {
         }
     });
 }
-function getRulePkgMessage(rule, packages) {
+function getRulePkgMessage(rule, packages, vulns) {
     var _a;
     let table = [[
             { data: 'Severity', header: true },
             { data: 'Package', header: true },
+            { data: 'CVE ID', header: true },
             { data: 'CVSS Score', header: true },
             { data: 'CVSS Version', header: true },
             { data: 'CVSS Vector', header: true },
@@ -1256,18 +1280,19 @@ function getRulePkgMessage(rule, packages) {
             { data: 'Exploitable', header: true }
         ]];
     (_a = rule.failures) === null || _a === void 0 ? void 0 : _a.forEach(failure => {
-        var _a, _b, _c;
-        let pkgIndex = (_a = failure.pkgIndex) !== null && _a !== void 0 ? _a : 0;
-        let vulnInPkgIndex = (_b = failure.vulnInPkgIndex) !== null && _b !== void 0 ? _b : 0;
-        let pkg = packages[pkgIndex];
-        let vuln = (_c = pkg.vulns) === null || _c === void 0 ? void 0 : _c.at(vulnInPkgIndex);
+        var _a, _b;
+        let pkgRef = (_a = failure.packageRef) !== null && _a !== void 0 ? _a : 0;
+        let vulnRef = (_b = failure.vulnerabilityRef) !== null && _b !== void 0 ? _b : 0;
+        let pkg = packages[pkgRef];
+        let vuln = vulns[vulnRef];
         if (vuln) {
             table.push([
-                { data: `${vuln.severity.value.toString()}` },
+                { data: `${vuln.severity}` },
                 { data: `${pkg.name}` },
-                { data: `${vuln.cvssScore.value.score}` },
-                { data: `${vuln.cvssScore.value.version}` },
-                { data: `${vuln.cvssScore.value.vector}` },
+                { data: `${vuln.name}` },
+                { data: `${vuln.cvssScore.score}` },
+                { data: `${vuln.cvssScore.version}` },
+                { data: `${vuln.cvssScore.vector}` },
                 { data: `${pkg.suggestedFix || "No fix available"}` },
                 { data: `${vuln.exploitable}` },
             ]);
@@ -28815,7 +28840,7 @@ module.exports = parseParams
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"5.2.0","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint . --ignore-pattern \'build/*\'","build":"tsc","prepare":"npm run build && ncc build build/index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^5.0.0"},"devDependencies":{"@types/jest":"^29.5.12","@types/tmp":"^0.2.6","@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^29.7.0","tmp":"^0.2.1","ts-jest":"^29.2.3","typescript":"^5.5.4"}}');
+module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"6.0.0","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint . --ignore-pattern \'build/*\'","build":"tsc","prepare":"npm run build && ncc build build/index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^5.0.0"},"devDependencies":{"@types/jest":"^29.5.12","@types/tmp":"^0.2.6","@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^29.7.0","tmp":"^0.2.1","ts-jest":"^29.2.3","typescript":"^5.5.4"}}');
 
 /***/ })
 

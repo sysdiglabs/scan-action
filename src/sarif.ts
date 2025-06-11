@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import fs from 'fs';
-import { Package, Report, FilterOptions, Vuln, filterPackages, SeverityNames } from './report';
+import { Package, Report, FilterOptions, Vulnerability, filterPackages, SeverityNames } from './report';
 
 import { version } from '../package.json';
 const toolVersion = `${version}`;
@@ -58,7 +58,7 @@ export function vulnerabilities2SARIF(
   filters?: FilterOptions
 ) {
 
-  const filteredPackages = filterPackages(data.result.packages, filters ?? {});
+  const filteredPackages = filterPackages(data.result.packages, data.result.vulnerabilities, filters ?? {});
   const filteredData = { ...data, result: { ...data.result, packages: filteredPackages } };
 
   let rules: SARIFRule[] = [];
@@ -99,7 +99,7 @@ export function vulnerabilities2SARIF(
       baseOs: data.result.metadata.baseOs,
       os: data.result.metadata.os,
       size: data.result.metadata.size,
-      layersCount: data.result.metadata.layersCount,
+      layersCount: Object.values(data.result.layers).length,
       resultUrl: data.info.resultUrl || "",
       resultId: data.info.resultId || "",
     }
@@ -107,7 +107,7 @@ export function vulnerabilities2SARIF(
 
 
   const sarifOutput = {
-    "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+    "$schema": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/errata01/os/schemas/sarif-schema-2.1.0.json",
     version: "2.1.0",
     runs: runs
   };
@@ -133,28 +133,25 @@ function vulnerabilities2SARIFResByPackage(data: Report): [SARIFRule[], SARIFRes
       baseUrl = resultUrl.slice(0, resultUrl.lastIndexOf('/'));
     }
 
-    data.result.packages.forEach(pkg => {
-      if (!pkg.vulns) {
-        return
-      }
-
+    Object.values(data.result.packages).forEach(pkg => {
       let helpUri = "";
       let fullDescription = "";
       let severityLevel = "";
       let minSeverityNum = 5;
       let score = 0.0;
-      pkg.vulns.forEach(vuln => {
+      pkg.vulnerabilitiesRefs.forEach(vulnRef => {
+        const vuln = data.result.vulnerabilities[vulnRef];
         fullDescription += `${getSARIFVulnFullDescription(pkg, vuln)}\n\n\n`;
 
-        const sevNum = numericPriorityForSeverity(vuln.severity.value);
+        const sevNum = numericPriorityForSeverity(vuln.severity);
 
         if (sevNum < minSeverityNum) {
-          severityLevel = vuln.severity.value.toLowerCase();
+          severityLevel = vuln.severity.toLowerCase();
           minSeverityNum = sevNum;
         }
 
-        if (vuln.cvssScore.value.score > score) {
-          score = vuln.cvssScore.value.score;
+        if (vuln.cvssScore.score > score) {
+          score = vuln.cvssScore.score;
         }
       });
       if (baseUrl) helpUri = `${baseUrl}/content?filter=freeText+in+("${pkg.name}")`;
@@ -170,7 +167,7 @@ function vulnerabilities2SARIFResByPackage(data: Report): [SARIFRule[], SARIFRes
           text: fullDescription
         },
         helpUri: helpUri,
-        help: getSARIFPkgHelp(pkg),
+        help: getSARIFPkgHelp(pkg, data.result.vulnerabilities),
         properties: {
           precision: "very-high",
           'security-severity': `${score}`,
@@ -228,12 +225,9 @@ function vulnerabilities2SARIFRes(data: Report): [SARIFRule[], SARIFResult[]] {
       baseUrl = resultUrl.slice(0, resultUrl.lastIndexOf('/'));
     }
 
-    data.result.packages.forEach(pkg => {
-      if (!pkg.vulns) {
-        return
-      }
-
-      pkg.vulns.forEach(vuln => {
+    Object.values(data.result.packages).forEach(pkg => {
+      pkg.vulnerabilitiesRefs.forEach(vulnRef => {
+        const vuln = data.result.vulnerabilities[vulnRef];
         if (!(vuln.name in ruleIds)) {
           ruleIds.push(vuln.name)
           let rule = {
@@ -249,11 +243,11 @@ function vulnerabilities2SARIFRes(data: Report): [SARIFRule[], SARIFResult[]] {
             help: getSARIFVulnHelp(pkg, vuln),
             properties: {
               precision: "very-high",
-              'security-severity': `${vuln.cvssScore.value.score}`,
+              'security-severity': `${vuln.cvssScore.score}`,
               tags: [
                 'vulnerability',
                 'security',
-                vuln.severity.value
+                vuln.severity
               ]
             }
           }
@@ -262,7 +256,7 @@ function vulnerabilities2SARIFRes(data: Report): [SARIFRule[], SARIFResult[]] {
 
         let result = {
           ruleId: vuln.name,
-          level: check_level(vuln.severity.value),
+          level: check_level(vuln.severity),
           message: {
             text: getSARIFReportMessage(data, vuln, pkg, baseUrl)
           },
@@ -287,28 +281,29 @@ function vulnerabilities2SARIFRes(data: Report): [SARIFRule[], SARIFResult[]] {
 
   return [rules, results];
 }
-function getSARIFVulnShortDescription(pkg: Package, vuln: Vuln) {
-  return `${vuln.name} Severity: ${vuln.severity.value} Package: ${pkg.name}`;
+function getSARIFVulnShortDescription(pkg: Package, vuln: Vulnerability) {
+  return `${vuln.name} Severity: ${vuln.severity} Package: ${pkg.name}`;
 }
 
-function getSARIFVulnFullDescription(pkg: Package, vuln: Vuln) {
+function getSARIFVulnFullDescription(pkg: Package, vuln: Vulnerability) {
   return `${vuln.name}
-Severity: ${vuln.severity.value}
+Severity: ${vuln.severity}
 Package: ${pkg.name}
 Type: ${pkg.type}
 Fix: ${pkg.suggestedFix || "No fix available"}
 URL: https://nvd.nist.gov/vuln/detail/${vuln.name}`;
 }
 
-function getSARIFPkgHelp(pkg: Package) {
+function getSARIFPkgHelp(pkg: Package, vulns: { [key: string]: Vulnerability}) {
   let text = "";
-  pkg.vulns?.forEach(vuln => {
+  pkg.vulnerabilitiesRefs.forEach(vulnRef => {
+    const vuln = vulns[vulnRef];
     text += `Vulnerability ${vuln.name}
-  Severity: ${vuln.severity.value}
+  Severity: ${vuln.severity}
   Package: ${pkg.name}
-  CVSS Score: ${vuln.cvssScore.value.score}
-  CVSS Version: ${vuln.cvssScore.value.version}
-  CVSS Vector: ${vuln.cvssScore.value.vector}
+  CVSS Score: ${vuln.cvssScore.score}
+  CVSS Version: ${vuln.cvssScore.version}
+  CVSS Vector: ${vuln.cvssScore.vector}
   Version: ${pkg.version}
   Fix Version: ${pkg.suggestedFix || "No fix available"}
   Exploitable: ${vuln.exploitable}
@@ -320,7 +315,10 @@ function getSARIFPkgHelp(pkg: Package) {
   let markdown = `| Vulnerability | Severity | CVSS Score | CVSS Version | CVSS Vector | Exploitable |
   | -------- | ------- | ---------- | ------------ | -----------  | ----------- |\n`;
 
-  pkg.vulns?.forEach(vuln => { markdown += `| ${vuln.name} | ${vuln.severity.value} | ${vuln.cvssScore.value.score} | ${vuln.cvssScore.value.version} | ${vuln.cvssScore.value.vector} | ${vuln.exploitable} |\n` });
+  pkg.vulnerabilitiesRefs.forEach(vulnRef => {
+    const vuln = vulns[vulnRef];
+    markdown += `| ${vuln.name} | ${vuln.severity} | ${vuln.cvssScore.score} | ${vuln.cvssScore.version} | ${vuln.cvssScore.vector} | ${vuln.exploitable} |\n`
+  });
 
   return {
     text: text,
@@ -328,14 +326,14 @@ function getSARIFPkgHelp(pkg: Package) {
   };
 }
 
-function getSARIFVulnHelp(pkg: Package, vuln: Vuln) {
+function getSARIFVulnHelp(pkg: Package, vuln: Vulnerability) {
   return {
     text: `Vulnerability ${vuln.name}
-Severity: ${vuln.severity.value}
+Severity: ${vuln.severity}
 Package: ${pkg.name}
-CVSS Score: ${vuln.cvssScore.value.score}
-CVSS Version: ${vuln.cvssScore.value.version}
-CVSS Vector: ${vuln.cvssScore.value.vector}
+CVSS Score: ${vuln.cvssScore.score}
+CVSS Version: ${vuln.cvssScore.version}
+CVSS Vector: ${vuln.cvssScore.vector}
 Version: ${pkg.version}
 Fix Version: ${pkg.suggestedFix || "No fix available"}
 Exploitable: ${vuln.exploitable}
@@ -346,7 +344,7 @@ URL: https://nvd.nist.gov/vuln/detail/${vuln.name}`,
 **Vulnerability [${vuln.name}](https://nvd.nist.gov/vuln/detail/${vuln.name})**
 | Severity | Package | CVSS Score | CVSS Version | CVSS Vector | Fixed Version | Exploitable |
 | -------- | ------- | ---------- | ------------ | ----------- | ------------- | ----------- |
-| ${vuln.severity.value} | ${pkg.name} | ${vuln.cvssScore.value.score} | ${vuln.cvssScore.value.version} | ${vuln.cvssScore.value.vector} | ${pkg.suggestedFix || "None"} | ${vuln.exploitable} |`
+| ${vuln.severity} | ${pkg.name} | ${vuln.cvssScore.score} | ${vuln.cvssScore.version} | ${vuln.cvssScore.vector} | ${pkg.suggestedFix || "None"} | ${vuln.exploitable} |`
   }
 }
 function getSARIFReportMessageByPackage(data: Report, pkg: Package, baseUrl?: string) {
@@ -362,7 +360,8 @@ function getSARIFReportMessageByPackage(data: Report, pkg: Package, baseUrl?: st
   Installed Version: ${pkg.version}
   Package path: ${pkg.path}\n`;
 
-  pkg.vulns?.forEach(vuln => {
+  pkg.vulnerabilitiesRefs.forEach(vulnRef => {
+    const vuln = data.result.vulnerabilities[vulnRef];
     message += `.\n`;
 
     if (baseUrl) {
@@ -371,11 +370,11 @@ function getSARIFReportMessageByPackage(data: Report, pkg: Package, baseUrl?: st
       message += `Vulnerability: ${vuln.name}\n`;
     }
 
-    message += `Severity: ${vuln.severity.value}
-    CVSS Score: ${vuln.cvssScore.value.score}
-    CVSS Version: ${vuln.cvssScore.value.version}
-    CVSS Vector: ${vuln.cvssScore.value.vector}
-    Fixed Version: ${(vuln.fixedInVersion || 'No fix available')}
+    message += `Severity: ${vuln.severity}
+    CVSS Score: ${vuln.cvssScore.score}
+    CVSS Version: ${vuln.cvssScore.version}
+    CVSS Vector: ${vuln.cvssScore.vector}
+    Fixed Version: ${(vuln.fixVersion || 'No fix available')}
     Exploitable: ${vuln.exploitable}
     Link to NVD: [${vuln.name}](https://nvd.nist.gov/vuln/detail/${vuln.name})\n`;
   });
@@ -384,7 +383,7 @@ function getSARIFReportMessageByPackage(data: Report, pkg: Package, baseUrl?: st
   return message;
 }
 
-function getSARIFReportMessage(data: Report, vuln: Vuln, pkg: Package, baseUrl: string | undefined) {
+function getSARIFReportMessage(data: Report, vuln: Vulnerability, pkg: Package, baseUrl: string | undefined) {
   let message = `Full image scan results in Sysdig UI: [${data.result.metadata.pullString} scan result](${data.info.resultUrl})\n`;
 
   if (baseUrl) {
@@ -402,11 +401,11 @@ function getSARIFReportMessage(data: Report, vuln: Vuln, pkg: Package, baseUrl: 
   } else {
     message += `Vulnerability: ${vuln.name}\n`;
   }
-  message += `Severity: ${vuln.severity.value}
-  CVSS Score: ${vuln.cvssScore.value.score}
-  CVSS Version: ${vuln.cvssScore.value.version}
-  CVSS Vector: ${vuln.cvssScore.value.vector}
-  Fixed Version: ${(vuln.fixedInVersion || 'No fix available')}
+  message += `Severity: ${vuln.severity}
+  CVSS Score: ${vuln.cvssScore.score}
+  CVSS Version: ${vuln.cvssScore.version}
+  CVSS Vector: ${vuln.cvssScore.vector}
+  Fixed Version: ${(vuln.fixVersion || 'No fix available')}
   Exploitable: ${vuln.exploitable}
   Link to NVD: [${vuln.name}](https://nvd.nist.gov/vuln/detail/${vuln.name})`;
 

@@ -1,6 +1,6 @@
 import { vulnerabilities2SARIF } from "../src/sarif"
 import { Report } from "../src/report";
-const fixtureReport: Report = require("../tests/fixtures/report-test.json"); // require is needed here, otherwise the import statement adds a .default attribute to the json
+const fixtureReport: Report = require("../tests/fixtures/report-test-v1.json"); // require is needed here, otherwise the import statement adds a .default attribute to the json
 const fixtureSarif = require("../tests/fixtures/sarif-test.json"); // require is needed here, otherwise the import statement adds a .default attribute to the json
 
 describe("input parsing", () => {
@@ -22,7 +22,7 @@ describe("input parsing", () => {
       const sarifGenerated = vulnerabilities2SARIF(someReportWithoutVulns, groupByPackage)
 
       expect(sarifGenerated).toEqual({
-        "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+        "$schema": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/errata01/os/schemas/sarif-schema-2.1.0.json",
         version: "2.1.0",
         runs: [{
           tool: {
@@ -30,9 +30,9 @@ describe("input parsing", () => {
               name: "sysdig-cli-scanner",
               fullName: "Sysdig Vulnerability CLI Scanner",
               informationUri: "https://docs.sysdig.com/en/docs/installation/sysdig-secure/install-vulnerability-cli-scanner",
-              version: "5.2.0",
-              semanticVersion: "5.2.0",
-              dottedQuadFileVersion: "5.2.0.0",
+              version: "6.0.0",
+              semanticVersion: "6.0.0",
+              dottedQuadFileVersion: "6.0.0.0",
               rules: []
             }
           },
@@ -50,11 +50,11 @@ describe("input parsing", () => {
             baseOs: "alpine 3.18.0",
             digest: "sha256:345ba1354949b1c66802fef1d048e89399d6f0116d4eea31d81c789b69b30b29",
             imageId: "sha256:2208f3cc77d0c6bc66fd8ff18e25628df8e9d759e7aa82fe9c7c84f254ff0237",
-            layersCount: 12,
+            layersCount: 45,
             os: "linux",
             pullString: "jenkins/jenkins:2.401.1-alpine",
-            resultId: "17e69f1c42f0d322164d17ab30e34730",
-            resultUrl: "https://secure.sysdig.com/#/vulnerabilities/results/17e69f1c42f0d322164d17ab30e34730/overview",
+            resultId: "184768dcba2c920060cded4596d76970",
+            resultUrl: "https://us2.app.sysdig.com/secure/#/vulnerabilities/results/184768dcba2c920060cded4596d76970/overview",
             size: 259845632,
           }
         }]
@@ -68,10 +68,10 @@ const removeVulnsFromReport = (report: Report): Report => {
     ...report,
     result: {
       ...report.result,
-      packages: report.result.packages.map(pkg => ({
+      packages: Object.fromEntries(Object.entries(report.result.packages).map(([key, pkg]) => ([key, {
         ...pkg,
-        vulns: [],
-      }))
+        vulnerabilitiesRefs: [],
+      }])))
     }
   };
 };
@@ -81,11 +81,11 @@ describe("SARIF filtering", () => {
   it("respects minSeverity", () => {
     const sarif = vulnerabilities2SARIF(fixtureReport, false, { minSeverity: "critical" });
 
-    expect(JSON.stringify(sarif)).toContain("Critical");
+    expect(JSON.stringify(sarif)).toContain("\"critical\"");
     expect(JSON.stringify(sarif)).toContain("CVE-2023-38545");
-    expect(JSON.stringify(sarif)).not.toContain("High");
+    expect(JSON.stringify(sarif)).not.toContain("\"high\"");
     expect(JSON.stringify(sarif)).not.toContain("CVE-2023-38039");
-    expect(JSON.stringify(sarif)).not.toContain("Medium");
+    expect(JSON.stringify(sarif)).not.toContain("\"medium\"");
     expect(JSON.stringify(sarif)).not.toContain("CVE-2023-42364");
   });
 
