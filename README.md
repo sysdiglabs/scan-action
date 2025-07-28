@@ -10,7 +10,7 @@ This action performs analysis on a specific container image and posts the result
 |------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------|
 | `cli-scanner-url`            | URL to `sysdig-cli-scanner` binary download. The action will detect the runner OS and architecture. For more info about the Sysdig CLI Scanner download visit [the official documentation](https://docs.sysdig.com/en/docs/installation/sysdig-secure/install-vulnerability-cli-scanner/).                               |                           |
 | `mode`                       | Mode of operation. Can be "vm" or "iac".                                                                                                                                                                                                                                                                                 | `vm`                      |
-| `cli-scanner-version`        | Custom sysdig-cli-scanner version to download. Minimum required version is 1.18.0. Please note that for VM mode the Action has only been tested with the current default version and it is not guaranteed that it will work as expected with other versions.                                           | `1.22.3`                  |
+| `cli-scanner-version`        | Custom sysdig-cli-scanner version to download. Minimum required version is 1.18.0. Please note that for VM mode the Action has only been tested with the current default version and it is not guaranteed that it will work as expected with other versions.                                                             | `1.22.5`                  |
 | `registry-user`              | Registry username to authenticate to while pulling the image to scan.                                                                                                                                                                                                                                                    |                           |
 | `registry-password`          | Registry password to authenticate to while pulling the image to scan.                                                                                                                                                                                                                                                    |                           |
 | `stop-on-failed-policy-eval` | Fail the job if the Policy Evaluation is Failed.                                                                                                                                                                                                                                                                         |                           |
@@ -128,7 +128,7 @@ The `if: success() || failure()` option makes sure the SARIF report is uploaded 
       uses: sysdiglabs/scan-action@v6
       with:
         sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
-        cli-scanner-version: 1.22.3
+        cli-scanner-version: 1.22.5
         mode: iac
         iac-scan-path: ./terraform
 ```
