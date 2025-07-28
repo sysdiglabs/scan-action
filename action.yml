@@ -6,7 +6,7 @@ inputs:
     required: false
   cli-scanner-version:
     description: Custom sysdig-cli-scanner version to download. Oldest supported version is 1.18.0.
-    default: "1.22.3"
+    default: "1.22.5"
     required: false
   registry-user:
     description: Registry username.
