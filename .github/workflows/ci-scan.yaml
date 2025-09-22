@@ -179,4 +179,3 @@ jobs:
             echo "Scan failed but it should have succeeded."
             exit 1
           fi
-
