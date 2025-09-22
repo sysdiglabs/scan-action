@@ -1,0 +1,29 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+    -   id: trailing-whitespace
+        exclude: ^dist/.*$
+    -   id: end-of-file-fixer
+        exclude: ^dist/.*$
+    -   id: check-yaml
+        exclude: ^dist/.*$
+    -   id: check-added-large-files
+        exclude: ^dist/.*$
+-   repo: local
+    hooks:
+    -   id: lint
+        name: Lint
+        entry: npm run lint
+        language: system
+        pass_filenames: false
+    -   id: build
+        name: Build dist/
+        entry: npm run prepare
+        language: system
+        pass_filenames: false
+    -   id: test
+        name: Execute tests
+        entry: npm run test
+        language: system
+        pass_filenames: false

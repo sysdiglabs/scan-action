@@ -136,5 +136,3 @@ function getRunOS() {
   }
   return os_name;
 }
-
-

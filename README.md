@@ -37,16 +37,16 @@ This action performs analysis on a specific container image and posts the result
 
 ### Filtering Examples
 
-- **severity-at-least:**  
+- **severity-at-least:**
   `medium` → Only Medium, High, and Critical findings will be reported.
 
-- **package-types:**  
+- **package-types:**
   `java,javascript` → Only vulnerabilities in Java or JavaScript packages will be included.
 
-- **not-package-types:**  
+- **not-package-types:**
   `os` → Excludes vulnerabilities found in OS packages.
 
-- **exclude-accepted:**  
+- **exclude-accepted:**
   `true` → Vulnerabilities that are marked as "accepted" (i.e., with risk acceptances) are excluded from the report.
 
 > ℹ️ You can combine these filters to focus the report on just what you care about!
@@ -74,7 +74,7 @@ and then add another step for uploading the SARIF report, providing the path in 
 ```yaml
     ...
       - name: Upload SARIF file
-        if: success() || failure() 
+        if: success() || failure()
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: ${{ github.workspace }}/sarif.json
@@ -100,7 +100,7 @@ The `if: success() || failure()` option makes sure the SARIF report is uploaded 
           sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
 
       - name: Upload SARIF file
-        if: success() || failure() 
+        if: success() || failure()
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: ${{ github.workspace }}/sarif.json

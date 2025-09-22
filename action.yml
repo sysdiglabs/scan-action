@@ -36,12 +36,12 @@ inputs:
   skip-summary:
     description: Skip generating Summary.
     default: "false"
-    required: false 
+    required: false
   use-policies:
     description: Comma-separated list of Sysdig Secure VM Policies to evaluate against the image. Policies with spaces must be enclosed in quotes.
     required: false
   override-pullstring:
-    description: Custom PullString to give the image when scanning and uploading. 
+    description: Custom PullString to give the image when scanning and uploading.
     required: false
   severity-at-least:
     description: Filtering option to only report vulnerabilities with at least the specified severity. Can take [critical|high|medium|low|negligible|any]. Default value "any" for no filtering.
