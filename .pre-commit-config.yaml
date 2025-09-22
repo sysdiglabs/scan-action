@@ -17,3 +17,8 @@ repos:
         entry: npm run prepare
         language: system
         pass_filenames: false
+    -   id: test
+        name: Execute tests
+        entry: npm run test
+        language: system
+        pass_filenames: false
