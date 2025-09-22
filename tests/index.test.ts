@@ -189,7 +189,17 @@ describe("execution flags", () => {
 
   it("uses custom policies flag", () => {
     let flags = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", usePolicies: "abcxyz", }).composeFlags();
-    expect(flags.flags).toMatch(new RegExp(/(^| )--policy[ =]abcxyz($| )/));
+    expect(flags.flags).toMatch(new RegExp(/(^| )--policy=abcxyz($| )/));
+  });
+
+  it("uses custom policies flag with spaces", () => {
+    let flags = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", usePolicies: '"All Posture Findings"', }).composeFlags();
+    expect(flags.flags).toMatch(new RegExp(/(^| )--policy="All Posture Findings"($| )/));
+  });
+
+  it("uses multiple custom policies flag with spaces", () => {
+    let flags = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", usePolicies: '"All Posture Findings", "another policy"', }).composeFlags();
+    expect(flags.flags).toMatch(new RegExp(/(^| )--policy="All Posture Findings" --policy="another policy"($| )/));
   });
 
   it("uses --skip-tls flag", () => {

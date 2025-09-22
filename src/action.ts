@@ -203,7 +203,14 @@ export class ActionInputs {
     }
 
     if (this.params.usePolicies) {
-      flags += ` --policy=${this.params.usePolicies}`;
+      const policies = this.params.usePolicies.split(',').map(p => p.trim());
+      for (const policy of policies) {
+        if (policy.includes(' ')) {
+          flags += ` --policy="${policy.replace(/"/g, '')}"`;
+        } else {
+          flags += ` --policy=${policy}`;
+        }
+      }
     }
 
     if (this.params.sysdigSkipTLS) {
