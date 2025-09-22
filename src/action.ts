@@ -176,7 +176,7 @@ export class ActionInputs {
     let envvars: { [key: string]: string } = {}
     envvars['SECURE_API_TOKEN'] = this.params.sysdigSecureToken || "";
 
-    let flags = ""
+    let flags: string[] = [];
 
     if (this.params.registryUser) {
       envvars['REGISTRY_USER'] = this.params.registryUser;
@@ -187,60 +187,56 @@ export class ActionInputs {
     }
 
     if (this.params.standalone) {
-      flags += " --standalone";
+      flags.push("--standalone");
     }
 
     if (this.params.sysdigSecureURL) {
-      flags += ` --apiurl ${this.params.sysdigSecureURL}`;
+      flags.push('--apiurl', this.params.sysdigSecureURL);
     }
 
     if (this.params.dbPath) {
-      flags += ` --dbpath=${this.params.dbPath}`;
+      flags.push(`--dbpath=${this.params.dbPath}`);
     }
 
     if (this.params.skipUpload) {
-      flags += ' --skipupload';
+      flags.push('--skipupload');
     }
 
     if (this.params.usePolicies) {
       const policies = this.params.usePolicies.split(',').map(p => p.trim());
       for (const policy of policies) {
-        if (policy.includes(' ')) {
-          flags += ` --policy="${policy.replace(/"/g, '')}"`;
-        } else {
-          flags += ` --policy=${policy}`;
-        }
+        flags.push('--policy', policy.replace(/"/g, ''));
       }
     }
 
     if (this.params.sysdigSkipTLS) {
-      flags += ` --skiptlsverify`;
+      flags.push(`--skiptlsverify`);
     }
 
     if (this.params.overridePullString) {
-      flags += ` --override-pullstring=${this.params.overridePullString}`;
+      flags.push(`--override-pullstring=${this.params.overridePullString}`);
     }
 
     if (this.params.extraParameters) {
-      flags += ` ${this.params.extraParameters}`;
+      flags.push(...this.params.extraParameters.split(' '));
     }
 
     if (this.params.mode == ScanMode.iac) {
-      flags += ` --iac`;
+      flags.push(`--iac`);
 
       if (this.params.recursive) {
-        flags += ` -r`;
+        flags.push(`-r`);
       }
       if (this.params.minimumSeverity) {
-        flags += ` -f=${this.params.minimumSeverity}`;
+        flags.push(`-f=${this.params.minimumSeverity}`);
       }
 
-      flags += ` ${this.params.iacScanPath}`;
+      flags.push(this.params.iacScanPath);
     }
 
     if (this.params.mode == ScanMode.vm) {
-      flags += ` --output=json-file=${cliScannerResult}`
-      flags += ` ${this.params.imageTag}`;
+      flags.push(`--output=json-file=${cliScannerResult}`)
+      flags.push(this.params.imageTag);
     }
 
     return {

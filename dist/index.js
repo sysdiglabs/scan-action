@@ -325,7 +325,7 @@ class ActionInputs {
         }
         let envvars = {};
         envvars['SECURE_API_TOKEN'] = this.params.sysdigSecureToken || "";
-        let flags = "";
+        let flags = [];
         if (this.params.registryUser) {
             envvars['REGISTRY_USER'] = this.params.registryUser;
         }
@@ -333,42 +333,45 @@ class ActionInputs {
             envvars['REGISTRY_PASSWORD'] = this.params.registryPassword;
         }
         if (this.params.standalone) {
-            flags += " --standalone";
+            flags.push("--standalone");
         }
         if (this.params.sysdigSecureURL) {
-            flags += ` --apiurl ${this.params.sysdigSecureURL}`;
+            flags.push('--apiurl', this.params.sysdigSecureURL);
         }
         if (this.params.dbPath) {
-            flags += ` --dbpath=${this.params.dbPath}`;
+            flags.push(`--dbpath=${this.params.dbPath}`);
         }
         if (this.params.skipUpload) {
-            flags += ' --skipupload';
+            flags.push('--skipupload');
         }
         if (this.params.usePolicies) {
-            flags += ` --policy=${this.params.usePolicies}`;
+            const policies = this.params.usePolicies.split(',').map(p => p.trim());
+            for (const policy of policies) {
+                flags.push('--policy', policy.replace(/"/g, ''));
+            }
         }
         if (this.params.sysdigSkipTLS) {
-            flags += ` --skiptlsverify`;
+            flags.push(`--skiptlsverify`);
         }
         if (this.params.overridePullString) {
-            flags += ` --override-pullstring=${this.params.overridePullString}`;
+            flags.push(`--override-pullstring=${this.params.overridePullString}`);
         }
         if (this.params.extraParameters) {
-            flags += ` ${this.params.extraParameters}`;
+            flags.push(...this.params.extraParameters.split(' '));
         }
         if (this.params.mode == scanner_1.ScanMode.iac) {
-            flags += ` --iac`;
+            flags.push(`--iac`);
             if (this.params.recursive) {
-                flags += ` -r`;
+                flags.push(`-r`);
             }
             if (this.params.minimumSeverity) {
-                flags += ` -f=${this.params.minimumSeverity}`;
+                flags.push(`-f=${this.params.minimumSeverity}`);
             }
-            flags += ` ${this.params.iacScanPath}`;
+            flags.push(this.params.iacScanPath);
         }
         if (this.params.mode == scanner_1.ScanMode.vm) {
-            flags += ` --output=json-file=${scanner_1.cliScannerResult}`;
-            flags += ` ${this.params.imageTag}`;
+            flags.push(`--output=json-file=${scanner_1.cliScannerResult}`);
+            flags.push(this.params.imageTag);
         }
         return {
             envvars: envvars,
@@ -993,13 +996,12 @@ function executeScan(scanFlags) {
             }
         };
         let start = performance.now();
-        let cmd = `./${exports.cliScannerName} ${flags}`;
-        core.info("Executing: " + cmd);
-        let retCode = yield exec.exec(cmd, undefined, scanOptions);
+        const command = `./${exports.cliScannerName}`;
+        core.info("Executing: " + command + " " + flags.join(' '));
+        let retCode = yield exec.exec(command, flags, scanOptions);
         core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
         if (retCode == 0 || retCode == 1) {
-            cmd = `cat ./${exports.cliScannerResult}`;
-            yield exec.exec(cmd, undefined, catOptions);
+            yield exec.exec(`cat ./${exports.cliScannerResult}`, undefined, catOptions);
         }
         return { ReturnCode: retCode, Output: execOutput, Error: errOutput };
     });

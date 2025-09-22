@@ -152,23 +152,23 @@ describe("execution flags", () => {
   it("uses default flags for VM mode", () => {
     let flags = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", mode: "vm" }).composeFlags();
     expect(flags.envvars.SECURE_API_TOKEN).toMatch("foo-token");
-    expect(flags.flags).toMatch(/(^| )image:tag($| )/);
+    expect(flags.flags).toContain("image:tag");
   });
 
   it("uses default flags for IaC mode", () => {
     let flags = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", mode: "iac", iacScanPath: "/my-special-path" }).composeFlags();
     expect(flags.envvars.SECURE_API_TOKEN).toMatch("foo-token");
-    expect(flags.flags).toMatch(/(^| )--iac \/my-special-path($| )/);
+    expect(flags.flags).toEqual(expect.arrayContaining(['--iac', '/my-special-path']));
   });
 
   it("adds secure URL flag", () => {
     let flags = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", sysdigSecureURL: "https://foo" }).composeFlags();
-    expect(flags.flags).toMatch(/(^| )--apiurl[ =]https:\/\/foo($| )/);
+    expect(flags.flags).toEqual(expect.arrayContaining(['--apiurl', 'https://foo']));
   });
 
   it("uses standalone mode", () => {
     let flags = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", standalone: true }).composeFlags();
-    expect(flags.flags).toMatch(/(^| )--standalone($| )/);
+    expect(flags.flags).toContain("--standalone");
   });
 
   it("uses registry credentials", () => {
@@ -179,37 +179,37 @@ describe("execution flags", () => {
 
   it("uses custom db path", () => {
     let flags = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", dbPath: "/mypath", }).composeFlags();
-    expect(flags.flags).toMatch(new RegExp(/(^| )--dbpath[ =]\/mypath($| )/));
+    expect(flags.flags).toContain("--dbpath=/mypath");
   });
 
   it("uses skip upload flag", () => {
     let flags = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", skipUpload: true, }).composeFlags();
-    expect(flags.flags).toMatch(new RegExp(/(^| )--skipupload($| )/));
+    expect(flags.flags).toContain("--skipupload");
   });
 
   it("uses custom policies flag", () => {
     let flags = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", usePolicies: "abcxyz", }).composeFlags();
-    expect(flags.flags).toMatch(new RegExp(/(^| )--policy=abcxyz($| )/));
+    expect(flags.flags).toEqual(expect.arrayContaining(['--policy', 'abcxyz']));
   });
 
   it("uses custom policies flag with spaces", () => {
     let flags = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", usePolicies: '"All Posture Findings"', }).composeFlags();
-    expect(flags.flags).toMatch(new RegExp(/(^| )--policy="All Posture Findings"($| )/));
+    expect(flags.flags).toEqual(expect.arrayContaining(['--policy', 'All Posture Findings']));
   });
 
   it("uses multiple custom policies flag with spaces", () => {
     let flags = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", usePolicies: '"All Posture Findings", "another policy"', }).composeFlags();
-    expect(flags.flags).toMatch(new RegExp(/(^| )--policy="All Posture Findings" --policy="another policy"($| )/));
+    expect(flags.flags).toEqual(expect.arrayContaining(['--policy', 'All Posture Findings', '--policy', 'another policy']));
   });
 
   it("uses --skip-tls flag", () => {
     let flags = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", sysdigSkipTLS: true, }).composeFlags();
-    expect(flags.flags).toMatch(new RegExp(/(^| )--skiptlsverify($| )/));
+    expect(flags.flags).toContain("--skiptlsverify");
   });
 
   it("uses override pullstring flag", () => {
     let flags = ActionInputs.overridingParsedActionInputs({ sysdigSecureToken: "foo-token", imageTag: "image:tag", overridePullString: "my-image", }).composeFlags();
-    expect(flags.flags).toMatch(new RegExp(/(^| )--override-pullstring[ =]my-image($| )/));
+    expect(flags.flags).toContain("--override-pullstring=my-image");
   });
 });
 
@@ -262,16 +262,17 @@ describe("scanner execution", () => {
       return Promise.resolve(0);
     });
 
-    const result = await index.executeScan({ envvars: { SECURE_API_TOKEN: "token" }, flags: "--run1 --run2 image-to-scan" });
+    const result = await index.executeScan({ envvars: { SECURE_API_TOKEN: "token" }, flags: ["--run1", "--run2", "image-to-scan"] });
 
     expect(mockExec).toHaveBeenCalledTimes(2);
-    expect(mockExec.mock.calls[0][0]).toMatch(`${index.cliScannerName} --run1 --run2 image-to-scan`);
+    expect(mockExec.mock.calls[0][0]).toMatch(`${index.cliScannerName}`);
+    expect(mockExec.mock.calls[0][1]).toEqual(["--run1", "--run2", "image-to-scan"]);
     expect(mockExec.mock.calls[1][0]).toMatch(`cat ./${index.cliScannerResult}`);
   });
 
   it("returns the execution return code", async () => {
     mockExec.mockResolvedValueOnce(123);
-    const result = await index.executeScan({ envvars: { SECURE_API_TOKEN: "token" }, flags: "image-to-scan" });
+    const result = await index.executeScan({ envvars: { SECURE_API_TOKEN: "token" }, flags: ["image-to-scan"] });
     expect(result.ReturnCode).toBe(123);
   });
 
@@ -283,7 +284,7 @@ describe("scanner execution", () => {
       return Promise.resolve(0);
     });
 
-    const result = await index.executeScan({ envvars: { SECURE_API_TOKEN: "token" }, flags: "image-to-scan" });
+    const result = await index.executeScan({ envvars: { SECURE_API_TOKEN: "token" }, flags: ["image-to-scan"] });
     expect(result.Output).toBe("foo-output");
   });
 });
@@ -470,7 +471,7 @@ describe("run the full action", () => {
 
     await index.run();
     expect(mockExec).toHaveBeenCalledTimes(4);
-    expect(mockExec.mock.calls[2][0]).toMatch(`${index.cliScannerName}  --apiurl https://secure.sysdig.com/ --override-pullstring=my-custom-image:latest --output=json-file=scan-result.json image:tag`);
+    expect(mockExec.mock.calls[2][1]).toEqual(expect.arrayContaining(["--override-pullstring=my-custom-image:latest", "image:tag"]));
   });
 });
 

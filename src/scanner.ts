@@ -93,14 +93,13 @@ export async function executeScan(scanFlags: ComposeFlags): Promise<ScanExecutio
   }
 
   let start = performance.now();
-  let cmd = `./${cliScannerName} ${flags}`;
-  core.info("Executing: " + cmd);
-  let retCode = await exec.exec(cmd, undefined, scanOptions);
+  const command = `./${cliScannerName}`;
+  core.info("Executing: " + command + " " + flags.join(' '));
+  let retCode = await exec.exec(command, flags, scanOptions);
   core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
 
   if (retCode == 0 || retCode == 1) {
-    cmd = `cat ./${cliScannerResult}`;
-    await exec.exec(cmd, undefined, catOptions);
+    await exec.exec(`cat ./${cliScannerResult}`, undefined, catOptions);
   }
   return { ReturnCode: retCode, Output: execOutput, Error: errOutput };
 }
@@ -109,7 +108,7 @@ export interface ComposeFlags {
   envvars: {
     [key: string]: string;
   };
-  flags: string;
+  flags: string[];
 }
 
 export function scannerURLForVersion(version: string): string {
