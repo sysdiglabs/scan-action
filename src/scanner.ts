@@ -94,7 +94,8 @@ export async function executeScan(scanFlags: ComposeFlags): Promise<ScanExecutio
 
   let start = performance.now();
   const command = `./${cliScannerName}`;
-  core.info("Executing: " + command + " " + flags.join(' '));
+  const loggableFlags = flags.map(flag => flag.includes(' ') ? `"${flag}"` : flag);
+  core.info("Executing: " + command + " " + loggableFlags.join(' '));
   let retCode = await exec.exec(command, flags, scanOptions);
   core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
 
