@@ -12,6 +12,11 @@ repos:
         exclude: ^dist/.*$
 -   repo: local
     hooks:
+    -   id: lint
+        name: Lint
+        entry: npm run lint
+        language: system
+        pass_filenames: false
     -   id: build
         name: Build dist/
         entry: npm run prepare
