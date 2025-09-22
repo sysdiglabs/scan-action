@@ -153,3 +153,36 @@ jobs:
         with:
           sarif_file: ${{ github.workspace }}/sarif.json
 
+  scan-with-multiple-policies:
+    runs-on: ubuntu-latest
+
+    steps:
+      # This step checks out a copy of your repository.
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Scan dummy-vuln-app from registry with multiple policies
+        id: scan
+        uses: ./
+        continue-on-error: true
+        with:
+          image-tag: sysdiglabs/dummy-vuln-app:latest
+          sysdig-secure-token: ${{ secrets.KUBELAB_SECURE_API_TOKEN }}
+          # Note: This test assumes these policies exist in the target Sysdig Secure account.
+          use-policies: '"All Posture Findings", "MITRE DEFEND"'
+
+      - name: Upload SARIF file
+        if: success() || failure() # Upload results regardless previous step fails
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ github.workspace }}/sarif.json
+
+      - name: Check that the scan has succeeded
+        run: |
+          if [ "${{ steps.scan.outcome }}" == "success" ]; then
+            echo "Scan succeeded as expected."
+          else
+            echo "Scan failed but it should have succeeded."
+            exit 1
+          fi
+
