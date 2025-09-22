@@ -325,7 +325,7 @@ class ActionInputs {
         }
         let envvars = {};
         envvars['SECURE_API_TOKEN'] = this.params.sysdigSecureToken || "";
-        let flags = "";
+        let flags = [];
         if (this.params.registryUser) {
             envvars['REGISTRY_USER'] = this.params.registryUser;
         }
@@ -333,42 +333,45 @@ class ActionInputs {
             envvars['REGISTRY_PASSWORD'] = this.params.registryPassword;
         }
         if (this.params.standalone) {
-            flags += " --standalone";
+            flags.push("--standalone");
         }
         if (this.params.sysdigSecureURL) {
-            flags += ` --apiurl ${this.params.sysdigSecureURL}`;
+            flags.push('--apiurl', this.params.sysdigSecureURL);
         }
         if (this.params.dbPath) {
-            flags += ` --dbpath=${this.params.dbPath}`;
+            flags.push(`--dbpath=${this.params.dbPath}`);
         }
         if (this.params.skipUpload) {
-            flags += ' --skipupload';
+            flags.push('--skipupload');
         }
         if (this.params.usePolicies) {
-            flags += ` --policy=${this.params.usePolicies}`;
+            const policies = this.params.usePolicies.split(',').map(p => p.trim());
+            for (const policy of policies) {
+                flags.push('--policy', policy.replace(/"/g, ''));
+            }
         }
         if (this.params.sysdigSkipTLS) {
-            flags += ` --skiptlsverify`;
+            flags.push(`--skiptlsverify`);
         }
         if (this.params.overridePullString) {
-            flags += ` --override-pullstring=${this.params.overridePullString}`;
+            flags.push(`--override-pullstring=${this.params.overridePullString}`);
         }
         if (this.params.extraParameters) {
-            flags += ` ${this.params.extraParameters}`;
+            flags.push(...this.params.extraParameters.split(' '));
         }
         if (this.params.mode == scanner_1.ScanMode.iac) {
-            flags += ` --iac`;
+            flags.push(`--iac`);
             if (this.params.recursive) {
-                flags += ` -r`;
+                flags.push(`-r`);
             }
             if (this.params.minimumSeverity) {
-                flags += ` -f=${this.params.minimumSeverity}`;
+                flags.push(`-f=${this.params.minimumSeverity}`);
             }
-            flags += ` ${this.params.iacScanPath}`;
+            flags.push(this.params.iacScanPath);
         }
         if (this.params.mode == scanner_1.ScanMode.vm) {
-            flags += ` --output=json-file=${scanner_1.cliScannerResult}`;
-            flags += ` ${this.params.imageTag}`;
+            flags.push(`--output=json-file=${scanner_1.cliScannerResult}`);
+            flags.push(this.params.imageTag);
         }
         return {
             envvars: envvars,
@@ -993,13 +996,13 @@ function executeScan(scanFlags) {
             }
         };
         let start = performance.now();
-        let cmd = `./${exports.cliScannerName} ${flags}`;
-        core.info("Executing: " + cmd);
-        let retCode = yield exec.exec(cmd, undefined, scanOptions);
+        const command = `./${exports.cliScannerName}`;
+        const loggableFlags = flags.map(flag => flag.includes(' ') ? `"${flag}"` : flag);
+        core.info("Executing: " + command + " " + loggableFlags.join(' '));
+        let retCode = yield exec.exec(command, flags, scanOptions);
         core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
         if (retCode == 0 || retCode == 1) {
-            cmd = `cat ./${exports.cliScannerResult}`;
-            yield exec.exec(cmd, undefined, catOptions);
+            yield exec.exec(`cat ./${exports.cliScannerResult}`, undefined, catOptions);
         }
         return { ReturnCode: retCode, Output: execOutput, Error: errOutput };
     });
@@ -28840,7 +28843,7 @@ module.exports = parseParams
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"6.1.0","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint . --ignore-pattern \'build/*\'","build":"tsc","prepare":"npm run build && ncc build build/index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^6.0.1"},"devDependencies":{"@types/jest":"^29.5.12","@types/tmp":"^0.2.6","@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^29.7.0","tmp":"^0.2.1","ts-jest":"^29.2.3","typescript":"^5.5.4"}}');
+module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"6.1.1","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint . --ignore-pattern \'build/*\'","build":"tsc","prepare":"npm run build && ncc build build/index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^6.0.1"},"devDependencies":{"@types/jest":"^29.5.12","@types/tmp":"^0.2.6","@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^29.7.0","tmp":"^0.2.1","ts-jest":"^29.2.3","typescript":"^5.5.4"}}');
 
 /***/ })
 

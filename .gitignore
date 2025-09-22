@@ -305,3 +305,4 @@ dist
 report.json
 sarif.json
 build/
+.secrets

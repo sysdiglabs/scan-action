@@ -38,7 +38,7 @@ inputs:
     default: "false"
     required: false 
   use-policies:
-    description: Specify Sysdig Secure VM Policies to evaluate the image.
+    description: Comma-separated list of Sysdig Secure VM Policies to evaluate against the image. Policies with spaces must be enclosed in quotes.
     required: false
   override-pullstring:
     description: Custom PullString to give the image when scanning and uploading. 

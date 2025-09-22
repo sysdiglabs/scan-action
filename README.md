@@ -24,7 +24,7 @@ This action performs analysis on a specific container image and posts the result
 | `db-path`                    | Specify the directory for the vulnerabilities database to use while scanning. Useful when running in standalone mode.                                                                                                                                                                                                    |                           |
 | `skip-upload`                | Skip uploading scanning results to Sysdig Secure.                                                                                                                                                                                                                                                                        |                           |
 | `skip-summary`               | Skip generating Summary.                                                                                                                                                                                                                                                                                                 |                           |
-| `use-policies`               | Specify Sysdig Secure VM Policies to evaluate the image.                                                                                                                                                                                                                                                                 |                           |
+| `use-policies`               | Comma-separated list of Sysdig Secure VM Policies to evaluate against the image. Policies with spaces must be enclosed in quotes.                                                                                                                                                                                                                                  |                           |
 | `override-pullstring`        | Custom PullString to give the image when scanning and uploading. Useful when building images in a pipeline with temporary names. The custom PullString will be used to identify the scanned image in Sysdig Secure.                                                                                                      |                           |
 | `image-tag`                  | Tag of the image to analyse.                                                                                                                                                                                                                                                                                             |                           |
 | `sysdig-secure-token`        | API token for Sysdig Scanning authentication. (Required if not in Standalone mode.)                                                                                                                                                                                                                                      |                           |
@@ -146,4 +146,21 @@ The `if: success() || failure()` option makes sure the SARIF report is uploaded 
         sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
         stop-on-failed-policy-eval: true
         stop-on-processing-error: true
+```
+
+### Advanced Examples
+
+#### Using Multiple Policies
+
+You can specify multiple policies to evaluate against the image. Policies with spaces in their names must be enclosed in quotes.
+
+```yaml
+    ...
+
+    - name: Scan image with multiple policies
+      uses: sysdiglabs/scan-action@v6
+      with:
+        image-tag: "sysdiglabs/dummy-vuln-app:latest"
+        sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+        use-policies: '"My Policy with Spaces", another-policy'
 ```
