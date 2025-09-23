@@ -30,9 +30,9 @@ describe("input parsing", () => {
               name: "sysdig-cli-scanner",
               fullName: "Sysdig Vulnerability CLI Scanner",
               informationUri: "https://docs.sysdig.com/en/docs/installation/sysdig-secure/install-vulnerability-cli-scanner",
-              version: "6.1.2",
-              semanticVersion: "6.1.2",
-              dottedQuadFileVersion: "6.1.2.0",
+              "version": "6.1.3",
+              "semanticVersion": "6.1.3",
+              "dottedQuadFileVersion": "6.1.3.0",
               rules: []
             }
           },
