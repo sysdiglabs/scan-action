@@ -16,6 +16,11 @@ repos:
     -   id: actionlint
 -   repo: local
     hooks:
+    -   id: fix-vulns
+        name: Fix Vulnerabilities
+        entry: npm audit fix
+        language: system
+        pass_filenames: false
     -   id: lint
         name: Lint
         entry: npm run lint
