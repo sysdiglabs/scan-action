@@ -1,0 +1,77 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - package.json
+
+jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      changes: ${{ steps.check_changes.outputs.changes }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if the package.version has changed
+        id: check_changes
+        run: |
+          set -euo pipefail
+          curr=$(jq -r '.version' package.json)
+          prev=$(git show HEAD^:package.json 2>/dev/null | jq -r '.version' || echo "")
+          if [ -n "$prev" ] && [ "$curr" != "$prev" ]; then
+            echo "changes=detected" >> "$GITHUB_OUTPUT"
+          else
+            echo "changes=none" >> "$GITHUB_OUTPUT"
+          fi
+
+  release:
+    runs-on: ubuntu-latest
+    needs: check-changes
+    if: needs.check-changes.outputs.changes == 'detected'
+    permissions:
+      contents: write
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Get current version
+        id: version
+        run: echo "version=v$(jq -r '.version' package.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Install git-chglog
+        run: nix profile install nixpkgs#git-chglog
+
+      - name: Tag with version ${{ steps.version.outputs.version }}
+        run: git tag "${{ steps.version.outputs.version }}"
+
+      - name: Generate changelog
+        run: git-chglog -c .github/git-chglog/config.yml -o RELEASE_CHANGELOG.md "${{ steps.version.outputs.version }}"
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ steps.version.outputs.version }}
+          tag_name: ${{ steps.version.outputs.version }}
+          prerelease: false
+          body_path: RELEASE_CHANGELOG.md
+
+      - name: Create major tag
+        run: |
+          MAJOR_VERSION=$(echo ${{ steps.version.outputs.version }} | cut -d. -f1)
+          git tag -f "$MAJOR_VERSION"
+          git push -f origin "$MAJOR_VERSION"
