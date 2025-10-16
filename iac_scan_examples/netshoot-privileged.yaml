@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: net-troubleshoot-ac
+  name: net-troubleshoot-ac
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: net-troubleshoot-ac
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: net-troubleshoot-ac
+    spec:
+      containers:
+      - name: netshoot-ac
+        image: nicolaka/netshoot
+        securityContext:
+          privileged: true
+        resources: {}
+status: {}
