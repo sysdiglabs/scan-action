@@ -112,15 +112,7 @@ export {
 };
 
 import { RunScanUseCase } from './src/application/use-cases/RunScanUseCase';
-import { IInputProvider } from './src/application/ports/IInputProvider';
-
-// Temporal provider implementation. Will be moved to infrastructure.
-class GitHubActionsInputProvider implements IInputProvider {
-  getInputs(): ActionInputs {
-    return ActionInputs.parseActionInputs();
-  }
-}
-
+import { GitHubActionsInputProvider } from './src/infrastructure/adapters/GitHubActionsInputProvider';
 
 if (require.main === module) {
   const inputProvider = new GitHubActionsInputProvider();
