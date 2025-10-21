@@ -1,6 +1,9 @@
 import * as core from '@actions/core';
 import fs from 'fs';
-import { Package, Report, FilterOptions, Vulnerability, filterPackages, SeverityNames } from './report';
+import { Package, Report } from './domain/entities/report';
+import { Vulnerability } from './domain/entities/vulnerability';
+import { FilterOptions, filterPackages } from './domain/services/filtering';
+import { SeverityNames } from './domain/value-objects/severity';
 
 import { version } from '../package.json';
 const toolVersion = `${version}`;

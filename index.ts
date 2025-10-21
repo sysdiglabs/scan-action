@@ -4,7 +4,9 @@ import { generateSARIFReport } from './src/sarif';
 import { cliScannerName, cliScannerResult, cliScannerURL, executeScan, pullScanner, ScanExecutionResult, ScanMode } from './src/scanner';
 import { ActionInputs, defaultSecureEndpoint } from './src/action';
 import { generateSummary } from './src/summary';
-import { Report, FilterOptions, Severity } from './src/report';
+import { Report } from './src/domain/entities/report';
+import { FilterOptions } from './src/domain/services/filtering';
+import { Severity } from './src/domain/value-objects/severity';
 
 function parseCsvList(str?: string): string[] {
   if (!str) return [];

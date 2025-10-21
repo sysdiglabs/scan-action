@@ -1,5 +1,8 @@
 import * as core from "@actions/core";
-import { FilterOptions, filterPackages, Package, Vulnerability, Severity, isSeverityGte, Report, Rule, Layer, SeverityNames } from "./report";
+import { Package, Report, Rule, Layer } from './domain/entities/report';
+import { Vulnerability } from './domain/entities/vulnerability';
+import { FilterOptions, filterPackages } from './domain/services/filtering';
+import { Severity, isSeverityGte, SeverityNames } from './domain/value-objects/severity';
 import { ActionInputs } from "./action";
 
 const EVALUATION: any = {

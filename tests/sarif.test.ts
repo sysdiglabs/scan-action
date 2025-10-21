@@ -1,5 +1,5 @@
 import { vulnerabilities2SARIF } from "../src/sarif"
-import { Report } from "../src/report";
+import { Report } from "../src/domain/entities/report";
 const fixtureReport: Report = require("../tests/fixtures/report-test-v1.json"); // require is needed here, otherwise the import statement adds a .default attribute to the json
 const fixtureSarif = require("../tests/fixtures/sarif-test.json"); // require is needed here, otherwise the import statement adds a .default attribute to the json
 

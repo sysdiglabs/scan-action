@@ -210,7 +210,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ActionInputs = exports.defaultSecureEndpoint = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const scanner_1 = __nccwpck_require__(491);
-const report_1 = __nccwpck_require__(7531);
+const severity_1 = __nccwpck_require__(8118);
 exports.defaultSecureEndpoint = "https://secure.sysdig.com/";
 class ActionInputs {
     get params() {
@@ -313,7 +313,7 @@ class ActionInputs {
             core.setFailed("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
             throw new Error("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
         }
-        if (params.severityAtLeast && params.severityAtLeast != "any" && !report_1.SeverityNames.includes(params.severityAtLeast.toLowerCase())) {
+        if (params.severityAtLeast && params.severityAtLeast != "any" && !severity_1.SeverityNames.includes(params.severityAtLeast.toLowerCase())) {
             core.setFailed(`Invalid severity-at-least value "${params.severityAtLeast}". Allowed values: any, critical, high, medium, low, negligible.`);
             throw new Error(`Invalid severity-at-least value "${params.severityAtLeast}". Allowed values: any, critical, high, medium, low, negligible.`);
         }
@@ -423,20 +423,14 @@ exports.ActionInputs = ActionInputs;
 
 /***/ }),
 
-/***/ 7531:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ 6834:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.SeverityNames = void 0;
-exports.isSeverityGte = isSeverityGte;
 exports.filterPackages = filterPackages;
-exports.SeverityNames = ["critical", "high", "medium", "low", "negligible"];
-const severityOrder = ["negligible", "low", "medium", "high", "critical"];
-function isSeverityGte(a, b) {
-    return severityOrder.indexOf(a.toLocaleLowerCase()) >= severityOrder.indexOf(b.toLocaleLowerCase());
-}
+const severity_1 = __nccwpck_require__(8118);
 function filterPackages(pkgs, vulns, filters) {
     const filteredPackages = Object.entries(pkgs)
         .filter(([key, pkg]) => {
@@ -455,7 +449,7 @@ function filterPackages(pkgs, vulns, filters) {
         var _a;
         let vulnRefs = (_a = pkg.vulnerabilitiesRefs) === null || _a === void 0 ? void 0 : _a.filter((vulnRef) => {
             const vuln = vulns[vulnRef];
-            if (filters.minSeverity && vuln && !isSeverityGte(vuln.severity, filters.minSeverity)) {
+            if (filters.minSeverity && vuln && !(0, severity_1.isSeverityGte)(vuln.severity, filters.minSeverity)) {
                 return false;
             }
             if (filters.excludeAccepted && vuln && Array.isArray(vuln.riskAcceptRefs) && vuln.riskAcceptRefs.length > 0)
@@ -466,6 +460,23 @@ function filterPackages(pkgs, vulns, filters) {
         return [key, filteredPackage];
     })
         .filter(([key, pkg]) => pkg.vulnerabilitiesRefs && pkg.vulnerabilitiesRefs.length > 0));
+}
+
+
+/***/ }),
+
+/***/ 8118:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SeverityNames = void 0;
+exports.isSeverityGte = isSeverityGte;
+exports.SeverityNames = ["critical", "high", "medium", "low", "negligible"];
+const severityOrder = ["negligible", "low", "medium", "high", "critical"];
+function isSeverityGte(a, b) {
+    return severityOrder.indexOf(a.toLocaleLowerCase()) >= severityOrder.indexOf(b.toLocaleLowerCase());
 }
 
 
@@ -517,7 +528,8 @@ exports.generateSARIFReport = generateSARIFReport;
 exports.vulnerabilities2SARIF = vulnerabilities2SARIF;
 const core = __importStar(__nccwpck_require__(2186));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
-const report_1 = __nccwpck_require__(7531);
+const filtering_1 = __nccwpck_require__(6834);
+const severity_1 = __nccwpck_require__(8118);
 const package_json_1 = __nccwpck_require__(6625);
 const toolVersion = `${package_json_1.version}`;
 const dottedQuadToolVersion = `${package_json_1.version}.0`;
@@ -527,7 +539,7 @@ function generateSARIFReport(data, groupByPackage, filters) {
     fs_1.default.writeFileSync("./sarif.json", JSON.stringify(sarifOutput, null, 2));
 }
 function vulnerabilities2SARIF(data, groupByPackage, filters) {
-    const filteredPackages = (0, report_1.filterPackages)(data.result.packages, data.result.vulnerabilities, filters !== null && filters !== void 0 ? filters : {});
+    const filteredPackages = (0, filtering_1.filterPackages)(data.result.packages, data.result.vulnerabilities, filters !== null && filters !== void 0 ? filters : {});
     const filteredData = Object.assign(Object.assign({}, data), { result: Object.assign(Object.assign({}, data.result), { packages: filteredPackages }) });
     let rules = [];
     let results = [];
@@ -579,7 +591,7 @@ function vulnerabilities2SARIF(data, groupByPackage, filters) {
     return (sarifOutput);
 }
 function numericPriorityForSeverity(severity) {
-    let sevNum = report_1.SeverityNames.indexOf(severity.toLowerCase());
+    let sevNum = severity_1.SeverityNames.indexOf(severity.toLowerCase());
     sevNum = sevNum === -1 ? 5 : sevNum;
     return sevNum;
 }
@@ -1084,14 +1096,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.generateSummary = generateSummary;
 const core = __importStar(__nccwpck_require__(2186));
-const report_1 = __nccwpck_require__(7531);
+const filtering_1 = __nccwpck_require__(6834);
+const severity_1 = __nccwpck_require__(8118);
 const EVALUATION = {
     "failed": "❌",
     "passed": "✅"
 };
 function generateSummary(opts, data, filters) {
     return __awaiter(this, void 0, void 0, function* () {
-        const filteredPkgs = (0, report_1.filterPackages)(data.result.packages, data.result.vulnerabilities, filters || {});
+        const filteredPkgs = (0, filtering_1.filterPackages)(data.result.packages, data.result.vulnerabilities, filters || {});
         let filteredData = Object.assign(Object.assign({}, data), { result: Object.assign(Object.assign({}, data.result), { packages: filteredPkgs }) });
         core.summary.emptyBuffer().clear();
         core.summary.addHeading(`Scan Results for ${opts.overridePullString || opts.imageTag}`);
@@ -1121,7 +1134,7 @@ function countVulnsBySeverity(packages, vulnerabilities, minSeverity) {
         for (const vulnRef of (_a = pkg.vulnerabilitiesRefs) !== null && _a !== void 0 ? _a : []) {
             const vuln = vulnerabilities[vulnRef];
             const sev = vuln.severity.toLowerCase();
-            if (!minSeverity || (0, report_1.isSeverityGte)(sev, minSeverity)) {
+            if (!minSeverity || (0, severity_1.isSeverityGte)(sev, minSeverity)) {
                 result.total[sev]++;
                 if (vuln.fixVersion || pkg.suggestedFix) {
                     result.fixable[sev]++;
@@ -1134,7 +1147,7 @@ function countVulnsBySeverity(packages, vulnerabilities, minSeverity) {
 function addVulnTableToSummary(data, minSeverity) {
     const pkgs = data.result.packages;
     const vulns = data.result.vulnerabilities;
-    const visibleSeverities = SEVERITY_ORDER.filter(sev => !minSeverity || (0, report_1.isSeverityGte)(sev, minSeverity));
+    const visibleSeverities = SEVERITY_ORDER.filter(sev => !minSeverity || (0, severity_1.isSeverityGte)(sev, minSeverity));
     const totalVulns = countVulnsBySeverity(pkgs, vulns, minSeverity);
     core.summary.addHeading(`Vulnerabilities summary`, 2);
     core.summary.addTable([
@@ -1161,7 +1174,7 @@ function findLayerByDigestOrRef(data, refOrDigest) {
     });
 }
 function addVulnsByLayerTableToSummary(data, minSeverity) {
-    const visibleSeverities = SEVERITY_ORDER.filter(sev => !minSeverity || (0, report_1.isSeverityGte)(sev, minSeverity));
+    const visibleSeverities = SEVERITY_ORDER.filter(sev => !minSeverity || (0, severity_1.isSeverityGte)(sev, minSeverity));
     core.summary.addHeading(`Package vulnerabilities per layer`, 2);
     let packagesPerLayer = {};
     Object.values(data.result.packages).forEach(pkg => {
@@ -1183,7 +1196,7 @@ function addVulnsByLayerTableToSummary(data, minSeverity) {
             return;
         }
         let orderedPackagesBySeverity = packagesWithVulns.sort((a, b) => {
-            const getSeverityVector = (pkg) => report_1.SeverityNames.map(severity => {
+            const getSeverityVector = (pkg) => severity_1.SeverityNames.map(severity => {
                 var _a, _b;
                 return (_b = (_a = pkg.vulnerabilitiesRefs) === null || _a === void 0 ? void 0 : _a.filter(ref => {
                     const vul = data.result.vulnerabilities[ref];
@@ -1192,7 +1205,7 @@ function addVulnsByLayerTableToSummary(data, minSeverity) {
             });
             const aVector = getSeverityVector(a);
             const bVector = getSeverityVector(b);
-            for (let i = 0; i < report_1.SeverityNames.length; i++) {
+            for (let i = 0; i < severity_1.SeverityNames.length; i++) {
                 if (aVector[i] !== bVector[i]) {
                     return bVector[i] - aVector[i];
                 }

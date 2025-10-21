@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import { cliScannerResult, cliScannerURL, ComposeFlags, ScanMode, scannerURLForVersion } from './scanner';
-import { Severity, SeverityNames } from './report';
+import { Severity, SeverityNames } from './domain/value-objects/severity';
 
 export const defaultSecureEndpoint = "https://secure.sysdig.com/"
 
