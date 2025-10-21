@@ -1,12 +1,12 @@
-import { RunScanUseCase } from '../../src/application/use-cases/RunScanUseCase';
-import { IInputProvider } from '../../src/application/ports/IInputProvider';
-import { IScanner } from '../../src/application/ports/IScanner';
-import { IReportPresenter } from '../../src/application/ports/IReportPresenter';
-import { IReportRepository } from '../../src/application/ports/IReportRepository';
-import { ActionInputs } from '../../src/infrastructure/ActionInputs';
-import { ScanExecutionResult, ScanMode } from '../../src/scanner';
+import { RunScanUseCase } from '../../../src/application/use-cases/RunScanUseCase';
+import { IInputProvider } from '../../../src/application/ports/IInputProvider';
+import { IScanner } from '../../../src/application/ports/IScanner';
+import { IReportPresenter } from '../../../src/application/ports/IReportPresenter';
+import { IReportRepository } from '../../../src/application/ports/IReportRepository';
+import { ScanExecutionResult, ScanMode } from '../../../src/application/ports/ScannerDTOs';
 import * as core from '@actions/core';
-import * as report_test from "../fixtures/report-test-v1.json";
+import * as report_test from "../../fixtures/report-test-v1.json";
+import { ScanConfig } from '../../../src/application/ports/ScanConfig';
 
 jest.mock('@actions/core');
 
@@ -20,7 +20,7 @@ describe('RunScanUseCase', () => {
   let reportPresenter: jest.Mocked<IReportPresenter>;
   let reportRepository: jest.Mocked<IReportRepository>;
   let useCase: RunScanUseCase;
-  let actionInputs: ActionInputs;
+  let scanConfig: ScanConfig;
 
   beforeEach(() => {
     // Reset mocks before each test
@@ -52,17 +52,33 @@ describe('RunScanUseCase', () => {
       }
     });
 
-    // Mock ActionInputs and its methods
-    actionInputs = ActionInputs.overridingParsedActionInputs({
+    // Mock ScanConfig
+    scanConfig = {
       imageTag: 'test-image:latest',
       sysdigSecureToken: 'test-token',
       stopOnFailedPolicyEval: true,
       stopOnProcessingError: true,
-    });
-    jest.spyOn(actionInputs, 'printOptions').mockImplementation();
-    jest.spyOn(actionInputs, 'composeFlags').mockReturnValue({ envvars: {}, flags: [] });
+      mode: ScanMode.vm,
+      cliScannerURL: '',
+      cliScannerVersion: '',
+      standalone: false,
+      skipSummary: false,
+      groupByPackage: false,
+      overridePullString: '',
+      registryUser: '',
+      registryPassword: '',
+      dbPath: '',
+      skipUpload: false,
+      usePolicies: '',
+      sysdigSecureURL: '',
+      sysdigSkipTLS: false,
+      extraParameters: '',
+      recursive: false,
+      minimumSeverity: '',
+      iacScanPath: '',
+    };
 
-    inputProvider.getInputs.mockReturnValue(actionInputs);
+    inputProvider.getInputs.mockReturnValue(scanConfig);
     scanner.pullScanner.mockResolvedValue(0);
   });
 
@@ -102,11 +118,8 @@ describe('RunScanUseCase', () => {
   });
 
   it('should not fail if policy evaluation fails and stopOnFailedPolicyEval is false', async () => {
-    actionInputs = ActionInputs.overridingParsedActionInputs({
-        ...actionInputs.params,
-        stopOnFailedPolicyEval: false,
-    });
-    inputProvider.getInputs.mockReturnValue(actionInputs);
+    scanConfig.stopOnFailedPolicyEval = false;
+    inputProvider.getInputs.mockReturnValue(scanConfig);
 
     const scanResult: ScanExecutionResult = {
       ReturnCode: 1,
@@ -135,11 +148,8 @@ describe('RunScanUseCase', () => {
   });
 
   it('should not fail if scanner returns an error code and stopOnProcessingError is false', async () => {
-    actionInputs = ActionInputs.overridingParsedActionInputs({
-        ...actionInputs.params,
-        stopOnProcessingError: false,
-    });
-    inputProvider.getInputs.mockReturnValue(actionInputs);
+    scanConfig.stopOnProcessingError = false;
+    inputProvider.getInputs.mockReturnValue(scanConfig);
     const scanResult: ScanExecutionResult = {
       ReturnCode: 2,
       Output: '',
@@ -171,11 +181,8 @@ describe('RunScanUseCase', () => {
   });
 
   it('should not generate reports if scan is not for VM mode', async () => {
-    actionInputs = ActionInputs.overridingParsedActionInputs({
-        ...actionInputs.params,
-        mode: ScanMode.iac,
-    });
-    inputProvider.getInputs.mockReturnValue(actionInputs);
+    scanConfig.mode = ScanMode.iac;
+    inputProvider.getInputs.mockReturnValue(scanConfig);
     const scanResult: ScanExecutionResult = {
       ReturnCode: 0,
       Output: '',

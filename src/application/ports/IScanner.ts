@@ -1,6 +1,7 @@
-import { ComposeFlags, ScanExecutionResult } from "../../scanner";
+import { ScanExecutionResult } from "./ScannerDTOs";
+import { ScanConfig } from './ScanConfig';
 
 export interface IScanner {
-  pullScanner(url: string): Promise<number>;
-  executeScan(flags: ComposeFlags): Promise<ScanExecutionResult>;
+  pullScanner(url: string, version: string): Promise<number>;
+  executeScan(config: ScanConfig): Promise<ScanExecutionResult>;
 }

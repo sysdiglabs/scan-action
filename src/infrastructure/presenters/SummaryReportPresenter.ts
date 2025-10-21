@@ -13,19 +13,23 @@ const EVALUATION: any = {
 
 export class SummaryReportPresenter implements IReportPresenter {
 
-  constructor(private readonly opts: ActionInputs) {}
+  constructor(
+    private readonly imageTag: string,
+    private readonly overridePullString: string,
+    private readonly standalone: boolean
+  ) {}
 
   async generateReport(data: Report, groupByPackage: boolean, filters?: FilterOptions) {
     const filteredPkgs = filterPackages(data.result.packages, data.result.vulnerabilities, filters || {});
     let filteredData = { ...data, result: { ...data.result, packages: filteredPkgs } };
 
     core.summary.emptyBuffer().clear();
-    core.summary.addHeading(`Scan Results for ${this.opts.overridePullString || this.opts.imageTag}`);
+    core.summary.addHeading(`Scan Results for ${this.overridePullString || this.imageTag}`);
 
     this.addVulnTableToSummary(filteredData, filters?.minSeverity);
     this.addVulnsByLayerTableToSummary(filteredData, filters?.minSeverity);
 
-    if (!this.opts.standalone) {
+    if (!this.standalone) {
       this.addReportToSummary(data);
     }
 

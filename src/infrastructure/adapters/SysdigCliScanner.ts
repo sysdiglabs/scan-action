@@ -3,28 +3,36 @@ import * as exec from '@actions/exec';
 import os from 'os';
 import process from 'process';
 import { IScanner } from '../../application/ports/IScanner';
-import { ComposeFlags, ScanExecutionResult, cliScannerName, cliScannerResult } from '../../scanner';
+import { ComposeFlags, ScanExecutionResult, ScanMode } from '../../application/ports/ScannerDTOs';
+import { cliScannerName, cliScannerResult, cliScannerURL, scannerURLForVersion } from './SysdigCliScannerConstants';
+import { ScanConfig } from '../../application/ports/ScanConfig';
 const performance = require('perf_hooks').performance;
 
 export class SysdigCliScanner implements IScanner {
-  async pullScanner(scannerURL: string): Promise<number> {
+  async pullScanner(scannerURL: string, version: string): Promise<number> {
+    let url = scannerURL;
+    if (version && url === cliScannerURL) { // cliScannerURL is the default
+      url = scannerURLForVersion(version);
+    }
+
     let start = performance.now();
-    core.info('Pulling cli-scanner from: ' + scannerURL);
-    let cmd = `wget ${scannerURL} -O ./${cliScannerName}`;
+    core.info('Pulling cli-scanner from: ' + url);
+    let cmd = `wget ${url} -O ./${cliScannerName}`;
     let retCode = await exec.exec(cmd, undefined, { silent: true });
 
     if (retCode == 0) {
       cmd = `chmod u+x ./${cliScannerName}`;
       await exec.exec(cmd, undefined, { silent: true });
     } else {
-      core.error(`Falied to pull scanner using "${scannerURL}"`)
+      core.error(`Falied to pull scanner using "${url}"`)
     }
 
     core.info("Scanner pull took " + Math.round(performance.now() - start) + " milliseconds.");
     return retCode;
   }
 
-  async executeScan(scanFlags: ComposeFlags): Promise<ScanExecutionResult> {
+  async executeScan(config: ScanConfig): Promise<ScanExecutionResult> {
+    const scanFlags = this.composeFlags(config);
     let { envvars, flags } = scanFlags;
     let execOutput = '';
     let errOutput = '';
@@ -73,5 +81,78 @@ export class SysdigCliScanner implements IScanner {
       await exec.exec(`cat ./${cliScannerResult}`, undefined, catOptions);
     }
     return { ReturnCode: retCode, Output: execOutput, Error: errOutput };
+  }
+
+  private composeFlags(config: ScanConfig): ComposeFlags {
+    let envvars: { [key: string]: string } = {}
+    envvars['SECURE_API_TOKEN'] = config.sysdigSecureToken || "";
+
+    let flags: string[] = [];
+
+    if (config.registryUser) {
+      envvars['REGISTRY_USER'] = config.registryUser;
+    }
+
+    if (config.registryPassword) {
+      envvars['REGISTRY_PASSWORD'] = config.registryPassword;
+    }
+
+    if (config.standalone) {
+      flags.push("--standalone");
+    }
+
+    if (config.sysdigSecureURL) {
+      flags.push('--apiurl', config.sysdigSecureURL);
+    }
+
+    if (config.dbPath) {
+      flags.push(`--dbpath=${config.dbPath}`);
+    }
+
+    if (config.skipUpload) {
+      flags.push('--skipupload');
+    }
+
+    if (config.usePolicies) {
+      const policies = config.usePolicies.split(',').map(p => p.trim());
+      for (const policy of policies) {
+        flags.push('--policy', policy.replace(/"/g, ''));
+      }
+    }
+
+    if (config.sysdigSkipTLS) {
+      flags.push(`--skiptlsverify`);
+    }
+
+    if (config.overridePullString) {
+      flags.push(`--override-pullstring=${config.overridePullString}`);
+    }
+
+    if (config.extraParameters) {
+      flags.push(...config.extraParameters.split(' '));
+    }
+
+    if (config.mode == ScanMode.iac) {
+      flags.push(`--iac`);
+
+      if (config.recursive) {
+        flags.push(`-r`);
+      }
+      if (config.minimumSeverity) {
+        flags.push(`-f=${config.minimumSeverity}`);
+      }
+
+      flags.push(config.iacScanPath);
+    }
+
+    if (config.mode == ScanMode.vm) {
+      flags.push(`--output=json-file=${cliScannerResult}`)
+      flags.push(config.imageTag);
+    }
+
+    return {
+      envvars: envvars,
+      flags: flags
+    }
   }
 }

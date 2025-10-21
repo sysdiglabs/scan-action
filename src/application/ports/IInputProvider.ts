@@ -1,5 +1,5 @@
-import { ActionInputs } from "../../infrastructure/ActionInputs";
+import { ScanConfig } from "./ScanConfig";
 
 export interface IInputProvider {
-  getInputs(): ActionInputs;
+  getInputs(): ScanConfig;
 }

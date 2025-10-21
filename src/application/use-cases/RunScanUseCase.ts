@@ -1,5 +1,5 @@
 import * as core from '@actions/core';
-import { ScanMode, ScanExecutionResult } from '../../scanner';
+import { ScanMode, ScanExecutionResult } from '../ports/ScannerDTOs';
 import { IInputProvider } from '../ports/IInputProvider';
 import { IScanner } from '../ports/IScanner';
 import { IReportPresenter } from '../ports/IReportPresenter';
@@ -7,7 +7,8 @@ import { IReportRepository } from '../ports/IReportRepository';
 import { Report } from '../../domain/entities/report';
 import { FilterOptions } from '../../domain/services/filtering';
 import { Severity } from '../../domain/value-objects/severity';
-import { ExecutionError } from '../../scanner';
+import { ExecutionError } from '../errors/ExecutionError';
+import { ScanConfig } from '../ports/ScanConfig';
 
 export class RunScanUseCase {
   constructor(
@@ -24,21 +25,20 @@ export class RunScanUseCase {
 
   async execute(): Promise<void> {
     try {
-      const opts = this.inputProvider.getInputs();
-      opts.printOptions();
-      const scanFlags = opts.composeFlags();
+      const config = this.inputProvider.getInputs();
+      this.printOptions(config);
 
       let scanResult: ScanExecutionResult;
       // Download CLI Scanner from 'cliScannerURL'
-      let retCode = await this.scanner.pullScanner(opts.cliScannerURL);
+      let retCode = await this.scanner.pullScanner(config.cliScannerURL, config.cliScannerVersion);
       if (retCode == 0) {
         // Execute Scanner
-        scanResult = await this.scanner.executeScan(scanFlags);
+        scanResult = await this.scanner.executeScan(config);
 
         retCode = scanResult.ReturnCode;
         if (retCode == 0 || retCode == 1) {
           // Transform Scan Results to other formats such as SARIF
-          if (opts.mode == ScanMode.vm) {
+          if (config.mode == ScanMode.vm) {
             this.reportRepository.writeReport(scanResult.Output);
 
             let report: Report;
@@ -51,16 +51,16 @@ export class RunScanUseCase {
 
             if (report) {
               const filters: FilterOptions = {
-                minSeverity: (opts.severityAtLeast && opts.severityAtLeast.toLowerCase() !== "any")
-                  ? opts.severityAtLeast.toLowerCase() as Severity
+                minSeverity: (config.severityAtLeast && config.severityAtLeast.toLowerCase() !== "any")
+                  ? config.severityAtLeast.toLowerCase() as Severity
                   : undefined,
-                packageTypes: this.parseCsvList(opts.packageTypes),
-                notPackageTypes: this.parseCsvList(opts.notPackageTypes),
-                excludeAccepted: opts.excludeAccepted,
+                packageTypes: this.parseCsvList(config.packageTypes),
+                notPackageTypes: this.parseCsvList(config.notPackageTypes),
+                excludeAccepted: config.excludeAccepted,
               };
 
               for (const presenter of this.reportPresenters) {
-                presenter.generateReport(report, opts.groupByPackage, filters);
+                presenter.generateReport(report, config.groupByPackage, filters);
               }
             }
           }
@@ -71,13 +71,13 @@ export class RunScanUseCase {
         core.error("Terminating scan. Scanner couldn't be pulled.")
       }
 
-      if (opts.stopOnFailedPolicyEval && retCode == 1) {
+      if (config.stopOnFailedPolicyEval && retCode == 1) {
         core.setFailed(`Stopping because Policy Evaluation was FAILED.`);
-      } else if (opts.standalone && retCode == 0) {
+      } else if (config.standalone && retCode == 0) {
         core.info("Policy Evaluation was OMITTED.");
       } else if (retCode == 0) {
         core.info("Policy Evaluation was PASSED.");
-      } else if (opts.stopOnProcessingError && retCode > 1) {
+      } else if (config.stopOnProcessingError && retCode > 1) {
         core.setFailed(`Stopping because the scanner terminated with an error.`);
       } // else: Don't stop regardless the outcome.
 
@@ -87,6 +87,60 @@ export class RunScanUseCase {
         core.setFailed(`Unexpected error: ${error instanceof Error ? error.stack : String(error)}`);
       }
       core.error(`Unexpected error: ${error instanceof Error ? error.stack : String(error)}`);
+    }
+  }
+
+  private printOptions(config: ScanConfig) {
+    if (config.standalone) {
+      core.info(`[!] Running in Standalone Mode.`);
+    }
+
+    if (config.sysdigSecureURL) {
+      core.info('Sysdig Secure URL: ' + config.sysdigSecureURL);
+    }
+
+    if (config.registryUser && config.registryPassword) {
+      core.info(`Using specified Registry credentials.`);
+    }
+
+    core.info(`Stop on Failed Policy Evaluation: ${config.stopOnFailedPolicyEval}`);
+
+    core.info(`Stop on Processing Error: ${config.stopOnProcessingError}`);
+
+    if (config.skipUpload) {
+      core.info(`Skipping scan results upload to Sysdig Secure...`);
+    }
+
+    if (config.dbPath) {
+      core.info(`DB Path: ${config.dbPath}`);
+    }
+
+    core.info(`Sysdig skip TLS: ${config.sysdigSkipTLS}`);
+
+    if (config.severityAtLeast) {
+      core.info(`Severity level: ${config.severityAtLeast}`);
+    }
+
+    if (config.packageTypes) {
+      core.info(`Package types included: ${config.packageTypes}`);
+    }
+
+    if (config.notPackageTypes) {
+      core.info(`Package types excluded: ${config.notPackageTypes}`);
+    }
+
+    if (config.excludeAccepted !== undefined) {
+      core.info(`Exclude vulnerabilities with accepted risks: ${config.excludeAccepted}`);
+    }
+
+    core.info('Analyzing image: ' + config.imageTag);
+
+    if (config.overridePullString) {
+      core.info(` * Image PullString will be overwritten as ${config.overridePullString}`);
+    }
+
+    if (config.skipSummary) {
+      core.info("This run will NOT generate a SUMMARY.");
     }
   }
 }
