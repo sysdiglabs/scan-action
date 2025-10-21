@@ -113,9 +113,11 @@ export {
 
 import { RunScanUseCase } from './src/application/use-cases/RunScanUseCase';
 import { GitHubActionsInputProvider } from './src/infrastructure/adapters/GitHubActionsInputProvider';
+import { SysdigCliScanner } from './src/infrastructure/adapters/SysdigCliScanner';
 
 if (require.main === module) {
   const inputProvider = new GitHubActionsInputProvider();
-  const useCase = new RunScanUseCase(inputProvider);
+  const scanner = new SysdigCliScanner();
+  const useCase = new RunScanUseCase(inputProvider, scanner, [], {} as any);
   useCase.execute();
 }
