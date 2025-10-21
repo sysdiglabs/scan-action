@@ -161,8 +161,17 @@ function processScanResult(result, opts) {
         }
     });
 }
+const RunScanUseCase_1 = __nccwpck_require__(59);
+// Temporal provider implementation. Will be moved to infrastructure.
+class GitHubActionsInputProvider {
+    getInputs() {
+        return action_1.ActionInputs.parseActionInputs();
+    }
+}
 if (require.main === require.cache[eval('__filename')]) {
-    run();
+    const inputProvider = new GitHubActionsInputProvider();
+    const useCase = new RunScanUseCase_1.RunScanUseCase(inputProvider);
+    useCase.execute();
 }
 
 
@@ -419,6 +428,40 @@ class ActionInputs {
     }
 }
 exports.ActionInputs = ActionInputs;
+
+
+/***/ }),
+
+/***/ 59:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RunScanUseCase = void 0;
+const __1 = __nccwpck_require__(1667);
+class RunScanUseCase {
+    constructor(inputProvider) {
+        this.inputProvider = inputProvider;
+    }
+    execute() {
+        return __awaiter(this, void 0, void 0, function* () {
+            // Por ahora, llamamos a la lógica antigua directamente.
+            // Esto será refactorizado en los siguientes pasos.
+            yield (0, __1.run)();
+        });
+    }
+}
+exports.RunScanUseCase = RunScanUseCase;
 
 
 /***/ }),

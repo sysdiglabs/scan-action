@@ -3,7 +3,7 @@ import { IInputProvider } from '../../src/application/ports/IInputProvider';
 import { IScanner } from '../../src/application/ports/IScanner';
 import { IReportPresenter } from '../../src/application/ports/IReportPresenter';
 import { IReportRepository } from '../../src/application/ports/IReportRepository';
-import { ActionInputs } from '../../src/action';
+import { ActionInputs } from '../../src/infrastructure/ActionInputs';
 import { ScanExecutionResult, ScanMode } from '../../src/scanner';
 import * as core from '@actions/core';
 import * as report_test from "../fixtures/report-test-v1.json";

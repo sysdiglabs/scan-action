@@ -4,7 +4,7 @@ import { Report, Package, Rule, Layer } from "../../domain/entities/report";
 import { Vulnerability } from "../../domain/entities/vulnerability";
 import { FilterOptions, filterPackages } from "../../domain/services/filtering";
 import { Severity, isSeverityGte, SeverityNames } from "../../domain/value-objects/severity";
-import { ActionInputs } from "../../action";
+import { ActionInputs } from "../ActionInputs";
 
 const EVALUATION: any = {
   "failed": "❌",

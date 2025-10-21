@@ -1,4 +1,4 @@
-import { ActionInputs } from '../../action';
+import { ActionInputs } from '../ActionInputs';
 import { IInputProvider } from '../../application/ports/IInputProvider';
 
 export class GitHubActionsInputProvider implements IInputProvider {
