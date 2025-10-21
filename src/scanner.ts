@@ -28,6 +28,12 @@ export namespace ScanMode {
   }
 }
 
+export class ExecutionError extends Error {
+  constructor(stdout: string, stderr: string) {
+    super("execution error\n\nstdout: " + stdout + "\n\nstderr: " + stderr);
+  }
+}
+
 export async function pullScanner(scannerURL: string) {
   let start = performance.now();
   core.info('Pulling cli-scanner from: ' + scannerURL);
