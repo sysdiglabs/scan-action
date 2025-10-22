@@ -3,35 +3,18 @@ import * as exec from '@actions/exec';
 import os from 'os';
 import process from 'process';
 import { IScanner } from '../../application/ports/IScanner';
-import { ComposeFlags, ScanExecutionResult, ScanMode } from '../../application/ports/ScannerDTOs';
+import { ComposeFlags, ScanMode } from '../../application/ports/ScannerDTOs';
 import { cliScannerName, cliScannerResult, cliScannerURL, scannerURLForVersion } from './SysdigCliScannerConstants';
 import { ScanConfig } from '../../application/ports/ScanConfig';
+import { Report } from '../../domain/entities/report';
+import { ReportParsingError } from '../../application/errors/ReportParsingError';
 const performance = require('perf_hooks').performance;
 
 export class SysdigCliScanner implements IScanner {
-  async pullScanner(scannerURL: string, version: string): Promise<number> {
-    let url = scannerURL;
-    if (version && url === cliScannerURL) { // cliScannerURL is the default
-      url = scannerURLForVersion(version);
-    }
 
-    let start = performance.now();
-    core.info('Pulling cli-scanner from: ' + url);
-    let cmd = `wget ${url} -O ./${cliScannerName}`;
-    let retCode = await exec.exec(cmd, undefined, { silent: true });
+  async executeScan(config: ScanConfig): Promise<Report> {
+    await this.pullScanner(cliScannerURL, 'latest');
 
-    if (retCode == 0) {
-      cmd = `chmod u+x ./${cliScannerName}`;
-      await exec.exec(cmd, undefined, { silent: true });
-    } else {
-      core.error(`Falied to pull scanner using "${url}"`)
-    }
-
-    core.info("Scanner pull took " + Math.round(performance.now() - start) + " milliseconds.");
-    return retCode;
-  }
-
-  async executeScan(config: ScanConfig): Promise<ScanExecutionResult> {
     const scanFlags = this.composeFlags(config);
     let { envvars, flags } = scanFlags;
     let execOutput = '';
@@ -80,7 +63,34 @@ export class SysdigCliScanner implements IScanner {
     if (retCode == 0 || retCode == 1) {
       await exec.exec(`cat ./${cliScannerResult}`, undefined, catOptions);
     }
-    return { ReturnCode: retCode, Output: execOutput, Error: errOutput };
+
+    try {
+      return JSON.parse(execOutput) as Report;
+    } catch (e) {
+      throw new ReportParsingError(execOutput);
+    }
+  }
+
+  private async pullScanner(scannerURL: string, version: string): Promise<number> {
+    let url = scannerURL;
+    if (version && url === cliScannerURL) { // cliScannerURL is the default
+      url = scannerURLForVersion(version);
+    }
+
+    let start = performance.now();
+    core.info('Pulling cli-scanner from: ' + url);
+    let cmd = `wget ${url} -O ./${cliScannerName}`;
+    let retCode = await exec.exec(cmd, undefined, { silent: true });
+
+    if (retCode == 0) {
+      cmd = `chmod u+x ./${cliScannerName}`;
+      await exec.exec(cmd, undefined, { silent: true });
+    } else {
+      core.error(`Falied to pull scanner using "${url}"`)
+    }
+
+    core.info("Scanner pull took " + Math.round(performance.now() - start) + " milliseconds.");
+    return retCode;
   }
 
   private composeFlags(config: ScanConfig): ComposeFlags {

@@ -32,13 +32,13 @@ export interface Layer {
   command: string
   digest?: string
   index: number
-  size?: number
+  size?: number | null
 }
 
 
 export interface Metadata {
   architecture: string
-  autor: string
+  author: string
   baseOs: string
   createdAt: string
   digest: string
@@ -58,7 +58,7 @@ export interface Package {
   suggestedFix?: string
   type: string
   version: string
-  vulnerabilitiesRefs: string[]
+  vulnerabilitiesRefs: string[] | null
 }
 
 export interface Policies {
@@ -84,7 +84,7 @@ export interface Bundle {
 }
 
 export interface Rule {
-  ruleId: number
+  ruleId: number | string
   ruleType: string
   failureType: string
   description: string

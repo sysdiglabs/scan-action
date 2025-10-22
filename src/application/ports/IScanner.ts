@@ -1,7 +1,6 @@
-import { ScanExecutionResult } from "./ScannerDTOs";
+import { Report } from '../../domain/entities/report';
 import { ScanConfig } from './ScanConfig';
 
 export interface IScanner {
-  pullScanner(url: string, version: string): Promise<number>;
-  executeScan(config: ScanConfig): Promise<ScanExecutionResult>;
+  executeScan(config: ScanConfig): Promise<Report>;
 }

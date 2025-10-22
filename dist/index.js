@@ -105,42 +105,6 @@ exports.ReportParsingError = ReportParsingError;
 
 /***/ }),
 
-/***/ 1119:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ScanExecutionError = void 0;
-class ScanExecutionError extends Error {
-    constructor(message) {
-        super(message);
-        this.name = "ScanExecutionError";
-    }
-}
-exports.ScanExecutionError = ScanExecutionError;
-
-
-/***/ }),
-
-/***/ 4481:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ScannerPullError = void 0;
-class ScannerPullError extends Error {
-    constructor(message) {
-        super(message);
-        this.name = "ScannerPullError";
-    }
-}
-exports.ScannerPullError = ScannerPullError;
-
-
-/***/ }),
-
 /***/ 1699:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -219,9 +183,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RunScanUseCase = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const ScannerDTOs_1 = __nccwpck_require__(1699);
-const ScannerPullError_1 = __nccwpck_require__(4481);
-const ScanExecutionError_1 = __nccwpck_require__(1119);
-const ReportParsingError_1 = __nccwpck_require__(93);
 class RunScanUseCase {
     constructor(inputProvider, scanner, reportPresenters, reportRepository) {
         this.inputProvider = inputProvider;
@@ -236,23 +197,33 @@ class RunScanUseCase {
     }
     execute() {
         return __awaiter(this, void 0, void 0, function* () {
+            var _a, _b;
             let config;
             try {
                 config = this.inputProvider.getInputs();
                 this.printOptions(config);
-                const scannerPulled = yield this.scanner.pullScanner(config.cliScannerURL, config.cliScannerVersion);
-                if (scannerPulled !== 0) {
-                    throw new ScannerPullError_1.ScannerPullError("Terminating scan. Scanner couldn't be pulled.");
+                const report = yield this.scanner.executeScan(config);
+                if (config.mode === ScannerDTOs_1.ScanMode.vm && report) {
+                    this.reportRepository.writeReport(report);
+                    const filters = {
+                        minSeverity: (config.severityAtLeast && config.severityAtLeast.toLowerCase() !== "any")
+                            ? config.severityAtLeast.toLowerCase()
+                            : undefined,
+                        packageTypes: this.parseCsvList(config.packageTypes),
+                        notPackageTypes: this.parseCsvList(config.notPackageTypes),
+                        excludeAccepted: config.excludeAccepted,
+                    };
+                    for (const presenter of this.reportPresenters) {
+                        presenter.generateReport(report, config.groupByPackage, filters);
+                    }
                 }
-                const scanResult = yield this.scanner.executeScan(config);
-                const retCode = scanResult.ReturnCode;
-                if ((retCode === 0 || retCode === 1) && config.mode === ScannerDTOs_1.ScanMode.vm) {
-                    this.processVmScanResult(config, scanResult);
+                const policyEvaluation = (_b = (_a = report === null || report === void 0 ? void 0 : report.result) === null || _a === void 0 ? void 0 : _a.policies) === null || _b === void 0 ? void 0 : _b.globalEvaluation;
+                if (policyEvaluation === 'failed') {
+                    this.setFinalStatus(config, 1);
                 }
-                else if (retCode > 1) {
-                    throw new ScanExecutionError_1.ScanExecutionError("Terminating scan. Scanner couldn't be executed.");
+                else {
+                    this.setFinalStatus(config, 0);
                 }
-                this.setFinalStatus(config, retCode);
             }
             catch (error) {
                 const errorMessage = `Unexpected error: ${error instanceof Error ? error.stack : String(error)}`;
@@ -262,31 +233,9 @@ class RunScanUseCase {
                 else {
                     core.error(errorMessage);
                 }
+                this.setFinalStatus(config, 2);
             }
         });
-    }
-    processVmScanResult(config, scanResult) {
-        this.reportRepository.writeReport(scanResult.Output);
-        let report;
-        try {
-            report = JSON.parse(scanResult.Output);
-        }
-        catch (error) {
-            throw new ReportParsingError_1.ReportParsingError("Error parsing analysis JSON report: " + error + ". Output was: " + scanResult.Output);
-        }
-        if (report) {
-            const filters = {
-                minSeverity: (config.severityAtLeast && config.severityAtLeast.toLowerCase() !== "any")
-                    ? config.severityAtLeast.toLowerCase()
-                    : undefined,
-                packageTypes: this.parseCsvList(config.packageTypes),
-                notPackageTypes: this.parseCsvList(config.notPackageTypes),
-                excludeAccepted: config.excludeAccepted,
-            };
-            for (const presenter of this.reportPresenters) {
-                presenter.generateReport(report, config.groupByPackage, filters);
-            }
-        }
     }
     setFinalStatus(config, retCode) {
         if (config.stopOnFailedPolicyEval && retCode === 1) {
@@ -639,31 +588,12 @@ const exec = __importStar(__nccwpck_require__(1514));
 const process_1 = __importDefault(__nccwpck_require__(7282));
 const ScannerDTOs_1 = __nccwpck_require__(1699);
 const SysdigCliScannerConstants_1 = __nccwpck_require__(3554);
+const ReportParsingError_1 = __nccwpck_require__(93);
 const performance = (__nccwpck_require__(4074).performance);
 class SysdigCliScanner {
-    pullScanner(scannerURL, version) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let url = scannerURL;
-            if (version && url === SysdigCliScannerConstants_1.cliScannerURL) { // cliScannerURL is the default
-                url = (0, SysdigCliScannerConstants_1.scannerURLForVersion)(version);
-            }
-            let start = performance.now();
-            core.info('Pulling cli-scanner from: ' + url);
-            let cmd = `wget ${url} -O ./${SysdigCliScannerConstants_1.cliScannerName}`;
-            let retCode = yield exec.exec(cmd, undefined, { silent: true });
-            if (retCode == 0) {
-                cmd = `chmod u+x ./${SysdigCliScannerConstants_1.cliScannerName}`;
-                yield exec.exec(cmd, undefined, { silent: true });
-            }
-            else {
-                core.error(`Falied to pull scanner using "${url}"`);
-            }
-            core.info("Scanner pull took " + Math.round(performance.now() - start) + " milliseconds.");
-            return retCode;
-        });
-    }
     executeScan(config) {
         return __awaiter(this, void 0, void 0, function* () {
+            yield this.pullScanner(SysdigCliScannerConstants_1.cliScannerURL, 'latest');
             const scanFlags = this.composeFlags(config);
             let { envvars, flags } = scanFlags;
             let execOutput = '';
@@ -702,7 +632,33 @@ class SysdigCliScanner {
             if (retCode == 0 || retCode == 1) {
                 yield exec.exec(`cat ./${SysdigCliScannerConstants_1.cliScannerResult}`, undefined, catOptions);
             }
-            return { ReturnCode: retCode, Output: execOutput, Error: errOutput };
+            try {
+                return JSON.parse(execOutput);
+            }
+            catch (e) {
+                throw new ReportParsingError_1.ReportParsingError(execOutput);
+            }
+        });
+    }
+    pullScanner(scannerURL, version) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let url = scannerURL;
+            if (version && url === SysdigCliScannerConstants_1.cliScannerURL) { // cliScannerURL is the default
+                url = (0, SysdigCliScannerConstants_1.scannerURLForVersion)(version);
+            }
+            let start = performance.now();
+            core.info('Pulling cli-scanner from: ' + url);
+            let cmd = `wget ${url} -O ./${SysdigCliScannerConstants_1.cliScannerName}`;
+            let retCode = yield exec.exec(cmd, undefined, { silent: true });
+            if (retCode == 0) {
+                cmd = `chmod u+x ./${SysdigCliScannerConstants_1.cliScannerName}`;
+                yield exec.exec(cmd, undefined, { silent: true });
+            }
+            else {
+                core.error(`Falied to pull scanner using "${url}"`);
+            }
+            core.info("Scanner pull took " + Math.round(performance.now() - start) + " milliseconds.");
+            return retCode;
         });
     }
     composeFlags(config) {
@@ -950,21 +906,23 @@ class SarifReportPresenter {
                 let severityLevel = "";
                 let minSeverityNum = 5;
                 let score = 0.0;
-                pkg.vulnerabilitiesRefs.forEach(vulnRef => {
-                    const vuln = data.result.vulnerabilities[vulnRef];
-                    fullDescription += `${this.getSARIFVulnFullDescription(pkg, vuln)}
-
-
+                if (pkg.vulnerabilitiesRefs) {
+                    pkg.vulnerabilitiesRefs.forEach(vulnRef => {
+                        const vuln = data.result.vulnerabilities[vulnRef];
+                        fullDescription += `${this.getSARIFVulnFullDescription(pkg, vuln)} \
+\
+\
 `;
-                    const sevNum = this.numericPriorityForSeverity(vuln.severity);
-                    if (sevNum < minSeverityNum) {
-                        severityLevel = vuln.severity.toLowerCase();
-                        minSeverityNum = sevNum;
-                    }
-                    if (vuln.cvssScore.score > score) {
-                        score = vuln.cvssScore.score;
-                    }
-                });
+                        const sevNum = this.numericPriorityForSeverity(vuln.severity);
+                        if (sevNum < minSeverityNum) {
+                            severityLevel = vuln.severity.toLowerCase();
+                            minSeverityNum = sevNum;
+                        }
+                        if (vuln.cvssScore.score > score) {
+                            score = vuln.cvssScore.score;
+                        }
+                    });
+                }
                 if (baseUrl)
                     helpUri = `${baseUrl}/content?filter=freeText+in+("${pkg.name}")`;
                 let rule = {
@@ -1030,55 +988,57 @@ class SarifReportPresenter {
                 baseUrl = resultUrl.slice(0, resultUrl.lastIndexOf('/'));
             }
             Object.values(data.result.packages).forEach(pkg => {
-                pkg.vulnerabilitiesRefs.forEach(vulnRef => {
-                    const vuln = data.result.vulnerabilities[vulnRef];
-                    if (!(vuln.name in ruleIds)) {
-                        ruleIds.push(vuln.name);
-                        let rule = {
-                            id: vuln.name,
-                            name: pkg.type,
-                            shortDescription: {
-                                text: this.getSARIFVulnShortDescription(pkg, vuln)
-                            },
-                            fullDescription: {
-                                text: this.getSARIFVulnFullDescription(pkg, vuln)
-                            },
-                            helpUri: `https://nvd.nist.gov/vuln/detail/${vuln.name}`,
-                            help: this.getSARIFVulnHelp(pkg, vuln),
-                            properties: {
-                                precision: "very-high",
-                                'security-severity': `${vuln.cvssScore.score}`,
-                                tags: [
-                                    'vulnerability',
-                                    'security',
-                                    vuln.severity
-                                ]
-                            }
-                        };
-                        rules.push(rule);
-                    }
-                    let result = {
-                        ruleId: vuln.name,
-                        level: this.check_level(vuln.severity),
-                        message: {
-                            text: this.getSARIFReportMessage(data, vuln, pkg, baseUrl)
-                        },
-                        locations: [
-                            {
-                                physicalLocation: {
-                                    artifactLocation: {
-                                        uri: `file:///${this.sanitizeImageName(data.result.metadata.pullString)}`,
-                                        uriBaseId: "ROOTPATH"
-                                    }
+                if (pkg.vulnerabilitiesRefs) {
+                    pkg.vulnerabilitiesRefs.forEach(vulnRef => {
+                        const vuln = data.result.vulnerabilities[vulnRef];
+                        if (!(vuln.name in ruleIds)) {
+                            ruleIds.push(vuln.name);
+                            let rule = {
+                                id: vuln.name,
+                                name: pkg.type,
+                                shortDescription: {
+                                    text: this.getSARIFVulnShortDescription(pkg, vuln)
                                 },
-                                message: {
-                                    text: `${data.result.metadata.pullString} - ${pkg.name}@${pkg.version}`
+                                fullDescription: {
+                                    text: this.getSARIFVulnFullDescription(pkg, vuln)
+                                },
+                                helpUri: `https://nvd.nist.gov/vuln/detail/${vuln.name}`,
+                                help: this.getSARIFVulnHelp(pkg, vuln),
+                                properties: {
+                                    precision: "very-high",
+                                    'security-severity': `${vuln.cvssScore.score}`,
+                                    tags: [
+                                        'vulnerability',
+                                        'security',
+                                        vuln.severity
+                                    ]
                                 }
-                            }
-                        ]
-                    };
-                    results.push(result);
-                });
+                            };
+                            rules.push(rule);
+                        }
+                        let result = {
+                            ruleId: vuln.name,
+                            level: this.check_level(vuln.severity),
+                            message: {
+                                text: this.getSARIFReportMessage(data, vuln, pkg, baseUrl)
+                            },
+                            locations: [
+                                {
+                                    physicalLocation: {
+                                        artifactLocation: {
+                                            uri: `file:///${this.sanitizeImageName(data.result.metadata.pullString)}`,
+                                            uriBaseId: "ROOTPATH"
+                                        }
+                                    },
+                                    message: {
+                                        text: `${data.result.metadata.pullString} - ${pkg.name}@${pkg.version}`
+                                    }
+                                }
+                            ]
+                        };
+                        results.push(result);
+                    });
+                }
             });
         }
         return [rules, results];
@@ -1096,9 +1056,10 @@ class SarifReportPresenter {
     }
     getSARIFPkgHelp(pkg, vulns) {
         let text = "";
-        pkg.vulnerabilitiesRefs.forEach(vulnRef => {
-            const vuln = vulns[vulnRef];
-            text += `Vulnerability ${vuln.name}
+        if (pkg.vulnerabilitiesRefs) {
+            pkg.vulnerabilitiesRefs.forEach(vulnRef => {
+                const vuln = vulns[vulnRef];
+                text += `Vulnerability ${vuln.name}
     Severity: ${vuln.severity}
     Package: ${pkg.name}
     CVSS Score: ${vuln.cvssScore.score}
@@ -1110,15 +1071,18 @@ class SarifReportPresenter {
     Type: ${pkg.type}
     Location: ${pkg.path}
     URL: https://nvd.nist.gov/vuln/detail/${vuln.name}\n\n\n`;
-        });
+            });
+        }
         let markdown = `| Vulnerability | Severity | CVSS Score | CVSS Version | CVSS Vector | Exploitable |
     | -------- | ------- | ---------- | ------------ | -----------  | ----------- |
 `;
-        pkg.vulnerabilitiesRefs.forEach(vulnRef => {
-            const vuln = vulns[vulnRef];
-            markdown += `| ${vuln.name} | ${vuln.severity} | ${vuln.cvssScore.score} | ${vuln.cvssScore.version} | ${vuln.cvssScore.vector} | ${vuln.exploitable} |
+        if (pkg.vulnerabilitiesRefs) {
+            pkg.vulnerabilitiesRefs.forEach(vulnRef => {
+                const vuln = vulns[vulnRef];
+                markdown += `| ${vuln.name} | ${vuln.severity} | ${vuln.cvssScore.score} | ${vuln.cvssScore.version} | ${vuln.cvssScore.vector} | ${vuln.exploitable} |
 `;
-        });
+            });
+        }
         return {
             text: text,
             markdown: markdown
@@ -1161,19 +1125,19 @@ class SarifReportPresenter {
     Installed Version: ${pkg.version}
     Package path: ${pkg.path}
 `;
-        pkg.vulnerabilitiesRefs.forEach(vulnRef => {
-            const vuln = data.result.vulnerabilities[vulnRef];
-            message += `.
+        if (pkg.vulnerabilitiesRefs) {
+            pkg.vulnerabilitiesRefs.forEach(vulnRef => {
+                const vuln = data.result.vulnerabilities[vulnRef];
+                message += ".\n";
+                if (baseUrl) {
+                    message += `Vulnerability: [${vuln.name}](${baseUrl}/vulnerabilities?filter=freeText+in+("${vuln.name}"))
 `;
-            if (baseUrl) {
-                message += `Vulnerability: [${vuln.name}](${baseUrl}/vulnerabilities?filter=freeText+in+("${vuln.name}"))
+                }
+                else {
+                    message += `Vulnerability: ${vuln.name}
 `;
-            }
-            else {
-                message += `Vulnerability: ${vuln.name}
-`;
-            }
-            message += `Severity: ${vuln.severity}
+                }
+                message += `Severity: ${vuln.severity}
       CVSS Score: ${vuln.cvssScore.score}
       CVSS Version: ${vuln.cvssScore.version}
       CVSS Vector: ${vuln.cvssScore.vector}
@@ -1181,7 +1145,8 @@ class SarifReportPresenter {
       Exploitable: ${vuln.exploitable}
       Link to NVD: [${vuln.name}](https://nvd.nist.gov/vuln/detail/${vuln.name})
 `;
-        });
+            });
+        }
         return message;
     }
     getSARIFReportMessage(data, vuln, pkg, baseUrl) {
@@ -1316,19 +1281,20 @@ class SummaryReportPresenter {
         });
     }
     countVulnsBySeverity(packages, vulnerabilities, minSeverity) {
-        var _a;
         const result = {
             total: { critical: 0, high: 0, medium: 0, low: 0, negligible: 0 },
             fixable: { critical: 0, high: 0, medium: 0, low: 0, negligible: 0 }
         };
         for (const pkg of Object.values(packages)) {
-            for (const vulnRef of (_a = pkg.vulnerabilitiesRefs) !== null && _a !== void 0 ? _a : []) {
-                const vuln = vulnerabilities[vulnRef];
-                const sev = vuln.severity.toLowerCase();
-                if (!minSeverity || (0, severity_1.isSeverityGte)(sev, minSeverity)) {
-                    result.total[sev]++;
-                    if (vuln.fixVersion || pkg.suggestedFix) {
-                        result.fixable[sev]++;
+            if (pkg.vulnerabilitiesRefs) {
+                for (const vulnRef of pkg.vulnerabilitiesRefs) {
+                    const vuln = vulnerabilities[vulnRef];
+                    const sev = vuln.severity.toLowerCase();
+                    if (!minSeverity || (0, severity_1.isSeverityGte)(sev, minSeverity)) {
+                        result.total[sev]++;
+                        if (vuln.fixVersion || pkg.suggestedFix) {
+                            result.fixable[sev]++;
+                        }
                     }
                 }
             }
@@ -1404,23 +1370,23 @@ class SummaryReportPresenter {
                 return 0;
             });
             let tableData = orderedPackagesBySeverity.map(pkg => {
-                var _a;
+                var _a, _b;
                 return [
                     { data: pkg.name },
                     { data: pkg.type },
                     { data: pkg.version },
                     { data: pkg.suggestedFix || "" },
                     ...visibleSeverities.map(s => {
-                        var _a;
-                        return `${(_a = pkg.vulnerabilitiesRefs.filter(vulnRef => {
+                        var _a, _b;
+                        return `${(_b = (_a = pkg.vulnerabilitiesRefs) === null || _a === void 0 ? void 0 : _a.filter(vulnRef => {
                             const vuln = data.result.vulnerabilities[vulnRef];
                             return vuln.severity.toLowerCase() === s;
-                        }).length) !== null && _a !== void 0 ? _a : 0}`;
+                        }).length) !== null && _b !== void 0 ? _b : 0}`;
                     }),
-                    `${(_a = pkg.vulnerabilitiesRefs.filter(vulnRef => {
+                    `${(_b = (_a = pkg.vulnerabilitiesRefs) === null || _a === void 0 ? void 0 : _a.filter(vulnRef => {
                         const vuln = data.result.vulnerabilities[vulnRef];
                         return vuln.exploitable;
-                    }).length) !== null && _a !== void 0 ? _a : 0}`,
+                    }).length) !== null && _b !== void 0 ? _b : 0}`,
                 ];
             });
             core.summary.addTable([
@@ -1568,7 +1534,8 @@ exports.FileSystemReportRepository = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 class FileSystemReportRepository {
-    writeReport(reportData) {
+    writeReport(report) {
+        const reportData = JSON.stringify(report, null, 2);
         fs_1.default.writeFileSync("./report.json", reportData);
         core.setOutput("scanReport", "./report.json");
     }

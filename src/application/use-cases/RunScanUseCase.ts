@@ -1,5 +1,5 @@
 import * as core from '@actions/core';
-import { ScanMode, ScanExecutionResult } from '../ports/ScannerDTOs';
+import { ScanMode } from '../ports/ScannerDTOs';
 import { IInputProvider } from '../ports/IInputProvider';
 import { IScanner } from '../ports/IScanner';
 import { IReportPresenter } from '../ports/IReportPresenter';
@@ -8,9 +8,7 @@ import { Report } from '../../domain/entities/report';
 import { FilterOptions } from '../../domain/services/filtering';
 import { Severity } from '../../domain/value-objects/severity';
 import { ScanConfig } from '../ports/ScanConfig';
-import { ScannerPullError } from '../errors/ScannerPullError';
 import { ScanExecutionError } from '../errors/ScanExecutionError';
-import { ReportParsingError } from '../errors/ReportParsingError';
 
 export class RunScanUseCase {
   constructor(
@@ -31,21 +29,31 @@ export class RunScanUseCase {
       config = this.inputProvider.getInputs();
       this.printOptions(config);
 
-      const scannerPulled = await this.scanner.pullScanner(config.cliScannerURL, config.cliScannerVersion);
-      if (scannerPulled !== 0) {
-        throw new ScannerPullError("Terminating scan. Scanner couldn't be pulled.");
+      const report = await this.scanner.executeScan(config);
+
+      if (config.mode === ScanMode.vm && report) {
+        this.reportRepository.writeReport(report);
+
+        const filters: FilterOptions = {
+          minSeverity: (config.severityAtLeast && config.severityAtLeast.toLowerCase() !== "any")
+            ? config.severityAtLeast.toLowerCase() as Severity
+            : undefined,
+          packageTypes: this.parseCsvList(config.packageTypes),
+          notPackageTypes: this.parseCsvList(config.notPackageTypes),
+          excludeAccepted: config.excludeAccepted,
+        };
+
+        for (const presenter of this.reportPresenters) {
+          presenter.generateReport(report, config.groupByPackage, filters);
+        }
       }
 
-      const scanResult = await this.scanner.executeScan(config);
-      const retCode = scanResult.ReturnCode;
-
-      if ((retCode === 0 || retCode === 1) && config.mode === ScanMode.vm) {
-        this.processVmScanResult(config, scanResult);
-      } else if (retCode > 1) {
-        throw new ScanExecutionError("Terminating scan. Scanner couldn't be executed.");
+      const policyEvaluation = report?.result?.policies?.globalEvaluation;
+      if (policyEvaluation === 'failed') {
+        this.setFinalStatus(config, 1);
+      } else {
+        this.setFinalStatus(config, 0);
       }
-
-      this.setFinalStatus(config, retCode);
 
     } catch (error) {
       const errorMessage = `Unexpected error: ${error instanceof Error ? error.stack : String(error)}`;
@@ -54,32 +62,7 @@ export class RunScanUseCase {
       } else {
         core.error(errorMessage);
       }
-    }
-  }
-
-  private processVmScanResult(config: ScanConfig, scanResult: ScanExecutionResult): void {
-    this.reportRepository.writeReport(scanResult.Output);
-
-    let report: Report;
-    try {
-      report = JSON.parse(scanResult.Output);
-    } catch (error) {
-      throw new ReportParsingError("Error parsing analysis JSON report: " + error + ". Output was: " + scanResult.Output);
-    }
-
-    if (report) {
-      const filters: FilterOptions = {
-        minSeverity: (config.severityAtLeast && config.severityAtLeast.toLowerCase() !== "any")
-          ? config.severityAtLeast.toLowerCase() as Severity
-          : undefined,
-        packageTypes: this.parseCsvList(config.packageTypes),
-        notPackageTypes: this.parseCsvList(config.notPackageTypes),
-        excludeAccepted: config.excludeAccepted,
-      };
-
-      for (const presenter of this.reportPresenters) {
-        presenter.generateReport(report, config.groupByPackage, filters);
-      }
+      this.setFinalStatus(config!, 2);
     }
   }
 
@@ -107,6 +90,8 @@ export class RunScanUseCase {
     if (config.registryUser && config.registryPassword) {
       core.info(`Using specified Registry credentials.`);
     }
+
+
 
     core.info(`Stop on Failed Policy Evaluation: ${config.stopOnFailedPolicyEval}`);
 

@@ -3,16 +3,17 @@ import { IInputProvider } from '../../../src/application/ports/IInputProvider';
 import { IScanner } from '../../../src/application/ports/IScanner';
 import { IReportPresenter } from '../../../src/application/ports/IReportPresenter';
 import { IReportRepository } from '../../../src/application/ports/IReportRepository';
-import { ScanExecutionResult, ScanMode } from '../../../src/application/ports/ScannerDTOs';
+import { ScanMode } from '../../../src/application/ports/ScannerDTOs';
 import * as core from '@actions/core';
 import * as report_test from "../../fixtures/report-test-v1.json";
 import { ScanConfig } from '../../../src/application/ports/ScanConfig';
+import { Report } from '../../../src/domain/entities/report';
 
 jest.mock('@actions/core');
 
 const mockCore = jest.mocked(core);
 
-const exampleReport = JSON.stringify(report_test);
+const exampleReport: Report = report_test as Report;
 
 describe('RunScanUseCase', () => {
   let inputProvider: jest.Mocked<IInputProvider>;
@@ -31,7 +32,6 @@ describe('RunScanUseCase', () => {
       getInputs: jest.fn(),
     };
     scanner = {
-      pullScanner: jest.fn(),
       executeScan: jest.fn(),
     };
     reportPresenter = {
@@ -79,7 +79,6 @@ describe('RunScanUseCase', () => {
     };
 
     inputProvider.getInputs.mockReturnValue(scanConfig);
-    scanner.pullScanner.mockResolvedValue(0);
   });
 
   const executeUseCase = () => {
@@ -88,29 +87,20 @@ describe('RunScanUseCase', () => {
   };
 
   it('should end successfully if scan passes', async () => {
-    const scanResult: ScanExecutionResult = {
-      ReturnCode: 0,
-      Output: exampleReport,
-      Error: '',
-    };
-    scanner.executeScan.mockResolvedValue(scanResult);
+    const exampleReportPassed = { ...exampleReport, result: { ...exampleReport.result, policies: { ...exampleReport.result.policies, globalEvaluation: 'passed' } } };
+    scanner.executeScan.mockResolvedValue(exampleReportPassed);
 
     await executeUseCase();
 
-    expect(scanner.pullScanner).toHaveBeenCalled();
     expect(scanner.executeScan).toHaveBeenCalled();
-    expect(reportRepository.writeReport).toHaveBeenCalledWith(exampleReport);
+    expect(reportRepository.writeReport).toHaveBeenCalledWith(exampleReportPassed);
     expect(reportPresenter.generateReport).toHaveBeenCalled();
     expect(mockCore.setFailed).not.toHaveBeenCalled();
   });
 
   it('should fail if policy evaluation fails and stopOnFailedPolicyEval is true', async () => {
-    const scanResult: ScanExecutionResult = {
-      ReturnCode: 1,
-      Output: exampleReport,
-      Error: '',
-    };
-    scanner.executeScan.mockResolvedValue(scanResult);
+    const failedReport = { ...exampleReport, result: { ...exampleReport.result, policies: { ...exampleReport.result.policies, globalEvaluation: 'failed' } } };
+    scanner.executeScan.mockResolvedValue(failedReport);
 
     await executeUseCase();
 
@@ -120,56 +110,12 @@ describe('RunScanUseCase', () => {
   it('should not fail if policy evaluation fails and stopOnFailedPolicyEval is false', async () => {
     scanConfig.stopOnFailedPolicyEval = false;
     inputProvider.getInputs.mockReturnValue(scanConfig);
-
-    const scanResult: ScanExecutionResult = {
-      ReturnCode: 1,
-      Output: exampleReport,
-      Error: '',
-    };
-    scanner.executeScan.mockResolvedValue(scanResult);
+    const failedReport = { ...exampleReport, result: { ...exampleReport.result, policies: { ...exampleReport.result.policies, globalEvaluation: 'failed' } } };
+    scanner.executeScan.mockResolvedValue(failedReport);
 
     await executeUseCase();
 
     expect(mockCore.setFailed).not.toHaveBeenCalled();
-  });
-
-
-  it('should fail if scanner returns an error code and stopOnProcessingError is true', async () => {
-    const scanResult: ScanExecutionResult = {
-      ReturnCode: 2,
-      Output: '',
-      Error: 'scanner error',
-    };
-    scanner.executeScan.mockResolvedValue(scanResult);
-
-    await executeUseCase();
-
-    expect(mockCore.setFailed).toHaveBeenCalledWith(expect.stringContaining("Terminating scan. Scanner couldn't be executed."));
-  });
-
-  it('should not fail if scanner returns an error code and stopOnProcessingError is false', async () => {
-    scanConfig.stopOnProcessingError = false;
-    inputProvider.getInputs.mockReturnValue(scanConfig);
-    const scanResult: ScanExecutionResult = {
-      ReturnCode: 2,
-      Output: '',
-      Error: 'scanner error',
-    };
-    scanner.executeScan.mockResolvedValue(scanResult);
-
-    await executeUseCase();
-
-    expect(mockCore.error).toHaveBeenCalledWith(expect.stringContaining("Terminating scan. Scanner couldn't be executed."));
-    expect(mockCore.setFailed).not.toHaveBeenCalled();
-  });
-
-
-  it('should fail if scanner pull fails', async () => {
-    scanner.pullScanner.mockResolvedValue(1);
-
-    await executeUseCase();
-
-    expect(mockCore.setFailed).toHaveBeenCalledWith(expect.stringContaining("Terminating scan. Scanner couldn't be pulled."));
   });
 
   it('should handle errors during execution', async () => {
@@ -184,12 +130,7 @@ describe('RunScanUseCase', () => {
   it('should not generate reports if scan is not for VM mode', async () => {
     scanConfig.mode = ScanMode.iac;
     inputProvider.getInputs.mockReturnValue(scanConfig);
-    const scanResult: ScanExecutionResult = {
-      ReturnCode: 0,
-      Output: '',
-      Error: '',
-    };
-    scanner.executeScan.mockResolvedValue(scanResult);
+    scanner.executeScan.mockResolvedValue(exampleReport);
 
     await executeUseCase();
 

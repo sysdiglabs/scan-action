@@ -144,24 +144,26 @@ export class SarifReportPresenter implements IReportPresenter {
         let severityLevel = "";
         let minSeverityNum = 5;
         let score = 0.0;
-        pkg.vulnerabilitiesRefs.forEach(vulnRef => {
-          const vuln = data.result.vulnerabilities[vulnRef];
-          fullDescription += `${this.getSARIFVulnFullDescription(pkg, vuln)}
-
-
+        if (pkg.vulnerabilitiesRefs) {
+          pkg.vulnerabilitiesRefs.forEach(vulnRef => {
+            const vuln = data.result.vulnerabilities[vulnRef];
+            fullDescription += `${this.getSARIFVulnFullDescription(pkg, vuln)} \
+\
+\
 `;
 
-          const sevNum = this.numericPriorityForSeverity(vuln.severity);
+            const sevNum = this.numericPriorityForSeverity(vuln.severity);
 
-          if (sevNum < minSeverityNum) {
-            severityLevel = vuln.severity.toLowerCase();
-            minSeverityNum = sevNum;
-          }
+            if (sevNum < minSeverityNum) {
+              severityLevel = vuln.severity.toLowerCase();
+              minSeverityNum = sevNum;
+            }
 
-          if (vuln.cvssScore.score > score) {
-            score = vuln.cvssScore.score;
-          }
-        });
+            if (vuln.cvssScore.score > score) {
+              score = vuln.cvssScore.score;
+            }
+          });
+        }
         if (baseUrl) helpUri = `${baseUrl}/content?filter=freeText+in+("${pkg.name}")`;
 
 
@@ -234,56 +236,58 @@ export class SarifReportPresenter implements IReportPresenter {
       }
 
       Object.values(data.result.packages).forEach(pkg => {
-        pkg.vulnerabilitiesRefs.forEach(vulnRef => {
-          const vuln = data.result.vulnerabilities[vulnRef];
-          if (!(vuln.name in ruleIds)) {
-            ruleIds.push(vuln.name)
-            let rule = {
-              id: vuln.name,
-              name: pkg.type,
-              shortDescription: {
-                text: this.getSARIFVulnShortDescription(pkg, vuln)
-              },
-              fullDescription: {
-                text: this.getSARIFVulnFullDescription(pkg, vuln)
-              },
-              helpUri: `https://nvd.nist.gov/vuln/detail/${vuln.name}`,
-              help: this.getSARIFVulnHelp(pkg, vuln),
-              properties: {
-                precision: "very-high",
-                'security-severity': `${vuln.cvssScore.score}`,
-                tags: [
-                  'vulnerability',
-                  'security',
-                  vuln.severity
-                ]
-              }
-            }
-            rules.push(rule)
-          }
-
-          let result = {
-            ruleId: vuln.name,
-            level: this.check_level(vuln.severity),
-            message: {
-              text: this.getSARIFReportMessage(data, vuln, pkg, baseUrl)
-            },
-            locations: [
-              {
-                physicalLocation: {
-                  artifactLocation: {
-                    uri: `file:///${this.sanitizeImageName(data.result.metadata.pullString)}`,
-                    uriBaseId: "ROOTPATH"
-                  }
+        if (pkg.vulnerabilitiesRefs) {
+          pkg.vulnerabilitiesRefs.forEach(vulnRef => {
+            const vuln = data.result.vulnerabilities[vulnRef];
+            if (!(vuln.name in ruleIds)) {
+              ruleIds.push(vuln.name)
+              let rule = {
+                id: vuln.name,
+                name: pkg.type,
+                shortDescription: {
+                  text: this.getSARIFVulnShortDescription(pkg, vuln)
                 },
-                message: {
-                  text: `${data.result.metadata.pullString} - ${pkg.name}@${pkg.version}`
+                fullDescription: {
+                  text: this.getSARIFVulnFullDescription(pkg, vuln)
+                },
+                helpUri: `https://nvd.nist.gov/vuln/detail/${vuln.name}`,
+                help: this.getSARIFVulnHelp(pkg, vuln),
+                properties: {
+                  precision: "very-high",
+                  'security-severity': `${vuln.cvssScore.score}`,
+                  tags: [
+                    'vulnerability',
+                    'security',
+                    vuln.severity
+                  ]
                 }
               }
-            ]
-          }
-          results.push(result)
-        });
+              rules.push(rule)
+            }
+
+            let result = {
+              ruleId: vuln.name,
+              level: this.check_level(vuln.severity),
+              message: {
+                text: this.getSARIFReportMessage(data, vuln, pkg, baseUrl)
+              },
+              locations: [
+                {
+                  physicalLocation: {
+                    artifactLocation: {
+                      uri: `file:///${this.sanitizeImageName(data.result.metadata.pullString)}`,
+                      uriBaseId: "ROOTPATH"
+                    }
+                  },
+                  message: {
+                    text: `${data.result.metadata.pullString} - ${pkg.name}@${pkg.version}`
+                  }
+                }
+              ]
+            }
+            results.push(result)
+          });
+        }
       });
     }
 
@@ -304,9 +308,10 @@ export class SarifReportPresenter implements IReportPresenter {
 
   private getSARIFPkgHelp(pkg: Package, vulns: { [key: string]: Vulnerability}) {
     let text = "";
-    pkg.vulnerabilitiesRefs.forEach(vulnRef => {
-      const vuln = vulns[vulnRef];
-      text += `Vulnerability ${vuln.name}
+    if (pkg.vulnerabilitiesRefs) {
+      pkg.vulnerabilitiesRefs.forEach(vulnRef => {
+        const vuln = vulns[vulnRef];
+        text += `Vulnerability ${vuln.name}
     Severity: ${vuln.severity}
     Package: ${pkg.name}
     CVSS Score: ${vuln.cvssScore.score}
@@ -318,17 +323,20 @@ export class SarifReportPresenter implements IReportPresenter {
     Type: ${pkg.type}
     Location: ${pkg.path}
     URL: https://nvd.nist.gov/vuln/detail/${vuln.name}\n\n\n`
-    });
+      });
+    }
 
     let markdown = `| Vulnerability | Severity | CVSS Score | CVSS Version | CVSS Vector | Exploitable |
     | -------- | ------- | ---------- | ------------ | -----------  | ----------- |
 `;
 
-    pkg.vulnerabilitiesRefs.forEach(vulnRef => {
-      const vuln = vulns[vulnRef];
-      markdown += `| ${vuln.name} | ${vuln.severity} | ${vuln.cvssScore.score} | ${vuln.cvssScore.version} | ${vuln.cvssScore.vector} | ${vuln.exploitable} |
+    if (pkg.vulnerabilitiesRefs) {
+      pkg.vulnerabilitiesRefs.forEach(vulnRef => {
+        const vuln = vulns[vulnRef];
+        markdown += `| ${vuln.name} | ${vuln.severity} | ${vuln.cvssScore.score} | ${vuln.cvssScore.version} | ${vuln.cvssScore.vector} | ${vuln.exploitable} |
 `
-    });
+      });
+    }
 
     return {
       text: text,
@@ -375,20 +383,20 @@ export class SarifReportPresenter implements IReportPresenter {
     Package path: ${pkg.path}
 `;
 
-    pkg.vulnerabilitiesRefs.forEach(vulnRef => {
-      const vuln = data.result.vulnerabilities[vulnRef];
-      message += `.
-`;
+    if (pkg.vulnerabilitiesRefs) {
+      pkg.vulnerabilitiesRefs.forEach(vulnRef => {
+        const vuln = data.result.vulnerabilities[vulnRef];
+        message += ".\n";
 
-      if (baseUrl) {
-        message += `Vulnerability: [${vuln.name}](${baseUrl}/vulnerabilities?filter=freeText+in+("${vuln.name}"))
+        if (baseUrl) {
+          message += `Vulnerability: [${vuln.name}](${baseUrl}/vulnerabilities?filter=freeText+in+("${vuln.name}"))
 `;
-      } else {
-        message += `Vulnerability: ${vuln.name}
+        } else {
+          message += `Vulnerability: ${vuln.name}
 `;
-      }
+        }
 
-      message += `Severity: ${vuln.severity}
+        message += `Severity: ${vuln.severity}
       CVSS Score: ${vuln.cvssScore.score}
       CVSS Version: ${vuln.cvssScore.version}
       CVSS Vector: ${vuln.cvssScore.vector}
@@ -396,7 +404,8 @@ export class SarifReportPresenter implements IReportPresenter {
       Exploitable: ${vuln.exploitable}
       Link to NVD: [${vuln.name}](https://nvd.nist.gov/vuln/detail/${vuln.name})
 `;
-    });
+      });
+    }
 
 
     return message;

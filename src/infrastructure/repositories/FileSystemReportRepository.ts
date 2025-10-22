@@ -1,9 +1,11 @@
 import * as core from '@actions/core';
 import fs from 'fs';
+import { Report } from '../../domain/entities/report';
 import { IReportRepository } from '../../application/ports/IReportRepository';
 
 export class FileSystemReportRepository implements IReportRepository {
-  writeReport(reportData: string): void {
+  writeReport(report: Report): void {
+    const reportData = JSON.stringify(report, null, 2);
     fs.writeFileSync("./report.json", reportData);
     core.setOutput("scanReport", "./report.json");
   }

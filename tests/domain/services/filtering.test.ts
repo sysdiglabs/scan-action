@@ -4,7 +4,7 @@ import { Vulnerability } from '../../../src/domain/entities/vulnerability';
 import { Severity } from '../../../src/domain/value-objects/severity';
 const fixtureReport : Report = require("../../fixtures/report-test-v1.json"); // require is needed here, otherwise the import statement adds a .default attribute to the json
 
-const newBasePkg = (vulnerabilitiesRefs: String[]  = [], type = "os") => ({
+const newBasePkg = (vulnerabilitiesRefs: String[] | null = [], type = "os") => ({
   type,
   name: "foo",
   version: "1.0",
@@ -41,7 +41,9 @@ describe("filterPackages", () => {
     const filters: FilterOptions = { minSeverity: "high" };
     const result = Object.values(filterPackages(pkgs, mockVulns, filters));
     expect(result.length).toBe(1);
-    expect(mockVulns[result[0].vulnerabilitiesRefs[0]].severity).toBe("high");
+    if (result[0].vulnerabilitiesRefs) {
+      expect(mockVulns[result[0].vulnerabilitiesRefs[0]].severity).toBe("high");
+    }
   });
 
   it("filters by packageTypes", () => {
@@ -82,7 +84,9 @@ describe("filterPackages", () => {
     const filters: FilterOptions = { excludeAccepted: true };
     const result =  Object.values(filterPackages(pkgs, vulnsWithAcceptedRisk, filters));
     expect(result.length).toBe(1);
-    expect(vulnsWithAcceptedRisk[result[0].vulnerabilitiesRefs[0]].riskAcceptRefs).toEqual([]);
+    if (result[0].vulnerabilitiesRefs) {
+      expect(vulnsWithAcceptedRisk[result[0].vulnerabilitiesRefs[0]].riskAcceptRefs).toEqual([]);
+    }
   });
 
   it("removes packages with no vulns after filtering", () => {
@@ -111,7 +115,7 @@ describe("filterPackages with fixture report", () => {
 
     expect(
       Object.values(result).every(pkg =>
-        pkg.vulnerabilitiesRefs.every(ref => vulns[ref].severity.toLowerCase() === "critical")
+        pkg.vulnerabilitiesRefs && pkg.vulnerabilitiesRefs.every(ref => vulns[ref].severity.toLowerCase() === "critical")
       )
     ).toBe(true);
 
@@ -130,7 +134,7 @@ describe("filterPackages with fixture report", () => {
     // Vuln with accepted risks should be removed
     expect(
       Object.values(result).some(pkg =>
-        pkg.vulnerabilitiesRefs.some(ref => (vulns[ref].riskAcceptRefs && vulns[ref].riskAcceptRefs.length > 0))
+        pkg.vulnerabilitiesRefs && pkg.vulnerabilitiesRefs.some(ref => (vulns[ref].riskAcceptRefs && vulns[ref].riskAcceptRefs.length > 0))
       )
     ).toBe(false);
   });

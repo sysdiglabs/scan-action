@@ -60,13 +60,15 @@ export class SummaryReportPresenter implements IReportPresenter {
     };
 
     for (const pkg of Object.values(packages)) {
-      for (const vulnRef of pkg.vulnerabilitiesRefs ?? []) {
-        const vuln = vulnerabilities[vulnRef];
-        const sev = vuln.severity.toLowerCase() as Severity;
-        if (!minSeverity || isSeverityGte(sev, minSeverity)) {
-          result.total[sev]++;
-          if (vuln.fixVersion || pkg.suggestedFix) {
-            result.fixable[sev]++;
+      if (pkg.vulnerabilitiesRefs) {
+        for (const vulnRef of pkg.vulnerabilitiesRefs) {
+          const vuln = vulnerabilities[vulnRef];
+          const sev = vuln.severity.toLowerCase() as Severity;
+          if (!minSeverity || isSeverityGte(sev, minSeverity)) {
+            result.total[sev]++;
+            if (vuln.fixVersion || pkg.suggestedFix) {
+              result.fixable[sev]++;
+            }
           }
         }
       }
@@ -170,13 +172,13 @@ export class SummaryReportPresenter implements IReportPresenter {
             { data: pkg.suggestedFix || "" },
             ...visibleSeverities.map(s =>
               `${
-                pkg.vulnerabilitiesRefs.filter(vulnRef => {
+                pkg.vulnerabilitiesRefs?.filter(vulnRef => {
                   const vuln = data.result.vulnerabilities[vulnRef];
                   return vuln.severity.toLowerCase() === s;
                 }).length ?? 0
               }`
             ),
-            `${pkg.vulnerabilitiesRefs.filter(vulnRef => {
+            `${pkg.vulnerabilitiesRefs?.filter(vulnRef => {
                 const vuln = data.result.vulnerabilities[vulnRef];
                 return vuln.exploitable;
             }).length ?? 0}`,

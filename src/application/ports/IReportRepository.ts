@@ -1,4 +1,5 @@
+import { Report } from "../../domain/entities/report";
 
 export interface IReportRepository {
-  writeReport(reportData: string): void;
+  writeReport(report: Report): void;
 }
