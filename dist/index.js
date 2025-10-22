@@ -200,59 +200,21 @@ class RunScanUseCase {
             try {
                 const config = this.inputProvider.getInputs();
                 this.printOptions(config);
-                let scanResult;
-                // Download CLI Scanner from 'cliScannerURL'
-                let retCode = yield this.scanner.pullScanner(config.cliScannerURL, config.cliScannerVersion);
-                if (retCode == 0) {
-                    // Execute Scanner
-                    scanResult = yield this.scanner.executeScan(config);
-                    retCode = scanResult.ReturnCode;
-                    if (retCode == 0 || retCode == 1) {
-                        // Transform Scan Results to other formats such as SARIF
-                        if (config.mode == ScannerDTOs_1.ScanMode.vm) {
-                            this.reportRepository.writeReport(scanResult.Output);
-                            let report;
-                            try {
-                                report = JSON.parse(scanResult.Output);
-                            }
-                            catch (error) {
-                                core.error("Error parsing analysis JSON report: " + error + ". Output was: " + scanResult.Output);
-                                throw new ExecutionError_1.ExecutionError(scanResult.Output, scanResult.Error);
-                            }
-                            if (report) {
-                                const filters = {
-                                    minSeverity: (config.severityAtLeast && config.severityAtLeast.toLowerCase() !== "any")
-                                        ? config.severityAtLeast.toLowerCase()
-                                        : undefined,
-                                    packageTypes: this.parseCsvList(config.packageTypes),
-                                    notPackageTypes: this.parseCsvList(config.notPackageTypes),
-                                    excludeAccepted: config.excludeAccepted,
-                                };
-                                for (const presenter of this.reportPresenters) {
-                                    presenter.generateReport(report, config.groupByPackage, filters);
-                                }
-                            }
-                        }
-                    }
-                    else {
-                        core.error("Terminating scan. Scanner couldn't be executed.");
-                    }
-                }
-                else {
+                const scannerPulled = yield this.scanner.pullScanner(config.cliScannerURL, config.cliScannerVersion);
+                if (scannerPulled !== 0) {
                     core.error("Terminating scan. Scanner couldn't be pulled.");
+                    this.setFinalStatus(config, scannerPulled);
+                    return;
                 }
-                if (config.stopOnFailedPolicyEval && retCode == 1) {
-                    core.setFailed(`Stopping because Policy Evaluation was FAILED.`);
+                const scanResult = yield this.scanner.executeScan(config);
+                const retCode = scanResult.ReturnCode;
+                if ((retCode === 0 || retCode === 1) && config.mode === ScannerDTOs_1.ScanMode.vm) {
+                    this.processVmScanResult(config, scanResult);
                 }
-                else if (config.standalone && retCode == 0) {
-                    core.info("Policy Evaluation was OMITTED.");
+                else if (retCode > 1) {
+                    core.error("Terminating scan. Scanner couldn't be executed.");
                 }
-                else if (retCode == 0) {
-                    core.info("Policy Evaluation was PASSED.");
-                }
-                else if (config.stopOnProcessingError && retCode > 1) {
-                    core.setFailed(`Stopping because the scanner terminated with an error.`);
-                } // else: Don't stop regardless the outcome.
+                this.setFinalStatus(config, retCode);
             }
             catch (error) {
                 if (core.getInput('stop-on-processing-error') == 'true') {
@@ -261,6 +223,44 @@ class RunScanUseCase {
                 core.error(`Unexpected error: ${error instanceof Error ? error.stack : String(error)}`);
             }
         });
+    }
+    processVmScanResult(config, scanResult) {
+        this.reportRepository.writeReport(scanResult.Output);
+        let report;
+        try {
+            report = JSON.parse(scanResult.Output);
+        }
+        catch (error) {
+            core.error("Error parsing analysis JSON report: " + error + ". Output was: " + scanResult.Output);
+            throw new ExecutionError_1.ExecutionError(scanResult.Output, scanResult.Error);
+        }
+        if (report) {
+            const filters = {
+                minSeverity: (config.severityAtLeast && config.severityAtLeast.toLowerCase() !== "any")
+                    ? config.severityAtLeast.toLowerCase()
+                    : undefined,
+                packageTypes: this.parseCsvList(config.packageTypes),
+                notPackageTypes: this.parseCsvList(config.notPackageTypes),
+                excludeAccepted: config.excludeAccepted,
+            };
+            for (const presenter of this.reportPresenters) {
+                presenter.generateReport(report, config.groupByPackage, filters);
+            }
+        }
+    }
+    setFinalStatus(config, retCode) {
+        if (config.stopOnFailedPolicyEval && retCode === 1) {
+            core.setFailed(`Stopping because Policy Evaluation was FAILED.`);
+        }
+        else if (config.standalone && retCode === 0) {
+            core.info("Policy Evaluation was OMITTED.");
+        }
+        else if (retCode === 0) {
+            core.info("Policy Evaluation was PASSED.");
+        }
+        else if (config.stopOnProcessingError && retCode > 1) {
+            core.setFailed(`Stopping because the scanner terminated with an error.`);
+        }
     }
     printOptions(config) {
         if (config.standalone) {
