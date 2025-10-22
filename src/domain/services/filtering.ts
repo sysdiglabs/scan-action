@@ -1,4 +1,4 @@
-import { Package } from "../../infrastructure/entities/JsonScanResultV1";
+import { JsonPackage } from "../../infrastructure/entities/JsonScanResultV1";
 import { Vulnerability } from "../entities/vulnerability";
 import { isSeverityGte, Severity } from "../value-objects/severity";
 
@@ -9,7 +9,7 @@ export interface FilterOptions {
   excludeAccepted?: boolean;
 }
 
-export function filterPackages(pkgs: {[key:string]: Package}, vulns: {[key:string]: Vulnerability}, filters: FilterOptions): {[key:string]: Package} {
+export function filterPackages(pkgs: {[key:string]: JsonPackage}, vulns: {[key:string]: Vulnerability}, filters: FilterOptions): {[key:string]: JsonPackage} {
   const filteredPackages = Object.entries(pkgs)
     .filter(([key, pkg]) => {
       const pkgType = pkg.type?.toLowerCase();
@@ -31,7 +31,7 @@ export function filterPackages(pkgs: {[key:string]: Package}, vulns: {[key:strin
           return true;
         });
         const filteredPackage = { ...pkg, vulnerabilitiesRefs: vulnRefs}
-        return [ key, filteredPackage] as [string, Package];
+        return [ key, filteredPackage] as [string, JsonPackage];
       })
       .filter(([key, pkg]) => pkg.vulnerabilitiesRefs && pkg.vulnerabilitiesRefs.length > 0));
 }

@@ -1,34 +1,34 @@
-export interface Report {
-  info: Info
-  scanner: Scanner
-  result: Result
+export interface JsonScanResultV1 {
+  info: JsonInfo
+  scanner: JsonScanner
+  result: JsonResult
 }
 
-export interface Info {
+export interface JsonInfo {
   scanTime: string
   scanDuration: string
   resultUrl: string
   resultId: string
 }
 
-export interface Scanner {
+export interface JsonScanner {
   name: string
   version: string
 }
 
-export interface Result {
+export interface JsonResult {
   assetType: string
-  layers: { [key: string]: Layer }
-  metadata: Metadata
-  packages: { [key: string]: Package }
-  policies: Policies
-  producer: Producer
+  layers: { [key: string]: JsonLayer }
+  metadata: JsonMetadata
+  packages: { [key: string]: JsonPackage }
+  policies: JsonPolicies
+  producer: JsonProducer
   riskAccepts?: { [key: string]: any }
   stage: string
   vulnerabilities: { [key: string]: any }
 }
 
-export interface Layer {
+export interface JsonLayer {
   command: string
   digest?: string
   index: number
@@ -36,7 +36,7 @@ export interface Layer {
 }
 
 
-export interface Metadata {
+export interface JsonMetadata {
   architecture: string
   author: string
   baseOs: string
@@ -49,7 +49,7 @@ export interface Metadata {
   size: number
 }
 
-export interface Package {
+export interface JsonPackage {
   isRemoved: boolean
   isRunning: boolean
   layerRef: string
@@ -61,64 +61,64 @@ export interface Package {
   vulnerabilitiesRefs: string[] | null
 }
 
-export interface Policies {
-  evaluations: PolicyEvaluation[]
+export interface JsonPolicies {
+  evaluations: JsonPolicyEvaluation[]
   globalEvaluation: string
 }
 
-export interface PolicyEvaluation {
+export interface JsonPolicyEvaluation {
   name: string
   identifier: string
   description: string
-  bundles: Bundle[]
+  bundles: JsonBundle[]
   evaluation: string
   createdAt: string
   updatedAt: string
 }
 
-export interface Bundle {
+export interface JsonBundle {
   name: string
   identifier: string
   type: string
-  rules: Rule[]
+  rules: JsonRule[]
 }
 
-export interface Rule {
+export interface JsonRule {
   ruleId: number | string
   ruleType: string
   failureType: string
   description: string
-  failures?: Failure[]
-  predicates: Predicate[]
+  failures?: JsonRuleFailure[]
+  predicates: JsonRulePredicate[]
   evaluationResult: string
 }
 
-export interface Failure {
+export interface JsonRuleFailure {
   description?: string
   packageRef: string
   vulnerabilityRef: string
   remediation?: string
-  Arguments?: Arguments
+  Arguments?: JsonRuleFailureArguments
   riskAcceptRefs?: string[]
 }
 
-export interface Arguments {
+export interface JsonRuleFailureArguments {
   instructions?: string[]
 }
 
 
-export interface Predicate {
+export interface JsonRulePredicate {
   type: string
-  extra?: Extra
+  extra?: JsonRulePredicateExtra
 }
 
-export interface Extra {
+export interface JsonRulePredicateExtra {
   level?: string
   age?: number
   vulnIds?: string[]
 }
 
 
-export interface Producer {
+export interface JsonProducer {
   producedAt: string
 }

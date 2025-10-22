@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import fs from 'fs';
 import { IReportPresenter } from '../../application/ports/IReportPresenter';
-import { Report, Package } from '../entities/JsonScanResultV1';
+import { JsonScanResultV1, JsonPackage } from '../entities/JsonScanResultV1';
 import { Vulnerability } from '../../domain/entities/vulnerability';
 import { FilterOptions, filterPackages } from '../../domain/services/filtering';
 import { SeverityNames } from '../../domain/value-objects/severity';
@@ -51,14 +51,14 @@ interface SARIFRule {
 }
 
 export class SarifReportPresenter implements IReportPresenter {
-  generateReport(data: Report, groupByPackage: boolean, filters?: FilterOptions) {
+  generateReport(data: JsonScanResultV1, groupByPackage: boolean, filters?: FilterOptions) {
     let sarifOutput = this.vulnerabilities2SARIF(data, groupByPackage, filters);
     core.setOutput("sarifReport", "./sarif.json");
     fs.writeFileSync("./sarif.json", JSON.stringify(sarifOutput, null, 2));
   }
 
   private vulnerabilities2SARIF(
-    data: Report,
+    data: JsonScanResultV1,
     groupByPackage: boolean,
     filters?: FilterOptions
   ) {
@@ -126,7 +126,7 @@ export class SarifReportPresenter implements IReportPresenter {
     return sevNum;
   }
 
-  private vulnerabilities2SARIFResByPackage(data: Report): [SARIFRule[], SARIFResult[]] {
+  private vulnerabilities2SARIFResByPackage(data: JsonScanResultV1): [SARIFRule[], SARIFResult[]] {
     let rules: SARIFRule[] = [];
     let results: SARIFResult[] = [];
     let resultUrl = "";
@@ -138,7 +138,7 @@ export class SarifReportPresenter implements IReportPresenter {
         baseUrl = resultUrl.slice(0, resultUrl.lastIndexOf('/'));
       }
 
-      Object.values(data.result.packages).forEach((pkg: Package) => {
+      Object.values(data.result.packages).forEach((pkg: JsonPackage) => {
         let helpUri = "";
         let fullDescription = "";
         let severityLevel = "";
@@ -222,7 +222,7 @@ export class SarifReportPresenter implements IReportPresenter {
     return imageName.replace(/[\/:]/g, '-');
   }
 
-  private vulnerabilities2SARIFRes(data: Report): [SARIFRule[], SARIFResult[]] {
+  private vulnerabilities2SARIFRes(data: JsonScanResultV1): [SARIFRule[], SARIFResult[]] {
     let results: SARIFResult[] = [];
     let rules: SARIFRule[] = [];
     let ruleIds: string[] = [];
@@ -293,11 +293,11 @@ export class SarifReportPresenter implements IReportPresenter {
 
     return [rules, results];
   }
-  private getSARIFVulnShortDescription(pkg: Package, vuln: Vulnerability) {
+  private getSARIFVulnShortDescription(pkg: JsonPackage, vuln: Vulnerability) {
     return `${vuln.name} Severity: ${vuln.severity} Package: ${pkg.name}`;
   }
 
-  private getSARIFVulnFullDescription(pkg: Package, vuln: Vulnerability) {
+  private getSARIFVulnFullDescription(pkg: JsonPackage, vuln: Vulnerability) {
     return `${vuln.name}
   Severity: ${vuln.severity}
   Package: ${pkg.name}
@@ -306,7 +306,7 @@ export class SarifReportPresenter implements IReportPresenter {
   URL: https://nvd.nist.gov/vuln/detail/${vuln.name}`;
   }
 
-  private getSARIFPkgHelp(pkg: Package, vulns: { [key: string]: Vulnerability}) {
+  private getSARIFPkgHelp(pkg: JsonPackage, vulns: { [key: string]: Vulnerability}) {
     let text = "";
     if (pkg.vulnerabilitiesRefs) {
       pkg.vulnerabilitiesRefs.forEach(vulnRef => {
@@ -344,7 +344,7 @@ export class SarifReportPresenter implements IReportPresenter {
     };
   }
 
-  private getSARIFVulnHelp(pkg: Package, vuln: Vulnerability) {
+  private getSARIFVulnHelp(pkg: JsonPackage, vuln: Vulnerability) {
     return {
       text: `Vulnerability ${vuln.name}
   Severity: ${vuln.severity}
@@ -366,7 +366,7 @@ export class SarifReportPresenter implements IReportPresenter {
 `
     }
   }
-  private getSARIFReportMessageByPackage(data: Report, pkg: Package, baseUrl?: string) {
+  private getSARIFReportMessageByPackage(data: JsonScanResultV1, pkg: JsonPackage, baseUrl?: string) {
     let message = `Full image scan results in Sysdig UI: [${data.result.metadata.pullString} scan result](${data.info.resultUrl})
 `;
 
@@ -411,7 +411,7 @@ export class SarifReportPresenter implements IReportPresenter {
     return message;
   }
 
-  private getSARIFReportMessage(data: Report, vuln: Vulnerability, pkg: Package, baseUrl: string | undefined) {
+  private getSARIFReportMessage(data: JsonScanResultV1, vuln: Vulnerability, pkg: JsonPackage, baseUrl: string | undefined) {
     let message = `Full image scan results in Sysdig UI: [${data.result.metadata.pullString} scan result](${data.info.resultUrl})
 `;
 

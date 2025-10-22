@@ -7,13 +7,13 @@ import { ScanMode } from '../../../src/application/ports/ScannerDTOs';
 import * as core from '@actions/core';
 import * as report_test from "../../fixtures/report-test-v1.json";
 import { ScanConfig } from '../../../src/application/ports/ScanConfig';
-import { Report } from '../../../src/infrastructure/entities/JsonScanResultV1';
+import { JsonScanResultV1 } from '../../../src/infrastructure/entities/JsonScanResultV1';
 
 jest.mock('@actions/core');
 
 const mockCore = jest.mocked(core);
 
-const exampleReport: Report = report_test as Report;
+const exampleReport: JsonScanResultV1 = report_test as JsonScanResultV1;
 
 describe('RunScanUseCase', () => {
   let inputProvider: jest.Mocked<IInputProvider>;

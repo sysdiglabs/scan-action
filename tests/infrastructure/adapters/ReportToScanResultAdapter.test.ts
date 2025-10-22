@@ -1,16 +1,16 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { Report } from '../../../src/infrastructure/entities/JsonScanResultV1';
+import { JsonScanResultV1 } from '../../../src/infrastructure/entities/JsonScanResultV1';
 import { Severity } from '../../../src/domain/scanresult';
 import { ReportToScanResultAdapter } from '../../../src/infrastructure/adapters/ReportToScanResultAdapter';
 
 describe('ReportToScanResultAdapter', () => {
-  let report: Report;
+  let report: JsonScanResultV1;
 
   beforeAll(() => {
     const filePath = path.join(__dirname, '../../fixtures/postgres_13.json');
     const fileContent = fs.readFileSync(filePath, 'utf-8');
-    report = JSON.parse(fileContent) as Report;
+    report = JSON.parse(fileContent) as JsonScanResultV1;
   });
 
   it('should correctly convert a Report to a ScanResult', () => {

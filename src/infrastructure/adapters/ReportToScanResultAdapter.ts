@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Report, Result as ReportResult, Metadata as ReportMetadata, Layer as JsonLayer, Package as JsonPackage } from '../entities/JsonScanResultV1';
+import { JsonScanResultV1, JsonResult as ReportResult, JsonMetadata as ReportMetadata, JsonLayer as JsonLayer, JsonPackage as JsonPackage } from '../entities/JsonScanResultV1';
 import {
   AcceptedRisk,
   AcceptedRiskReason,
@@ -127,7 +127,7 @@ function mapStringToEvaluationResult(result: string): EvaluationResult {
 // --- Adapter Class ---
 
 export class ReportToScanResultAdapter {
-  public toScanResult(report: Report): ScanResult {
+  public toScanResult(report: JsonScanResultV1): ScanResult {
     const scanResult = this.createScanResult(report.result.metadata);
     const reportResult = report.result;
 

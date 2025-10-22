@@ -1,5 +1,5 @@
-import { Report } from "../../infrastructure/entities/JsonScanResultV1";
+import { JsonScanResultV1 } from "../../infrastructure/entities/JsonScanResultV1";
 
 export interface IReportRepository {
-  writeReport(report: Report): void;
+  writeReport(report: JsonScanResultV1): void;
 }

@@ -4,7 +4,7 @@ import { IInputProvider } from '../ports/IInputProvider';
 import { IScanner } from '../ports/IScanner';
 import { IReportPresenter } from '../ports/IReportPresenter';
 import { IReportRepository } from '../ports/IReportRepository';
-import { Report } from '../../infrastructure/entities/JsonScanResultV1';
+import { JsonScanResultV1 } from '../../infrastructure/entities/JsonScanResultV1';
 import { FilterOptions } from '../../domain/services/filtering';
 import { Severity } from '../../domain/value-objects/severity';
 import { ScanConfig } from '../ports/ScanConfig';

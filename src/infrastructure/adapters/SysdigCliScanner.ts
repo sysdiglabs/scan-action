@@ -6,13 +6,13 @@ import { IScanner } from '../../application/ports/IScanner';
 import { ComposeFlags, ScanMode } from '../../application/ports/ScannerDTOs';
 import { cliScannerName, cliScannerResult, cliScannerURL, scannerURLForVersion } from './SysdigCliScannerConstants';
 import { ScanConfig } from '../../application/ports/ScanConfig';
-import { Report } from '../entities/JsonScanResultV1';
+import { JsonScanResultV1 } from '../entities/JsonScanResultV1';
 import { ReportParsingError } from '../../application/errors/ReportParsingError';
 const performance = require('perf_hooks').performance;
 
 export class SysdigCliScanner implements IScanner {
 
-  async executeScan(config: ScanConfig): Promise<Report> {
+  async executeScan(config: ScanConfig): Promise<JsonScanResultV1> {
     await this.pullScanner(config.cliScannerURL, config.cliScannerVersion)
 
     const scanFlags = this.composeFlags(config);
@@ -65,7 +65,7 @@ export class SysdigCliScanner implements IScanner {
     }
 
     try {
-      return JSON.parse(execOutput) as Report;
+      return JSON.parse(execOutput) as JsonScanResultV1;
     } catch (e) {
       throw new ReportParsingError(execOutput);
     }

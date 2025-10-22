@@ -1,6 +1,6 @@
 import * as core from "@actions/core";
 import { IReportPresenter } from "../../application/ports/IReportPresenter";
-import { Report, Package, Rule, Layer } from "../entities/JsonScanResultV1";
+import { JsonScanResultV1, JsonPackage, JsonRule, JsonLayer } from "../entities/JsonScanResultV1";
 import { Vulnerability } from "../../domain/entities/vulnerability";
 import { FilterOptions, filterPackages } from "../../domain/services/filtering";
 import { Severity, isSeverityGte, SeverityNames } from "../../domain/value-objects/severity";
@@ -19,7 +19,7 @@ export class SummaryReportPresenter implements IReportPresenter {
     private readonly standalone: boolean
   ) {}
 
-  async generateReport(data: Report, groupByPackage: boolean, filters?: FilterOptions) {
+  async generateReport(data: JsonScanResultV1, groupByPackage: boolean, filters?: FilterOptions) {
     const filteredPkgs = filterPackages(data.result.packages, data.result.vulnerabilities, filters || {});
     let filteredData = { ...data, result: { ...data.result, packages: filteredPkgs } };
 
@@ -47,7 +47,7 @@ export class SummaryReportPresenter implements IReportPresenter {
   };
 
   private countVulnsBySeverity(
-    packages:  { [key: string]: Package },
+    packages:  { [key: string]: JsonPackage },
     vulnerabilities: { [key: string]: Vulnerability },
     minSeverity?: Severity
   ): {
@@ -77,7 +77,7 @@ export class SummaryReportPresenter implements IReportPresenter {
   }
 
   private addVulnTableToSummary(
-    data: Report,
+    data: JsonScanResultV1,
     minSeverity?: Severity
   ) {
     const pkgs = data.result.packages;
@@ -106,7 +106,7 @@ export class SummaryReportPresenter implements IReportPresenter {
     ]);
   }
 
-  private findLayerByDigestOrRef(data: Report, refOrDigest: string): (Layer | undefined) {
+  private findLayerByDigestOrRef(data: JsonScanResultV1, refOrDigest: string): (JsonLayer | undefined) {
       const layer = refOrDigest ? data.result.layers[refOrDigest] : undefined;
       if (layer) return layer;
 
@@ -116,14 +116,14 @@ export class SummaryReportPresenter implements IReportPresenter {
 
   }
 
-  private addVulnsByLayerTableToSummary(data: Report, minSeverity?: Severity) {
+  private addVulnsByLayerTableToSummary(data: JsonScanResultV1, minSeverity?: Severity) {
     const visibleSeverities = this.SEVERITY_ORDER.filter(sev =>
       !minSeverity || isSeverityGte(sev, minSeverity)
     );
 
     core.summary.addHeading(`Package vulnerabilities per layer`, 2);
 
-    let packagesPerLayer: { [digest: string]: Package[] } = {};
+    let packagesPerLayer: { [digest: string]: JsonPackage[] } = {};
     Object.values(data.result.packages).forEach(pkg => {
       const layer = this.findLayerByDigestOrRef(data, pkg.layerRef);
       if (layer && layer.digest) {
@@ -145,7 +145,7 @@ export class SummaryReportPresenter implements IReportPresenter {
       }
 
       let orderedPackagesBySeverity = packagesWithVulns.sort((a, b) => {
-        const getSeverityVector = (pkg: Package) =>
+        const getSeverityVector = (pkg: JsonPackage) =>
           SeverityNames.map(severity =>
             pkg.vulnerabilitiesRefs?.filter(ref => {
               const vul = data.result.vulnerabilities[ref];
@@ -199,7 +199,7 @@ export class SummaryReportPresenter implements IReportPresenter {
     });
   }
 
-  private addReportToSummary(data: Report) {
+  private addReportToSummary(data: JsonScanResultV1) {
     let policyEvaluations = data.result.policies.evaluations;
     let packages = data.result.packages;
     let vulns = data.result.vulnerabilities;
@@ -247,7 +247,7 @@ export class SummaryReportPresenter implements IReportPresenter {
 
   }
 
-  private getRulePkgMessage(rule: Rule, packages: { [key:string]: Package}, vulns: { [key: string]: Vulnerability}) {
+  private getRulePkgMessage(rule: JsonRule, packages: { [key:string]: JsonPackage}, vulns: { [key: string]: Vulnerability}) {
     let table: { data: string, header?: boolean }[][] = [[
       { data: 'Severity', header: true },
       { data: 'Package', header: true },
@@ -282,7 +282,7 @@ export class SummaryReportPresenter implements IReportPresenter {
     core.summary.addTable(table);
   }
 
-  private getRuleImageMessage(rule: Rule) {
+  private getRuleImageMessage(rule: JsonRule) {
     let message: string[] = [];
 
 
