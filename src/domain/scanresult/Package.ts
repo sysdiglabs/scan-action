@@ -1,0 +1,35 @@
+import { AcceptedRisk } from './AcceptedRisk';
+import { Layer } from './Layer';
+import { PackageType } from './PackageType';
+import { Vulnerability } from './Vulnerability';
+
+export class Package {
+  private readonly vulnerabilities: Set<Vulnerability> = new Set();
+  private readonly acceptedRisks: WeakSet<AcceptedRisk> = new WeakSet();
+
+  constructor(
+    public readonly packageType: PackageType,
+    public readonly name: string,
+    public readonly version: string,
+    public readonly path: string,
+    public readonly foundInLayer: Layer
+  ) {}
+
+  addVulnerability(vulnerability: Vulnerability) {
+    if (!this.vulnerabilities.has(vulnerability)) {
+      this.vulnerabilities.add(vulnerability);
+      vulnerability.addFoundInPackage(this);
+    }
+  }
+
+  getVulnerabilities(): Vulnerability[] {
+    return Array.from(this.vulnerabilities);
+  }
+
+  addAcceptedRisk(risk: AcceptedRisk) {
+    if (!this.acceptedRisks.has(risk)) {
+      this.acceptedRisks.add(risk);
+      risk.addForPackage(this);
+    }
+  }
+}
