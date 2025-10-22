@@ -420,7 +420,7 @@ class ActionInputs {
     static overridingParsedActionInputs(overrides) {
         const params = {
             cliScannerURL: core.getInput('cli-scanner-url') || SysdigCliScannerConstants_1.cliScannerURL,
-            cliScannerVersion: core.getInput('cli-scanner-version'),
+            cliScannerVersion: core.getInput('cli-scanner-version') || undefined,
             registryUser: core.getInput('registry-user'),
             registryPassword: core.getInput('registry-password'),
             stopOnFailedPolicyEval: core.getInput('stop-on-failed-policy-eval') == 'true',
@@ -593,7 +593,7 @@ const performance = (__nccwpck_require__(4074).performance);
 class SysdigCliScanner {
     executeScan(config) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.pullScanner(SysdigCliScannerConstants_1.cliScannerURL, 'latest');
+            yield this.pullScanner(config.cliScannerURL, config.cliScannerVersion);
             const scanFlags = this.composeFlags(config);
             let { envvars, flags } = scanFlags;
             let execOutput = '';

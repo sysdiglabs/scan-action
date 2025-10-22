@@ -13,7 +13,7 @@ const performance = require('perf_hooks').performance;
 export class SysdigCliScanner implements IScanner {
 
   async executeScan(config: ScanConfig): Promise<Report> {
-    await this.pullScanner(cliScannerURL, 'latest');
+    await this.pullScanner(config.cliScannerURL, config.cliScannerVersion)
 
     const scanFlags = this.composeFlags(config);
     let { envvars, flags } = scanFlags;
@@ -71,7 +71,7 @@ export class SysdigCliScanner implements IScanner {
     }
   }
 
-  private async pullScanner(scannerURL: string, version: string): Promise<number> {
+  private async pullScanner(scannerURL: string, version: string | undefined): Promise<number> {
     let url = scannerURL;
     if (version && url === cliScannerURL) { // cliScannerURL is the default
       url = scannerURLForVersion(version);

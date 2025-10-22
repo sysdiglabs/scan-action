@@ -3,7 +3,7 @@ import { Severity } from '../../domain/value-objects/severity';
 
 export interface ScanConfig {
   cliScannerURL: string;
-  cliScannerVersion: string;
+  cliScannerVersion?: string;
   stopOnFailedPolicyEval: boolean;
   stopOnProcessingError: boolean;
   standalone: boolean;
