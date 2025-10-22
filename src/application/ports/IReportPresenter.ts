@@ -1,4 +1,4 @@
-import { Report } from "../../domain/entities/report";
+import { Report } from "../../infrastructure/entities/JsonScanResultV1";
 import { FilterOptions } from "../../domain/services/filtering";
 
 export interface IReportPresenter {

@@ -6,7 +6,7 @@ import { IScanner } from '../../application/ports/IScanner';
 import { ComposeFlags, ScanMode } from '../../application/ports/ScannerDTOs';
 import { cliScannerName, cliScannerResult, cliScannerURL, scannerURLForVersion } from './SysdigCliScannerConstants';
 import { ScanConfig } from '../../application/ports/ScanConfig';
-import { Report } from '../../domain/entities/report';
+import { Report } from '../entities/JsonScanResultV1';
 import { ReportParsingError } from '../../application/errors/ReportParsingError';
 const performance = require('perf_hooks').performance;
 

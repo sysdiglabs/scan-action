@@ -1,4 +1,4 @@
-import { Package } from "../entities/report";
+import { Package } from "../../infrastructure/entities/JsonScanResultV1";
 import { Vulnerability } from "../entities/vulnerability";
 import { isSeverityGte, Severity } from "../value-objects/severity";
 

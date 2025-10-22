@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import fs from 'fs';
-import { Report } from '../../domain/entities/report';
+import { Report } from '../entities/JsonScanResultV1';
 import { IReportRepository } from '../../application/ports/IReportRepository';
 
 export class FileSystemReportRepository implements IReportRepository {

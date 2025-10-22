@@ -1,6 +1,6 @@
 import * as core from "@actions/core";
 import { IReportPresenter } from "../../application/ports/IReportPresenter";
-import { Report, Package, Rule, Layer } from "../../domain/entities/report";
+import { Report, Package, Rule, Layer } from "../entities/JsonScanResultV1";
 import { Vulnerability } from "../../domain/entities/vulnerability";
 import { FilterOptions, filterPackages } from "../../domain/services/filtering";
 import { Severity, isSeverityGte, SeverityNames } from "../../domain/value-objects/severity";

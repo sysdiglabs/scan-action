@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import fs from 'fs';
 import { IReportPresenter } from '../../application/ports/IReportPresenter';
-import { Report, Package } from '../../domain/entities/report';
+import { Report, Package } from '../entities/JsonScanResultV1';
 import { Vulnerability } from '../../domain/entities/vulnerability';
 import { FilterOptions, filterPackages } from '../../domain/services/filtering';
 import { SeverityNames } from '../../domain/value-objects/severity';
@@ -138,7 +138,7 @@ export class SarifReportPresenter implements IReportPresenter {
         baseUrl = resultUrl.slice(0, resultUrl.lastIndexOf('/'));
       }
 
-      Object.values(data.result.packages).forEach(pkg => {
+      Object.values(data.result.packages).forEach((pkg: Package) => {
         let helpUri = "";
         let fullDescription = "";
         let severityLevel = "";

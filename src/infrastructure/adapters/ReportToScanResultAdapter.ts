@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Report, Result as ReportResult, Metadata as ReportMetadata } from '../../domain/entities/report';
+import { Report, Result as ReportResult, Metadata as ReportMetadata, Layer as JsonLayer, Package as JsonPackage } from '../entities/JsonScanResultV1';
 import {
   AcceptedRisk,
   AcceptedRiskReason,
@@ -155,7 +155,7 @@ export class ReportToScanResultAdapter {
   }
 
   private addLayers(reportResult: ReportResult, scanResult: ScanResult): void {
-    for (const layerData of Object.values(reportResult.layers)) {
+    for (const layerData of Object.values(reportResult.layers) as JsonLayer[]) {
       scanResult.addLayer(
         layerData.digest ?? '',
         layerData.index,
@@ -205,7 +205,7 @@ export class ReportToScanResultAdapter {
   }
 
   private addPackages(reportResult: ReportResult, scanResult: ScanResult): void {
-    for (const pkgData of Object.values(reportResult.packages)) {
+    for (const pkgData of Object.values(reportResult.packages) as JsonPackage[]) {
       const layerRef = reportResult.layers[pkgData.layerRef];
       if (!layerRef) continue;
 

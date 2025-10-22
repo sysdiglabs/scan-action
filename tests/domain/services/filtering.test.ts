@@ -1,5 +1,5 @@
 import { FilterOptions, filterPackages } from '../../../src/domain/services/filtering';
-import { Package, Report } from '../../../src/domain/entities/report';
+import { Package, Report } from '../../../src/infrastructure/entities/JsonScanResultV1';
 import { Vulnerability } from '../../../src/domain/entities/vulnerability';
 import { Severity } from '../../../src/domain/value-objects/severity';
 const fixtureReport : Report = require("../../fixtures/report-test-v1.json"); // require is needed here, otherwise the import statement adds a .default attribute to the json

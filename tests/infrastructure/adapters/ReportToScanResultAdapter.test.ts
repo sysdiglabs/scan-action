@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { Report } from '../../../src/domain/entities/report';
+import { Report } from '../../../src/infrastructure/entities/JsonScanResultV1';
 import { Severity } from '../../../src/domain/scanresult';
 import { ReportToScanResultAdapter } from '../../../src/infrastructure/adapters/ReportToScanResultAdapter';
 

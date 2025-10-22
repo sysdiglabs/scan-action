@@ -7,7 +7,7 @@ import { ScanMode } from '../../../src/application/ports/ScannerDTOs';
 import * as core from '@actions/core';
 import * as report_test from "../../fixtures/report-test-v1.json";
 import { ScanConfig } from '../../../src/application/ports/ScanConfig';
-import { Report } from '../../../src/domain/entities/report';
+import { Report } from '../../../src/infrastructure/entities/JsonScanResultV1';
 
 jest.mock('@actions/core');
 

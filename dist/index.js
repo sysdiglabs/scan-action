@@ -900,7 +900,7 @@ class SarifReportPresenter {
                 resultUrl = data.info.resultUrl;
                 baseUrl = resultUrl.slice(0, resultUrl.lastIndexOf('/'));
             }
-            Object.values(data.result.packages).forEach(pkg => {
+            Object.values(data.result.packages).forEach((pkg) => {
                 let helpUri = "";
                 let fullDescription = "";
                 let severityLevel = "";
