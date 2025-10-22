@@ -87,19 +87,56 @@ run();
 
 /***/ }),
 
-/***/ 6949:
+/***/ 93:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ExecutionError = void 0;
-class ExecutionError extends Error {
-    constructor(stdout, stderr) {
-        super("execution error\n\nstdout: " + stdout + "\n\nstderr: " + stderr);
+exports.ReportParsingError = void 0;
+class ReportParsingError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = "ReportParsingError";
     }
 }
-exports.ExecutionError = ExecutionError;
+exports.ReportParsingError = ReportParsingError;
+
+
+/***/ }),
+
+/***/ 1119:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ScanExecutionError = void 0;
+class ScanExecutionError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = "ScanExecutionError";
+    }
+}
+exports.ScanExecutionError = ScanExecutionError;
+
+
+/***/ }),
+
+/***/ 4481:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ScannerPullError = void 0;
+class ScannerPullError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = "ScannerPullError";
+    }
+}
+exports.ScannerPullError = ScannerPullError;
 
 
 /***/ }),
@@ -182,7 +219,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RunScanUseCase = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const ScannerDTOs_1 = __nccwpck_require__(1699);
-const ExecutionError_1 = __nccwpck_require__(6949);
+const ScannerPullError_1 = __nccwpck_require__(4481);
+const ScanExecutionError_1 = __nccwpck_require__(1119);
+const ReportParsingError_1 = __nccwpck_require__(93);
 class RunScanUseCase {
     constructor(inputProvider, scanner, reportPresenters, reportRepository) {
         this.inputProvider = inputProvider;
@@ -197,14 +236,13 @@ class RunScanUseCase {
     }
     execute() {
         return __awaiter(this, void 0, void 0, function* () {
+            let config;
             try {
-                const config = this.inputProvider.getInputs();
+                config = this.inputProvider.getInputs();
                 this.printOptions(config);
                 const scannerPulled = yield this.scanner.pullScanner(config.cliScannerURL, config.cliScannerVersion);
                 if (scannerPulled !== 0) {
-                    core.error("Terminating scan. Scanner couldn't be pulled.");
-                    this.setFinalStatus(config, scannerPulled);
-                    return;
+                    throw new ScannerPullError_1.ScannerPullError("Terminating scan. Scanner couldn't be pulled.");
                 }
                 const scanResult = yield this.scanner.executeScan(config);
                 const retCode = scanResult.ReturnCode;
@@ -212,15 +250,18 @@ class RunScanUseCase {
                     this.processVmScanResult(config, scanResult);
                 }
                 else if (retCode > 1) {
-                    core.error("Terminating scan. Scanner couldn't be executed.");
+                    throw new ScanExecutionError_1.ScanExecutionError("Terminating scan. Scanner couldn't be executed.");
                 }
                 this.setFinalStatus(config, retCode);
             }
             catch (error) {
-                if (core.getInput('stop-on-processing-error') == 'true') {
-                    core.setFailed(`Unexpected error: ${error instanceof Error ? error.stack : String(error)}`);
+                const errorMessage = `Unexpected error: ${error instanceof Error ? error.stack : String(error)}`;
+                if (config.stopOnProcessingError) {
+                    core.setFailed(errorMessage);
                 }
-                core.error(`Unexpected error: ${error instanceof Error ? error.stack : String(error)}`);
+                else {
+                    core.error(errorMessage);
+                }
             }
         });
     }
@@ -231,8 +272,7 @@ class RunScanUseCase {
             report = JSON.parse(scanResult.Output);
         }
         catch (error) {
-            core.error("Error parsing analysis JSON report: " + error + ". Output was: " + scanResult.Output);
-            throw new ExecutionError_1.ExecutionError(scanResult.Output, scanResult.Error);
+            throw new ReportParsingError_1.ReportParsingError("Error parsing analysis JSON report: " + error + ". Output was: " + scanResult.Output);
         }
         if (report) {
             const filters = {

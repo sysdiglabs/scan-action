@@ -144,7 +144,7 @@ describe('RunScanUseCase', () => {
 
     await executeUseCase();
 
-    expect(mockCore.setFailed).toHaveBeenCalledWith('Stopping because the scanner terminated with an error.');
+    expect(mockCore.setFailed).toHaveBeenCalledWith(expect.stringContaining("Terminating scan. Scanner couldn't be executed."));
   });
 
   it('should not fail if scanner returns an error code and stopOnProcessingError is false', async () => {
@@ -159,6 +159,7 @@ describe('RunScanUseCase', () => {
 
     await executeUseCase();
 
+    expect(mockCore.error).toHaveBeenCalledWith(expect.stringContaining("Terminating scan. Scanner couldn't be executed."));
     expect(mockCore.setFailed).not.toHaveBeenCalled();
   });
 
@@ -168,7 +169,7 @@ describe('RunScanUseCase', () => {
 
     await executeUseCase();
 
-    expect(core.error).toHaveBeenCalledWith("Terminating scan. Scanner couldn't be pulled.");
+    expect(mockCore.setFailed).toHaveBeenCalledWith(expect.stringContaining("Terminating scan. Scanner couldn't be pulled."));
   });
 
   it('should handle errors during execution', async () => {

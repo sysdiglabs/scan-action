@@ -7,8 +7,10 @@ import { IReportRepository } from '../ports/IReportRepository';
 import { Report } from '../../domain/entities/report';
 import { FilterOptions } from '../../domain/services/filtering';
 import { Severity } from '../../domain/value-objects/severity';
-import { ExecutionError } from '../errors/ExecutionError';
 import { ScanConfig } from '../ports/ScanConfig';
+import { ScannerPullError } from '../errors/ScannerPullError';
+import { ScanExecutionError } from '../errors/ScanExecutionError';
+import { ReportParsingError } from '../errors/ReportParsingError';
 
 export class RunScanUseCase {
   constructor(
@@ -24,15 +26,14 @@ export class RunScanUseCase {
   }
 
   async execute(): Promise<void> {
+    let config: ScanConfig;
     try {
-      const config = this.inputProvider.getInputs();
+      config = this.inputProvider.getInputs();
       this.printOptions(config);
 
       const scannerPulled = await this.scanner.pullScanner(config.cliScannerURL, config.cliScannerVersion);
       if (scannerPulled !== 0) {
-        core.error("Terminating scan. Scanner couldn't be pulled.");
-        this.setFinalStatus(config, scannerPulled);
-        return;
+        throw new ScannerPullError("Terminating scan. Scanner couldn't be pulled.");
       }
 
       const scanResult = await this.scanner.executeScan(config);
@@ -41,16 +42,18 @@ export class RunScanUseCase {
       if ((retCode === 0 || retCode === 1) && config.mode === ScanMode.vm) {
         this.processVmScanResult(config, scanResult);
       } else if (retCode > 1) {
-        core.error("Terminating scan. Scanner couldn't be executed.");
+        throw new ScanExecutionError("Terminating scan. Scanner couldn't be executed.");
       }
 
       this.setFinalStatus(config, retCode);
 
     } catch (error) {
-      if (core.getInput('stop-on-processing-error') == 'true') {
-        core.setFailed(`Unexpected error: ${error instanceof Error ? error.stack : String(error)}`);
+      const errorMessage = `Unexpected error: ${error instanceof Error ? error.stack : String(error)}`;
+      if (config!.stopOnProcessingError) {
+        core.setFailed(errorMessage);
+      } else {
+        core.error(errorMessage);
       }
-      core.error(`Unexpected error: ${error instanceof Error ? error.stack : String(error)}`);
     }
   }
 
@@ -61,8 +64,7 @@ export class RunScanUseCase {
     try {
       report = JSON.parse(scanResult.Output);
     } catch (error) {
-      core.error("Error parsing analysis JSON report: " + error + ". Output was: " + scanResult.Output);
-      throw new ExecutionError(scanResult.Output, scanResult.Error);
+      throw new ReportParsingError("Error parsing analysis JSON report: " + error + ". Output was: " + scanResult.Output);
     }
 
     if (report) {
