@@ -1,12 +1,13 @@
 import * as core from '@actions/core';
-import { cliScannerResult, cliScannerURL, ComposeFlags, ScanMode, scannerURLForVersion } from './scanner';
-import { Severity, SeverityNames } from './report';
+import { cliScannerURL } from '../sysdig/SysdigCliScannerConstants';
+import { ScanMode } from '../../application/ports/ScannerDTOs';
+import { Severity } from '../../domain/scanresult';
 
 export const defaultSecureEndpoint = "https://secure.sysdig.com/"
 
 interface ActionInputParameters {
   cliScannerURL: string;
-  cliScannerVersion: string;
+  cliScannerVersion?: string;
   registryUser: string;
   registryPassword: string;
   stopOnFailedPolicyEval: boolean;
@@ -59,7 +60,7 @@ export class ActionInputs {
 
     const params: ActionInputParameters = {
       cliScannerURL: core.getInput('cli-scanner-url') || cliScannerURL,
-      cliScannerVersion: core.getInput('cli-scanner-version'),
+      cliScannerVersion: core.getInput('cli-scanner-version') || undefined,
       registryUser: core.getInput('registry-user'),
       registryPassword: core.getInput('registry-password'),
       stopOnFailedPolicyEval: core.getInput('stop-on-failed-policy-eval') == 'true',
@@ -161,141 +162,9 @@ export class ActionInputs {
       throw new Error("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
     }
 
-    if (params.severityAtLeast && params.severityAtLeast != "any" && !SeverityNames.includes(params.severityAtLeast.toLowerCase() as Severity)) {
+    if (params.severityAtLeast && params.severityAtLeast.toLowerCase() !== 'any' && Severity.fromString(params.severityAtLeast) === Severity.Unknown) {
       core.setFailed(`Invalid severity-at-least value "${params.severityAtLeast}". Allowed values: any, critical, high, medium, low, negligible.`);
       throw new Error(`Invalid severity-at-least value "${params.severityAtLeast}". Allowed values: any, critical, high, medium, low, negligible.`);
-    }
-  }
-
-  // FIXME(fede) this also modifies the opts.cliScannerURL, which is something we don't want
-  public composeFlags(): ComposeFlags {
-    if (this.params.cliScannerVersion && this.params.cliScannerURL == cliScannerURL) {
-      this.params.cliScannerURL = scannerURLForVersion(this.params.cliScannerVersion)
-    }
-
-    let envvars: { [key: string]: string } = {}
-    envvars['SECURE_API_TOKEN'] = this.params.sysdigSecureToken || "";
-
-    let flags: string[] = [];
-
-    if (this.params.registryUser) {
-      envvars['REGISTRY_USER'] = this.params.registryUser;
-    }
-
-    if (this.params.registryPassword) {
-      envvars['REGISTRY_PASSWORD'] = this.params.registryPassword;
-    }
-
-    if (this.params.standalone) {
-      flags.push("--standalone");
-    }
-
-    if (this.params.sysdigSecureURL) {
-      flags.push('--apiurl', this.params.sysdigSecureURL);
-    }
-
-    if (this.params.dbPath) {
-      flags.push(`--dbpath=${this.params.dbPath}`);
-    }
-
-    if (this.params.skipUpload) {
-      flags.push('--skipupload');
-    }
-
-    if (this.params.usePolicies) {
-      const policies = this.params.usePolicies.split(',').map(p => p.trim());
-      for (const policy of policies) {
-        flags.push('--policy', policy.replace(/"/g, ''));
-      }
-    }
-
-    if (this.params.sysdigSkipTLS) {
-      flags.push(`--skiptlsverify`);
-    }
-
-    if (this.params.overridePullString) {
-      flags.push(`--override-pullstring=${this.params.overridePullString}`);
-    }
-
-    if (this.params.extraParameters) {
-      flags.push(...this.params.extraParameters.split(' '));
-    }
-
-    if (this.params.mode == ScanMode.iac) {
-      flags.push(`--iac`);
-
-      if (this.params.recursive) {
-        flags.push(`-r`);
-      }
-      if (this.params.minimumSeverity) {
-        flags.push(`-f=${this.params.minimumSeverity}`);
-      }
-
-      flags.push(this.params.iacScanPath);
-    }
-
-    if (this.params.mode == ScanMode.vm) {
-      flags.push(`--output=json-file=${cliScannerResult}`)
-      flags.push(this.params.imageTag);
-    }
-
-    return {
-      envvars: envvars,
-      flags: flags
-    }
-  }
-
-  public printOptions() {
-    if (this.params.standalone) {
-      core.info(`[!] Running in Standalone Mode.`);
-    }
-
-    if (this.params.sysdigSecureURL) {
-      core.info('Sysdig Secure URL: ' + this.params.sysdigSecureURL);
-    }
-
-    if (this.params.registryUser && this.params.registryPassword) {
-      core.info(`Using specified Registry credentials.`);
-    }
-
-    core.info(`Stop on Failed Policy Evaluation: ${this.params.stopOnFailedPolicyEval}`);
-
-    core.info(`Stop on Processing Error: ${this.params.stopOnProcessingError}`);
-
-    if (this.params.skipUpload) {
-      core.info(`Skipping scan results upload to Sysdig Secure...`);
-    }
-
-    if (this.params.dbPath) {
-      core.info(`DB Path: ${this.params.dbPath}`);
-    }
-
-    core.info(`Sysdig skip TLS: ${this.params.sysdigSkipTLS}`);
-
-    if (this.params.severityAtLeast) {
-      core.info(`Severity level: ${this.params.severityAtLeast}`);
-    }
-
-    if (this.params.packageTypes) {
-      core.info(`Package types included: ${this.params.packageTypes}`);
-    }
-
-    if (this.params.notPackageTypes) {
-      core.info(`Package types excluded: ${this.params.notPackageTypes}`);
-    }
-
-    if (this.params.excludeAccepted !== undefined) {
-      core.info(`Exclude vulnerabilities with accepted risks: ${this.params.excludeAccepted}`);
-    }
-
-    core.info('Analyzing image: ' + this.params.imageTag);
-
-    if (this.params.overridePullString) {
-      core.info(` * Image PullString will be overwritten as ${this.params.overridePullString}`);
-    }
-
-    if (this.params.skipSummary) {
-      core.info("This run will NOT generate a SUMMARY.");
     }
   }
 }

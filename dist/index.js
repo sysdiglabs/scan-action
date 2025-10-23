@@ -48,127 +48,1273 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.cliScannerResult = exports.executeScan = exports.cliScannerName = exports.pullScanner = exports.defaultSecureEndpoint = exports.cliScannerURL = exports.ExecutionError = void 0;
-exports.run = run;
-exports.processScanResult = processScanResult;
 const core = __importStar(__nccwpck_require__(2186));
-const fs_1 = __importDefault(__nccwpck_require__(7147));
-const sarif_1 = __nccwpck_require__(3032);
-const scanner_1 = __nccwpck_require__(491);
-Object.defineProperty(exports, "cliScannerName", ({ enumerable: true, get: function () { return scanner_1.cliScannerName; } }));
-Object.defineProperty(exports, "cliScannerResult", ({ enumerable: true, get: function () { return scanner_1.cliScannerResult; } }));
-Object.defineProperty(exports, "cliScannerURL", ({ enumerable: true, get: function () { return scanner_1.cliScannerURL; } }));
-Object.defineProperty(exports, "executeScan", ({ enumerable: true, get: function () { return scanner_1.executeScan; } }));
-Object.defineProperty(exports, "pullScanner", ({ enumerable: true, get: function () { return scanner_1.pullScanner; } }));
-const action_1 = __nccwpck_require__(3761);
-Object.defineProperty(exports, "defaultSecureEndpoint", ({ enumerable: true, get: function () { return action_1.defaultSecureEndpoint; } }));
-const summary_1 = __nccwpck_require__(5389);
-function parseCsvList(str) {
-    if (!str)
-        return [];
-    return str.split(",").map(s => s.trim()).filter(s => !!s);
-}
-class ExecutionError extends Error {
-    constructor(stdout, stderr) {
-        super("execution error\n\nstdout: " + stdout + "\n\nstderr: " + stderr);
-    }
-}
-exports.ExecutionError = ExecutionError;
-function writeReport(reportData) {
-    fs_1.default.writeFileSync("./report.json", reportData);
-    core.setOutput("scanReport", "./report.json");
-}
+const RunScanUseCase_1 = __nccwpck_require__(59);
+const GitHubActionsInputProvider_1 = __nccwpck_require__(6315);
+const SysdigCliScanner_1 = __nccwpck_require__(3993);
+const SarifReportPresenter_1 = __nccwpck_require__(5934);
+const SummaryReportPresenter_1 = __nccwpck_require__(9495);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            let opts = action_1.ActionInputs.parseActionInputs();
-            opts.printOptions();
-            let scanFlags = opts.composeFlags();
-            let scanResult;
-            // Download CLI Scanner from 'cliScannerURL'
-            let retCode = yield (0, scanner_1.pullScanner)(opts.cliScannerURL);
-            if (retCode == 0) {
-                // Execute Scanner
-                scanResult = yield (0, scanner_1.executeScan)(scanFlags);
-                retCode = scanResult.ReturnCode;
-                if (retCode == 0 || retCode == 1) {
-                    // Transform Scan Results to other formats such as SARIF
-                    if (opts.mode == scanner_1.ScanMode.vm) {
-                        yield processScanResult(scanResult, opts);
+            const inputProvider = new GitHubActionsInputProvider_1.GitHubActionsInputProvider();
+            const config = inputProvider.getInputs();
+            const scanner = new SysdigCliScanner_1.SysdigCliScanner();
+            const presenters = [
+                new SarifReportPresenter_1.SarifReportPresenter(),
+            ];
+            if (!config.skipSummary) {
+                presenters.push(new SummaryReportPresenter_1.SummaryReportPresenter());
+            }
+            const useCase = new RunScanUseCase_1.RunScanUseCase(scanner, presenters, inputProvider);
+            yield useCase.execute();
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                core.setFailed(error.message);
+            }
+            else {
+                core.setFailed(`Unknown error: ${error}`);
+            }
+        }
+    });
+}
+run();
+
+
+/***/ }),
+
+/***/ 93:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ReportParsingError = void 0;
+class ReportParsingError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = "ReportParsingError";
+    }
+}
+exports.ReportParsingError = ReportParsingError;
+
+
+/***/ }),
+
+/***/ 1699:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ScanMode = void 0;
+var ScanMode;
+(function (ScanMode) {
+    ScanMode["vm"] = "vm";
+    ScanMode["iac"] = "iac";
+})(ScanMode || (exports.ScanMode = ScanMode = {}));
+(function (ScanMode) {
+    function fromString(str) {
+        switch (str.toLowerCase()) {
+            case "vm":
+                return ScanMode.vm;
+            case "iac":
+                return ScanMode.iac;
+        }
+    }
+    ScanMode.fromString = fromString;
+})(ScanMode || (exports.ScanMode = ScanMode = {}));
+
+
+/***/ }),
+
+/***/ 59:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RunScanUseCase = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const ScannerDTOs_1 = __nccwpck_require__(1699);
+const scanresult_1 = __nccwpck_require__(9056);
+class RunScanUseCase {
+    constructor(scanner, reportPresenters, inputProvider) {
+        this.scanner = scanner;
+        this.reportPresenters = reportPresenters;
+        this.inputProvider = inputProvider;
+    }
+    parseCsvList(str) {
+        if (!str)
+            return [];
+        return str.split(",").map(s => s.trim()).filter(s => !!s);
+    }
+    execute() {
+        return __awaiter(this, void 0, void 0, function* () {
+            let config;
+            try {
+                config = this.inputProvider.getInputs();
+                this.printOptions(config);
+                const report = yield this.scanner.executeScan(config);
+                if (config.mode === ScannerDTOs_1.ScanMode.vm && report) {
+                    const filters = {
+                        minSeverity: (config.severityAtLeast && config.severityAtLeast.toLowerCase() !== "any")
+                            ? scanresult_1.Severity.fromString(config.severityAtLeast)
+                            : undefined,
+                        packageTypes: this.parseCsvList(config.packageTypes),
+                        notPackageTypes: this.parseCsvList(config.notPackageTypes),
+                        excludeAccepted: config.excludeAccepted,
+                    };
+                    for (const presenter of this.reportPresenters) {
+                        presenter.generateReport(report, config.groupByPackage, filters);
                     }
                 }
+                const policyEvaluation = report === null || report === void 0 ? void 0 : report.getEvaluationResult();
+                if (policyEvaluation === null || policyEvaluation === void 0 ? void 0 : policyEvaluation.isFailed()) {
+                    this.setFinalStatus(config, 1);
+                }
                 else {
-                    core.error("Terminating scan. Scanner couldn't be executed.");
+                    this.setFinalStatus(config, 0);
                 }
             }
-            else {
-                core.error("Terminating scan. Scanner couldn't be pulled.");
+            catch (error) {
+                const errorMessage = `Unexpected error: ${error instanceof Error ? error.stack : String(error)}`;
+                if (config.stopOnProcessingError) {
+                    core.setFailed(errorMessage);
+                }
+                else {
+                    core.error(errorMessage);
+                }
+                this.setFinalStatus(config, 2);
             }
-            if (opts.stopOnFailedPolicyEval && retCode == 1) {
-                core.setFailed(`Stopping because Policy Evaluation was FAILED.`);
-            }
-            else if (opts.standalone && retCode == 0) {
-                core.info("Policy Evaluation was OMITTED.");
-            }
-            else if (retCode == 0) {
-                core.info("Policy Evaluation was PASSED.");
-            }
-            else if (opts.stopOnProcessingError && retCode > 1) {
-                core.setFailed(`Stopping because the scanner terminated with an error.`);
-            } // else: Don't stop regardless the outcome.
+        });
+    }
+    setFinalStatus(config, retCode) {
+        if (config.stopOnFailedPolicyEval && retCode === 1) {
+            core.setFailed(`Stopping because Policy Evaluation was FAILED.`);
         }
-        catch (error) {
-            if (core.getInput('stop-on-processing-error') == 'true') {
-                core.setFailed(`Unexpected error: ${error instanceof Error ? error.stack : String(error)}`);
-            }
-            core.error(`Unexpected error: ${error instanceof Error ? error.stack : String(error)}`);
+        else if (config.standalone && retCode === 0) {
+            core.info("Policy Evaluation was OMITTED.");
         }
-    });
+        else if (retCode === 0) {
+            core.info("Policy Evaluation was PASSED.");
+        }
+        else if (config.stopOnProcessingError && retCode > 1) {
+            core.setFailed(`Stopping because the scanner terminated with an error.`);
+        }
+    }
+    printOptions(config) {
+        if (config.standalone) {
+            core.info(`[!] Running in Standalone Mode.`);
+        }
+        if (config.sysdigSecureURL) {
+            core.info('Sysdig Secure URL: ' + config.sysdigSecureURL);
+        }
+        if (config.registryUser && config.registryPassword) {
+            core.info(`Using specified Registry credentials.`);
+        }
+        core.info(`Stop on Failed Policy Evaluation: ${config.stopOnFailedPolicyEval}`);
+        core.info(`Stop on Processing Error: ${config.stopOnProcessingError}`);
+        if (config.skipUpload) {
+            core.info(`Skipping scan results upload to Sysdig Secure...`);
+        }
+        if (config.dbPath) {
+            core.info(`DB Path: ${config.dbPath}`);
+        }
+        core.info(`Sysdig skip TLS: ${config.sysdigSkipTLS}`);
+        if (config.severityAtLeast) {
+            core.info(`Severity level: ${config.severityAtLeast}`);
+        }
+        if (config.packageTypes) {
+            core.info(`Package types included: ${config.packageTypes}`);
+        }
+        if (config.notPackageTypes) {
+            core.info(`Package types excluded: ${config.notPackageTypes}`);
+        }
+        if (config.excludeAccepted !== undefined) {
+            core.info(`Exclude vulnerabilities with accepted risks: ${config.excludeAccepted}`);
+        }
+        core.info('Analyzing image: ' + config.imageTag);
+        if (config.overridePullString) {
+            core.info(` * Image PullString will be overwritten as ${config.overridePullString}`);
+        }
+        if (config.skipSummary) {
+            core.info("This run will NOT generate a SUMMARY.");
+        }
+    }
 }
-function processScanResult(result, opts) {
-    return __awaiter(this, void 0, void 0, function* () {
-        writeReport(result.Output);
-        let report;
-        try {
-            report = JSON.parse(result.Output);
+exports.RunScanUseCase = RunScanUseCase;
+
+
+/***/ }),
+
+/***/ 7272:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AcceptedRisk = void 0;
+class AcceptedRisk {
+    constructor(id, reason, description, expirationDate, isActive, createdAt, updatedAt) {
+        this.id = id;
+        this.reason = reason;
+        this.description = description;
+        this.expirationDate = expirationDate;
+        this.isActive = isActive;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.assignedToVulnerabilities = new Set();
+        this.assignedToPackages = new Set();
+    }
+    addForVulnerability(vulnerability) {
+        if (!this.assignedToVulnerabilities.has(vulnerability)) {
+            this.assignedToVulnerabilities.add(vulnerability);
+            vulnerability.addAcceptedRisk(this);
         }
-        catch (error) {
-            core.error("Error parsing analysis JSON report: " + error + ". Output was: " + result.Output);
-            throw new ExecutionError(result.Output, result.Error);
+    }
+    getVulnerabilities() {
+        return Array.from(this.assignedToVulnerabilities);
+    }
+    addForPackage(pkg) {
+        if (!this.assignedToPackages.has(pkg)) {
+            this.assignedToPackages.add(pkg);
+            pkg.addAcceptedRisk(this);
         }
-        if (report) {
-            const filters = {
-                minSeverity: (opts.severityAtLeast && opts.severityAtLeast.toLowerCase() !== "any")
-                    ? opts.severityAtLeast.toLowerCase()
-                    : undefined,
-                packageTypes: parseCsvList(opts.packageTypes),
-                notPackageTypes: parseCsvList(opts.notPackageTypes),
-                excludeAccepted: opts.excludeAccepted,
-            };
-            core.info("Generating SARIF Report...");
-            (0, sarif_1.generateSARIFReport)(report, opts.groupByPackage, filters);
-            if (!opts.skipSummary) {
-                core.info("Generating Summary...");
-                yield (0, summary_1.generateSummary)(opts, report, filters);
-            }
-            else {
-                core.info("Skipping Summary...");
-            }
-        }
-    });
+    }
+    getPackages() {
+        return Array.from(this.assignedToPackages);
+    }
 }
-if (require.main === require.cache[eval('__filename')]) {
-    run();
+exports.AcceptedRisk = AcceptedRisk;
+
+
+/***/ }),
+
+/***/ 5004:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AcceptedRiskReason = void 0;
+class AcceptedRiskReason {
+    constructor(name) {
+        this.name = name;
+    }
+    toString() {
+        return this.name;
+    }
+    static fromString(name) {
+        const a = AcceptedRiskReason.values.find(p => p.name.toLowerCase() === name.toLowerCase());
+        return a || AcceptedRiskReason.Unknown;
+    }
+}
+exports.AcceptedRiskReason = AcceptedRiskReason;
+AcceptedRiskReason.RiskOwned = new AcceptedRiskReason('RiskOwned');
+AcceptedRiskReason.RiskTransferred = new AcceptedRiskReason('RiskTransferred');
+AcceptedRiskReason.RiskAvoided = new AcceptedRiskReason('RiskAvoided');
+AcceptedRiskReason.RiskMitigated = new AcceptedRiskReason('RiskMitigated');
+AcceptedRiskReason.RiskNotRelevant = new AcceptedRiskReason('RiskNotRelevant');
+AcceptedRiskReason.Custom = new AcceptedRiskReason('Custom');
+AcceptedRiskReason.Unknown = new AcceptedRiskReason('Unknown');
+AcceptedRiskReason.values = [
+    AcceptedRiskReason.RiskOwned,
+    AcceptedRiskReason.RiskTransferred,
+    AcceptedRiskReason.RiskAvoided,
+    AcceptedRiskReason.RiskMitigated,
+    AcceptedRiskReason.RiskNotRelevant,
+    AcceptedRiskReason.Custom,
+    AcceptedRiskReason.Unknown,
+];
+
+
+/***/ }),
+
+/***/ 6417:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Architecture = void 0;
+class Architecture {
+    constructor(name) {
+        this.name = name;
+    }
+    toString() {
+        return this.name;
+    }
+    static fromString(name) {
+        return Architecture.values.find(p => p.name.toLowerCase() === name.toLowerCase()) || Architecture.Unknown;
+    }
+}
+exports.Architecture = Architecture;
+Architecture.Amd64 = new Architecture('Amd64');
+Architecture.Arm64 = new Architecture('Arm64');
+Architecture.Unknown = new Architecture('Unknown');
+Architecture.values = [
+    Architecture.Amd64,
+    Architecture.Arm64,
+    Architecture.Unknown,
+];
+
+
+/***/ }),
+
+/***/ 4405:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.EvaluationResult = void 0;
+class EvaluationResult {
+    constructor(name) {
+        this.name = name;
+    }
+    toString() {
+        return this.name;
+    }
+    isPassed() {
+        return this === EvaluationResult.Passed;
+    }
+    isFailed() {
+        return this === EvaluationResult.Failed;
+    }
+    static fromString(name) {
+        return EvaluationResult.values.find(p => p.name.toLowerCase() === name.toLowerCase()) || EvaluationResult.Failed;
+    }
+}
+exports.EvaluationResult = EvaluationResult;
+EvaluationResult.Passed = new EvaluationResult('passed');
+EvaluationResult.Failed = new EvaluationResult('failed');
+EvaluationResult.values = [
+    EvaluationResult.Passed,
+    EvaluationResult.Failed,
+];
+
+
+/***/ }),
+
+/***/ 6293:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Layer = void 0;
+class Layer {
+    constructor(digest, index, size, command) {
+        this.digest = digest;
+        this.index = index;
+        this.size = size;
+        this.command = command;
+        this.packages = new Set();
+    }
+    addPackage(pkg) {
+        this.packages.add(pkg);
+    }
+    getPackages() {
+        return Array.from(this.packages);
+    }
+    getVulnerabilities() {
+        const vulnerabilities = new Set();
+        for (const pkg of this.packages) {
+            for (const vuln of pkg.getVulnerabilities()) {
+                vulnerabilities.add(vuln);
+            }
+        }
+        return Array.from(vulnerabilities);
+    }
+}
+exports.Layer = Layer;
+
+
+/***/ }),
+
+/***/ 7616:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.OperatingSystem = exports.Family = void 0;
+class Family {
+    constructor(name) {
+        this.name = name;
+    }
+    toString() {
+        return this.name;
+    }
+    static fromString(name) {
+        return Family.values.find(p => p.name.toLowerCase() === name.toLowerCase()) || Family.Unknown;
+    }
+}
+exports.Family = Family;
+Family.Linux = new Family('Linux');
+Family.Darwin = new Family('Darwin');
+Family.Windows = new Family('Windows');
+Family.Unknown = new Family('Unknown');
+Family.values = [
+    Family.Linux,
+    Family.Darwin,
+    Family.Windows,
+    Family.Unknown,
+];
+class OperatingSystem {
+    constructor(family, name) {
+        this.family = family;
+        this.name = name;
+    }
+}
+exports.OperatingSystem = OperatingSystem;
+
+
+/***/ }),
+
+/***/ 6913:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Package = void 0;
+const Severity_1 = __nccwpck_require__(4231);
+class Package {
+    constructor(id, packageType, name, version, path, foundInLayer) {
+        this.id = id;
+        this.packageType = packageType;
+        this.name = name;
+        this.version = version;
+        this.path = path;
+        this.foundInLayer = foundInLayer;
+        this.vulnerabilities = new Set();
+        this.acceptedRisks = new Set();
+    }
+    addVulnerability(vulnerability) {
+        if (!this.vulnerabilities.has(vulnerability)) {
+            this.vulnerabilities.add(vulnerability);
+            vulnerability.addFoundInPackage(this);
+        }
+    }
+    getVulnerabilities() {
+        return Array.from(this.vulnerabilities);
+    }
+    addAcceptedRisk(risk) {
+        if (!this.acceptedRisks.has(risk)) {
+            this.acceptedRisks.add(risk);
+            risk.addForPackage(this);
+        }
+    }
+    getAcceptedRisks() {
+        return Array.from(this.acceptedRisks);
+    }
+    suggestedFixVersion() {
+        const vulnerabilities = this.getVulnerabilities();
+        if (vulnerabilities.length === 0) {
+            return undefined;
+        }
+        const candidateVersions = vulnerabilities
+            .filter((vuln) => vuln.fixVersion)
+            .map((vuln) => vuln.fixVersion)
+            .reduce((unique, item) => {
+            if (!unique.some((v) => v.equals(item))) {
+                unique.push(item);
+            }
+            return unique;
+        }, []);
+        if (candidateVersions.length === 0) {
+            return undefined;
+        }
+        const severityOrder = [
+            Severity_1.Severity.Critical,
+            Severity_1.Severity.High,
+            Severity_1.Severity.Medium,
+            Severity_1.Severity.Low,
+            Severity_1.Severity.Negligible,
+            Severity_1.Severity.Unknown,
+        ];
+        const scores = new Map();
+        for (const candidate of candidateVersions) {
+            const score = new Map();
+            for (const severity of severityOrder) {
+                score.set(severity, 0);
+            }
+            for (const vuln of vulnerabilities) {
+                if (vuln.fixVersion && vuln.fixVersion.equals(candidate)) { // fixVersion == candidate
+                    const currentCount = score.get(vuln.severity) || 0;
+                    score.set(vuln.severity, currentCount + 1);
+                }
+            }
+            scores.set(candidate, score);
+        }
+        candidateVersions.sort((a, b) => {
+            const scoreA = scores.get(a);
+            const scoreB = scores.get(b);
+            for (const severity of severityOrder) {
+                const countA = scoreA.get(severity);
+                const countB = scoreB.get(severity);
+                if (countA !== countB) {
+                    return countB - countA; // Higher count is better
+                }
+            }
+            // If scores are identical, lower version is better
+            return a.greaterThan(b) ? 1 : (a.lessThan(b) ? -1 : 0);
+        });
+        return candidateVersions[0];
+    }
+}
+exports.Package = Package;
+
+
+/***/ }),
+
+/***/ 1946:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PackageType = void 0;
+class PackageType {
+    constructor(name) {
+        this.name = name;
+    }
+    toString() {
+        return this.name;
+    }
+    static fromString(name) {
+        if (name.toLowerCase() === 'c#') {
+            return PackageType.CSharp;
+        }
+        return PackageType.values.find(p => p.name.toLowerCase() === name.toLowerCase()) || PackageType.Unknown;
+    }
+}
+exports.PackageType = PackageType;
+PackageType.Unknown = new PackageType('Unknown');
+PackageType.Os = new PackageType('Os');
+PackageType.Python = new PackageType('Python');
+PackageType.Java = new PackageType('Java');
+PackageType.Javascript = new PackageType('Javascript');
+PackageType.Golang = new PackageType('Golang');
+PackageType.Rust = new PackageType('Rust');
+PackageType.Ruby = new PackageType('Ruby');
+PackageType.Php = new PackageType('Php');
+PackageType.CSharp = new PackageType('CSharp');
+PackageType.values = [
+    PackageType.Unknown,
+    PackageType.Os,
+    PackageType.Python,
+    PackageType.Java,
+    PackageType.Javascript,
+    PackageType.Golang,
+    PackageType.Rust,
+    PackageType.Ruby,
+    PackageType.Php,
+    PackageType.CSharp,
+];
+
+
+/***/ }),
+
+/***/ 4023:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Policy = void 0;
+const EvaluationResult_1 = __nccwpck_require__(4405);
+class Policy {
+    constructor(id, name, createdAt, updatedAt) {
+        this.id = id;
+        this.name = name;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.bundles = new Set();
+    }
+    addBundle(bundle) {
+        if (!this.bundles.has(bundle)) {
+            this.bundles.add(bundle);
+            bundle.addPolicy(this);
+        }
+    }
+    getBundles() {
+        return Array.from(this.bundles);
+    }
+    getEvaluationResult() {
+        for (const bundle of this.bundles) {
+            if (bundle.getEvaluationResult().isFailed()) {
+                return EvaluationResult_1.EvaluationResult.Failed;
+            }
+        }
+        return EvaluationResult_1.EvaluationResult.Passed;
+    }
+}
+exports.Policy = Policy;
+
+
+/***/ }),
+
+/***/ 7747:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PolicyBundle = void 0;
+const EvaluationResult_1 = __nccwpck_require__(4405);
+class PolicyBundle {
+    constructor(id, name) {
+        this.id = id;
+        this.name = name;
+        this.rules = new Set();
+        this.foundInPolicies = new Set();
+    }
+    addPolicy(policy) {
+        if (!this.foundInPolicies.has(policy)) {
+            this.foundInPolicies.add(policy);
+            policy.addBundle(this);
+        }
+    }
+    getPolicies() {
+        return Array.from(this.foundInPolicies);
+    }
+    addRule(rule) {
+        this.rules.add(rule);
+    }
+    getRules() {
+        return Array.from(this.rules);
+    }
+    getEvaluationResult() {
+        for (const rule of this.rules) {
+            if (rule.evaluationResult.isFailed()) {
+                return EvaluationResult_1.EvaluationResult.Failed;
+            }
+        }
+        return EvaluationResult_1.EvaluationResult.Passed;
+    }
+}
+exports.PolicyBundle = PolicyBundle;
+
+
+/***/ }),
+
+/***/ 8889:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PolicyBundleRuleImageConfig = exports.PolicyBundleRuleImageConfigFailure = exports.PolicyBundleRulePkgVuln = exports.PolicyBundleRulePkgVulnFailure = void 0;
+exports.isPkgRule = isPkgRule;
+exports.isImageRule = isImageRule;
+function isPkgRule(rule) {
+    return rule instanceof PolicyBundleRulePkgVuln;
+}
+function isImageRule(rule) {
+    return rule instanceof PolicyBundleRuleImageConfig;
+}
+class PolicyBundleRulePkgVulnFailure {
+    constructor(remediation, pkg, vuln, parent) {
+        this.remediation = remediation;
+        this.pkg = pkg;
+        this.vuln = vuln;
+        this.parent = parent;
+    }
+    reason() {
+        return `${this.vuln.cve} found in ${this.pkg.name} (${this.pkg.version})`;
+    }
+}
+exports.PolicyBundleRulePkgVulnFailure = PolicyBundleRulePkgVulnFailure;
+class PolicyBundleRulePkgVuln {
+    constructor(id, description, evaluationResult, parent) {
+        this.id = id;
+        this.description = description;
+        this.evaluationResult = evaluationResult;
+        this.parent = parent;
+        this.failures = [];
+    }
+    addFailure(description, pkg, vuln) {
+        const failure = new PolicyBundleRulePkgVulnFailure(description, pkg, vuln, this);
+        this.failures.push(failure);
+        return failure;
+    }
+    getFailures() {
+        return this.failures;
+    }
+}
+exports.PolicyBundleRulePkgVuln = PolicyBundleRulePkgVuln;
+class PolicyBundleRuleImageConfigFailure {
+    constructor(description, parent) {
+        this.description = description;
+        this.parent = parent;
+    }
+    reason() {
+        return this.description;
+    }
+}
+exports.PolicyBundleRuleImageConfigFailure = PolicyBundleRuleImageConfigFailure;
+class PolicyBundleRuleImageConfig {
+    constructor(id, description, evaluationResult, parent) {
+        this.id = id;
+        this.description = description;
+        this.evaluationResult = evaluationResult;
+        this.parent = parent;
+        this.failures = [];
+    }
+    addFailure(remediation) {
+        const failure = new PolicyBundleRuleImageConfigFailure(remediation, this);
+        this.failures.push(failure);
+        return failure;
+    }
+    getFailures() {
+        return this.failures;
+    }
+}
+exports.PolicyBundleRuleImageConfig = PolicyBundleRuleImageConfig;
+
+
+/***/ }),
+
+/***/ 9061:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ScanResult = exports.Metadata = void 0;
+const AcceptedRisk_1 = __nccwpck_require__(7272);
+const EvaluationResult_1 = __nccwpck_require__(4405);
+const Layer_1 = __nccwpck_require__(6293);
+const Package_1 = __nccwpck_require__(6913);
+const Policy_1 = __nccwpck_require__(4023);
+const PolicyBundle_1 = __nccwpck_require__(7747);
+const Version_1 = __nccwpck_require__(8979);
+const Vulnerability_1 = __nccwpck_require__(6246);
+class Metadata {
+    constructor(pullString, imageId, digest, baseOs, sizeInBytes, architecture, labels, createdAt) {
+        this.pullString = pullString;
+        this.imageId = imageId;
+        this.digest = digest;
+        this.baseOs = baseOs;
+        this.sizeInBytes = sizeInBytes;
+        this.architecture = architecture;
+        this.labels = labels;
+        this.createdAt = createdAt;
+    }
+}
+exports.Metadata = Metadata;
+class ScanResult {
+    constructor(scanType, pullString, imageId, digest, baseOs, sizeInBytes, architecture, labels, createdAt) {
+        this.scanType = scanType;
+        this.layers = [];
+        this.packages = new Set();
+        this.vulnerabilities = new Map();
+        this.policies = new Map();
+        this.policyBundles = new Map();
+        this.acceptedRisks = new Map();
+        this.metadata = new Metadata(pullString, imageId, digest, baseOs, sizeInBytes, architecture, labels, createdAt);
+    }
+    addLayer(digest, index, size, command) {
+        const layer = new Layer_1.Layer(digest, index, size, command);
+        this.layers.push(layer);
+        return layer;
+    }
+    findLayerByDigest(digest) {
+        return this.layers.find((l) => l.digest === digest);
+    }
+    getLayers() {
+        return [...this.layers].sort((a, b) => a.index - b.index);
+    }
+    addPackage(id, packageType, name, version, path, foundInLayer) {
+        const pkg = new Package_1.Package(id, packageType, name, new Version_1.Version(version), path, foundInLayer);
+        foundInLayer.addPackage(pkg);
+        this.packages.add(pkg);
+        return pkg;
+    }
+    getPackages() {
+        return Array.from(this.packages);
+    }
+    findPackageByID(id) {
+        return this.getPackages().find(p => p.id == id);
+    }
+    addVulnerability(cve, severity, cvssScore, disclosureDate, solutionDate, exploitable, fixVersion) {
+        if (this.vulnerabilities.has(cve)) {
+            return this.vulnerabilities.get(cve);
+        }
+        const vuln = new Vulnerability_1.Vulnerability(cve, severity, cvssScore, disclosureDate, solutionDate, exploitable, fixVersion ? new Version_1.Version(fixVersion) : null);
+        this.vulnerabilities.set(cve, vuln);
+        return vuln;
+    }
+    findVulnerabilityByCve(cve) {
+        return this.vulnerabilities.get(cve);
+    }
+    getVulnerabilities() {
+        return Array.from(this.vulnerabilities.values());
+    }
+    addPolicy(id, name, createdAt, updatedAt) {
+        if (this.policies.has(id)) {
+            return this.policies.get(id);
+        }
+        const policy = new Policy_1.Policy(id, name, createdAt, updatedAt);
+        this.policies.set(id, policy);
+        return policy;
+    }
+    findPolicyById(id) {
+        return this.policies.get(id);
+    }
+    getPolicies() {
+        return Array.from(this.policies.values());
+    }
+    addPolicyBundle(id, name, policy) {
+        let bundle = this.policyBundles.get(id);
+        if (!bundle) {
+            bundle = new PolicyBundle_1.PolicyBundle(id, name);
+            this.policyBundles.set(id, bundle);
+        }
+        bundle.addPolicy(policy);
+        return bundle;
+    }
+    findPolicyBundleById(id) {
+        return this.policyBundles.get(id);
+    }
+    getPolicyBundles() {
+        return Array.from(this.policyBundles.values());
+    }
+    addAcceptedRisk(id, reason, description, expirationDate, isActive, createdAt, updatedAt) {
+        if (this.acceptedRisks.has(id)) {
+            return this.acceptedRisks.get(id);
+        }
+        const risk = new AcceptedRisk_1.AcceptedRisk(id, reason, description, expirationDate, isActive, createdAt, updatedAt);
+        this.acceptedRisks.set(id, risk);
+        return risk;
+    }
+    findAcceptedRiskById(id) {
+        return this.acceptedRisks.get(id);
+    }
+    getAcceptedRisks() {
+        return Array.from(this.acceptedRisks.values());
+    }
+    getEvaluationResult() {
+        for (const policy of this.getPolicies()) {
+            if (policy.getEvaluationResult().isFailed()) {
+                return EvaluationResult_1.EvaluationResult.Failed;
+            }
+        }
+        return EvaluationResult_1.EvaluationResult.Passed;
+    }
+}
+exports.ScanResult = ScanResult;
+
+
+/***/ }),
+
+/***/ 4378:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ScanType = void 0;
+class ScanType {
+    constructor(name) {
+        this.name = name;
+    }
+    toString() {
+        return this.name;
+    }
+}
+exports.ScanType = ScanType;
+ScanType.Docker = new ScanType('Docker');
+ScanType.values = [
+    ScanType.Docker,
+];
+
+
+/***/ }),
+
+/***/ 4231:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Severity = void 0;
+class Severity {
+    constructor(name, value) {
+        this.name = name;
+        this.value = value;
+    }
+    toString() {
+        return this.name;
+    }
+    static fromString(name) {
+        return Severity.values.find(s => s.name.toLowerCase() === name.toLowerCase()) || Severity.Unknown;
+    }
+    static fromValue(value) {
+        return Severity.values.find(s => s.value === value) || Severity.Unknown;
+    }
+    asNumber() {
+        return this.value;
+    }
+    isEqualTo(other) {
+        return this.value === other.value;
+    }
+    /**
+     * A severity is more severe than another if its value is lower.
+     * e.g. Critical (0) is more severe than High (1)
+     * @param other Severity to compare to
+     * @returns true if this severity is more severe than the other
+     */
+    isMoreSevereThan(other) {
+        return this.value < other.value;
+    }
+    /**
+     * A severity is more severe than or equal to another if its value is lower or equal.
+     * e.g. Critical (0) is more severe than or equal to High (1)
+     * @param other Severity to compare to
+     * @returns true if this severity is more severe than or equal to the other
+     */
+    isMoreSevereThanOrEqualTo(other) {
+        return this.value <= other.value;
+    }
+    /**
+     * A severity is less severe than another if its value is higher.
+     * e.g. Low (3) is less severe than Medium (2)
+     * @param other Severity to compare to
+     * @returns true if this severity is less severe than the other
+     */
+    isLessSevereThan(other) {
+        return this.value > other.value;
+    }
+    /**
+     * A severity is less severe than or equal to another if its value is higher or equal.
+     * e.g. Low (3) is less severe than or equal to Medium (2)
+     * @param other Severity to compare to
+     * @returns true if this severity is less severe than or equal to the other
+     */
+    isLessSevereThanOrEqualTo(other) {
+        return this.value >= other.value;
+    }
+}
+exports.Severity = Severity;
+Severity.Critical = new Severity('Critical', 0);
+Severity.High = new Severity('High', 1);
+Severity.Medium = new Severity('Medium', 2);
+Severity.Low = new Severity('Low', 3);
+Severity.Negligible = new Severity('Negligible', 4);
+Severity.Unknown = new Severity('Unknown', 5);
+Severity.values = [
+    Severity.Critical,
+    Severity.High,
+    Severity.Medium,
+    Severity.Low,
+    Severity.Negligible,
+    Severity.Unknown,
+];
+
+
+/***/ }),
+
+/***/ 8979:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Version = void 0;
+class Version {
+    constructor(value) {
+        this.value = value;
+        if (!value) {
+            throw new Error('Version string cannot be empty');
+        }
+    }
+    toString() {
+        return this.value;
+    }
+    equals(other) {
+        return this.compareTo(other) === 0;
+    }
+    greaterThan(other) {
+        return this.compareTo(other) > 0;
+    }
+    lessThan(other) {
+        return this.compareTo(other) < 0;
+    }
+    /**
+     * Compares this version with another.
+     * @returns 0 if equal, 1 if greater, -1 if less.
+     */
+    compareTo(other) {
+        const thisParts = Version.parse(this.value);
+        const otherParts = Version.parse(other.value);
+        // Compare core version parts
+        for (let i = 0; i < 3; i++) {
+            if (thisParts.core[i] > otherParts.core[i])
+                return 1;
+            if (thisParts.core[i] < otherParts.core[i])
+                return -1;
+        }
+        // Core versions are same, check pre-release
+        const thisPre = thisParts.preRelease;
+        const otherPre = otherParts.preRelease;
+        if (thisPre && !otherPre)
+            return -1; // 1.0.0-alpha < 1.0.0
+        if (!thisPre && otherPre)
+            return 1; // 1.0.0 > 1.0.0-alpha
+        if (!thisPre && !otherPre)
+            return 0; // 1.0.0 == 1.0.0
+        if (!thisPre || !otherPre)
+            return 0; // Should not happen because of previous checks, but makes typescript happy
+        // Both have pre-release tags, compare them identifier by identifier
+        const preLen = Math.max(thisPre.length, otherPre.length);
+        for (let i = 0; i < preLen; i++) {
+            if (thisPre[i] === undefined)
+                return -1; // this is shorter, so smaller
+            if (otherPre[i] === undefined)
+                return 1;
+            const thisIdent = thisPre[i];
+            const otherIdent = otherPre[i];
+            if (thisIdent === otherIdent)
+                continue;
+            const thisIsNum = typeof thisIdent === 'number';
+            const otherIsNum = typeof otherIdent === 'number';
+            if (thisIsNum && !otherIsNum)
+                return -1; // numeric is smaller than string
+            if (!thisIsNum && otherIsNum)
+                return 1;
+            if (thisIdent > otherIdent)
+                return 1;
+            if (thisIdent < otherIdent)
+                return -1;
+        }
+        return 0; // pre-releases are identical
+    }
+    static parse(versionString) {
+        const value = versionString.replace(/^v/, '');
+        const preReleaseIndex = value.indexOf('-');
+        const buildIndex = value.indexOf('+');
+        let corePart;
+        let preReleasePart = null;
+        if (preReleaseIndex > -1) {
+            corePart = value.substring(0, preReleaseIndex);
+            const endOfPreRelease = buildIndex > -1 && buildIndex > preReleaseIndex ? buildIndex : value.length;
+            preReleasePart = value.substring(preReleaseIndex + 1, endOfPreRelease);
+        }
+        else if (buildIndex > -1) {
+            corePart = value.substring(0, buildIndex);
+        }
+        else {
+            corePart = value;
+        }
+        const core = corePart.split('.').map(p => parseInt(p, 10) || 0);
+        // Pad with zeros to ensure it has at least 3 parts (major, minor, patch)
+        while (core.length < 3) {
+            core.push(0);
+        }
+        if (preReleasePart) {
+            const preRelease = preReleasePart.split('.').map(ident => {
+                const num = parseInt(ident, 10);
+                return isNaN(num) || String(num) !== ident ? ident : num;
+            });
+            return { core, preRelease };
+        }
+        return { core, preRelease: null };
+    }
+}
+exports.Version = Version;
+
+
+/***/ }),
+
+/***/ 6246:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Vulnerability = void 0;
+class Vulnerability {
+    constructor(cve, severity, cvssScore, disclosureDate, solutionDate, exploitable, fixVersion) {
+        this.cve = cve;
+        this.severity = severity;
+        this.cvssScore = cvssScore;
+        this.disclosureDate = disclosureDate;
+        this.solutionDate = solutionDate;
+        this.exploitable = exploitable;
+        this.fixVersion = fixVersion;
+        this.foundInPackages = new Set();
+        this.acceptedRisks = new Set();
+    }
+    isFixable() {
+        return this.fixVersion !== null;
+    }
+    addFoundInPackage(pkg) {
+        if (!this.foundInPackages.has(pkg)) {
+            this.foundInPackages.add(pkg);
+            pkg.addVulnerability(this);
+        }
+    }
+    getFoundInPackages() {
+        return Array.from(this.foundInPackages);
+    }
+    getFoundInLayers() {
+        const layers = new Set();
+        for (const pkg of this.foundInPackages) {
+            layers.add(pkg.foundInLayer);
+        }
+        return Array.from(layers);
+    }
+    addAcceptedRisk(risk) {
+        if (!this.acceptedRisks.has(risk)) {
+            this.acceptedRisks.add(risk);
+            risk.addForVulnerability(this);
+        }
+    }
+    getAcceptedRisks() {
+        return Array.from(this.acceptedRisks);
+    }
+}
+exports.Vulnerability = Vulnerability;
+
+
+/***/ }),
+
+/***/ 9056:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__nccwpck_require__(7272), exports);
+__exportStar(__nccwpck_require__(5004), exports);
+__exportStar(__nccwpck_require__(6417), exports);
+__exportStar(__nccwpck_require__(4405), exports);
+__exportStar(__nccwpck_require__(6293), exports);
+__exportStar(__nccwpck_require__(7616), exports);
+__exportStar(__nccwpck_require__(6913), exports);
+__exportStar(__nccwpck_require__(1946), exports);
+__exportStar(__nccwpck_require__(4023), exports);
+__exportStar(__nccwpck_require__(7747), exports);
+__exportStar(__nccwpck_require__(8889), exports);
+__exportStar(__nccwpck_require__(9061), exports);
+__exportStar(__nccwpck_require__(4378), exports);
+__exportStar(__nccwpck_require__(4231), exports);
+__exportStar(__nccwpck_require__(6246), exports);
+__exportStar(__nccwpck_require__(8979), exports);
+
+
+/***/ }),
+
+/***/ 6834:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.withPackageTypes = withPackageTypes;
+exports.withoutPackageTypes = withoutPackageTypes;
+exports.withMinSeverity = withMinSeverity;
+exports.withoutAcceptedRisks = withoutAcceptedRisks;
+exports.filterPackages = filterPackages;
+function withPackageTypes(packageTypes) {
+    return (pkgs) => pkgs.filter((pkg) => packageTypes.includes(pkg.packageType.toString().toLowerCase()));
+}
+function withoutPackageTypes(packageTypes) {
+    return (pkgs) => pkgs.filter((pkg) => !packageTypes.includes(pkg.packageType.toString().toLowerCase()));
+}
+function withMinSeverity(minSeverity) {
+    return (pkgs) => pkgs.filter((pkg) => pkg
+        .getVulnerabilities()
+        .some((vuln) => vuln.severity.isMoreSevereThanOrEqualTo(minSeverity)));
+}
+function withoutAcceptedRisks() {
+    return (pkgs) => pkgs.filter((pkg) => pkg.getAcceptedRisks().length === 0);
+}
+function filterPackages(pkgs, filters) {
+    const filterOptions = [];
+    if (filters) {
+        if (filters.packageTypes && filters.packageTypes.length > 0) {
+            filterOptions.push(withPackageTypes(filters.packageTypes));
+        }
+        if (filters.notPackageTypes && filters.notPackageTypes.length > 0) {
+            filterOptions.push(withoutPackageTypes(filters.notPackageTypes));
+        }
+        if (filters.minSeverity) {
+            filterOptions.push(withMinSeverity(filters.minSeverity));
+        }
+        if (filters.excludeAccepted) {
+            filterOptions.push(withoutAcceptedRisks());
+        }
+    }
+    return filterOptions.reduce((acc, filter) => filter(acc), pkgs);
 }
 
 
 /***/ }),
 
-/***/ 3761:
+/***/ 6254:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -209,8 +1355,9 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ActionInputs = exports.defaultSecureEndpoint = void 0;
 const core = __importStar(__nccwpck_require__(2186));
-const scanner_1 = __nccwpck_require__(491);
-const report_1 = __nccwpck_require__(7531);
+const SysdigCliScannerConstants_1 = __nccwpck_require__(1500);
+const ScannerDTOs_1 = __nccwpck_require__(1699);
+const scanresult_1 = __nccwpck_require__(9056);
 exports.defaultSecureEndpoint = "https://secure.sysdig.com/";
 class ActionInputs {
     get params() {
@@ -231,8 +1378,8 @@ class ActionInputs {
     }
     static overridingParsedActionInputs(overrides) {
         const params = {
-            cliScannerURL: core.getInput('cli-scanner-url') || scanner_1.cliScannerURL,
-            cliScannerVersion: core.getInput('cli-scanner-version'),
+            cliScannerURL: core.getInput('cli-scanner-url') || SysdigCliScannerConstants_1.cliScannerURL,
+            cliScannerVersion: core.getInput('cli-scanner-version') || undefined,
             registryUser: core.getInput('registry-user'),
             registryPassword: core.getInput('registry-password'),
             stopOnFailedPolicyEval: core.getInput('stop-on-failed-policy-eval') == 'true',
@@ -253,7 +1400,7 @@ class ActionInputs {
             excludeAccepted: core.getInput('exclude-accepted') === 'true',
             groupByPackage: core.getInput('group-by-package') == 'true',
             extraParameters: core.getInput('extra-parameters'),
-            mode: scanner_1.ScanMode.fromString(core.getInput('mode')) || scanner_1.ScanMode.vm,
+            mode: ScannerDTOs_1.ScanMode.fromString(core.getInput('mode')) || ScannerDTOs_1.ScanMode.vm,
             recursive: core.getInput('recursive') == 'true',
             minimumSeverity: core.getInput('minimum-severity'),
             iacScanPath: core.getInput('iac-scan-path') || './',
@@ -305,116 +1452,17 @@ class ActionInputs {
             core.setFailed("Sysdig Secure Token is required for standard execution, please set your token or remove the standalone input.");
             throw new Error("Sysdig Secure Token is required for standard execution, please set your token or remove the standalone input.");
         }
-        if (params.mode && params.mode == scanner_1.ScanMode.vm && !params.imageTag) {
+        if (params.mode && params.mode == ScannerDTOs_1.ScanMode.vm && !params.imageTag) {
             core.setFailed("image-tag is required for VM mode.");
             throw new Error("image-tag is required for VM mode.");
         }
-        if (params.mode && params.mode == scanner_1.ScanMode.iac && params.iacScanPath == "") {
+        if (params.mode && params.mode == ScannerDTOs_1.ScanMode.iac && params.iacScanPath == "") {
             core.setFailed("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
             throw new Error("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
         }
-        if (params.severityAtLeast && params.severityAtLeast != "any" && !report_1.SeverityNames.includes(params.severityAtLeast.toLowerCase())) {
+        if (params.severityAtLeast && params.severityAtLeast.toLowerCase() !== 'any' && scanresult_1.Severity.fromString(params.severityAtLeast) === scanresult_1.Severity.Unknown) {
             core.setFailed(`Invalid severity-at-least value "${params.severityAtLeast}". Allowed values: any, critical, high, medium, low, negligible.`);
             throw new Error(`Invalid severity-at-least value "${params.severityAtLeast}". Allowed values: any, critical, high, medium, low, negligible.`);
-        }
-    }
-    // FIXME(fede) this also modifies the opts.cliScannerURL, which is something we don't want
-    composeFlags() {
-        if (this.params.cliScannerVersion && this.params.cliScannerURL == scanner_1.cliScannerURL) {
-            this.params.cliScannerURL = (0, scanner_1.scannerURLForVersion)(this.params.cliScannerVersion);
-        }
-        let envvars = {};
-        envvars['SECURE_API_TOKEN'] = this.params.sysdigSecureToken || "";
-        let flags = [];
-        if (this.params.registryUser) {
-            envvars['REGISTRY_USER'] = this.params.registryUser;
-        }
-        if (this.params.registryPassword) {
-            envvars['REGISTRY_PASSWORD'] = this.params.registryPassword;
-        }
-        if (this.params.standalone) {
-            flags.push("--standalone");
-        }
-        if (this.params.sysdigSecureURL) {
-            flags.push('--apiurl', this.params.sysdigSecureURL);
-        }
-        if (this.params.dbPath) {
-            flags.push(`--dbpath=${this.params.dbPath}`);
-        }
-        if (this.params.skipUpload) {
-            flags.push('--skipupload');
-        }
-        if (this.params.usePolicies) {
-            const policies = this.params.usePolicies.split(',').map(p => p.trim());
-            for (const policy of policies) {
-                flags.push('--policy', policy.replace(/"/g, ''));
-            }
-        }
-        if (this.params.sysdigSkipTLS) {
-            flags.push(`--skiptlsverify`);
-        }
-        if (this.params.overridePullString) {
-            flags.push(`--override-pullstring=${this.params.overridePullString}`);
-        }
-        if (this.params.extraParameters) {
-            flags.push(...this.params.extraParameters.split(' '));
-        }
-        if (this.params.mode == scanner_1.ScanMode.iac) {
-            flags.push(`--iac`);
-            if (this.params.recursive) {
-                flags.push(`-r`);
-            }
-            if (this.params.minimumSeverity) {
-                flags.push(`-f=${this.params.minimumSeverity}`);
-            }
-            flags.push(this.params.iacScanPath);
-        }
-        if (this.params.mode == scanner_1.ScanMode.vm) {
-            flags.push(`--output=json-file=${scanner_1.cliScannerResult}`);
-            flags.push(this.params.imageTag);
-        }
-        return {
-            envvars: envvars,
-            flags: flags
-        };
-    }
-    printOptions() {
-        if (this.params.standalone) {
-            core.info(`[!] Running in Standalone Mode.`);
-        }
-        if (this.params.sysdigSecureURL) {
-            core.info('Sysdig Secure URL: ' + this.params.sysdigSecureURL);
-        }
-        if (this.params.registryUser && this.params.registryPassword) {
-            core.info(`Using specified Registry credentials.`);
-        }
-        core.info(`Stop on Failed Policy Evaluation: ${this.params.stopOnFailedPolicyEval}`);
-        core.info(`Stop on Processing Error: ${this.params.stopOnProcessingError}`);
-        if (this.params.skipUpload) {
-            core.info(`Skipping scan results upload to Sysdig Secure...`);
-        }
-        if (this.params.dbPath) {
-            core.info(`DB Path: ${this.params.dbPath}`);
-        }
-        core.info(`Sysdig skip TLS: ${this.params.sysdigSkipTLS}`);
-        if (this.params.severityAtLeast) {
-            core.info(`Severity level: ${this.params.severityAtLeast}`);
-        }
-        if (this.params.packageTypes) {
-            core.info(`Package types included: ${this.params.packageTypes}`);
-        }
-        if (this.params.notPackageTypes) {
-            core.info(`Package types excluded: ${this.params.notPackageTypes}`);
-        }
-        if (this.params.excludeAccepted !== undefined) {
-            core.info(`Exclude vulnerabilities with accepted risks: ${this.params.excludeAccepted}`);
-        }
-        core.info('Analyzing image: ' + this.params.imageTag);
-        if (this.params.overridePullString) {
-            core.info(` * Image PullString will be overwritten as ${this.params.overridePullString}`);
-        }
-        if (this.params.skipSummary) {
-            core.info("This run will NOT generate a SUMMARY.");
         }
     }
 }
@@ -423,55 +1471,26 @@ exports.ActionInputs = ActionInputs;
 
 /***/ }),
 
-/***/ 7531:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ 6315:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.SeverityNames = void 0;
-exports.isSeverityGte = isSeverityGte;
-exports.filterPackages = filterPackages;
-exports.SeverityNames = ["critical", "high", "medium", "low", "negligible"];
-const severityOrder = ["negligible", "low", "medium", "high", "critical"];
-function isSeverityGte(a, b) {
-    return severityOrder.indexOf(a.toLocaleLowerCase()) >= severityOrder.indexOf(b.toLocaleLowerCase());
+exports.GitHubActionsInputProvider = void 0;
+const ActionInputs_1 = __nccwpck_require__(6254);
+class GitHubActionsInputProvider {
+    getInputs() {
+        const actionInputs = ActionInputs_1.ActionInputs.parseActionInputs();
+        return actionInputs.params;
+    }
 }
-function filterPackages(pkgs, vulns, filters) {
-    const filteredPackages = Object.entries(pkgs)
-        .filter(([key, pkg]) => {
-        var _a;
-        const pkgType = (_a = pkg.type) === null || _a === void 0 ? void 0 : _a.toLowerCase();
-        if (filters.packageTypes && filters.packageTypes.length > 0 &&
-            !filters.packageTypes.map(t => t.toLowerCase()).includes(pkgType))
-            return false;
-        if (filters.notPackageTypes && filters.notPackageTypes.length > 0 &&
-            filters.notPackageTypes.map(t => t.toLowerCase()).includes(pkgType))
-            return false;
-        return true;
-    });
-    return Object.fromEntries(filteredPackages
-        .map(([key, pkg]) => {
-        var _a;
-        let vulnRefs = (_a = pkg.vulnerabilitiesRefs) === null || _a === void 0 ? void 0 : _a.filter((vulnRef) => {
-            const vuln = vulns[vulnRef];
-            if (filters.minSeverity && vuln && !isSeverityGte(vuln.severity, filters.minSeverity)) {
-                return false;
-            }
-            if (filters.excludeAccepted && vuln && Array.isArray(vuln.riskAcceptRefs) && vuln.riskAcceptRefs.length > 0)
-                return false;
-            return true;
-        });
-        const filteredPackage = Object.assign(Object.assign({}, pkg), { vulnerabilitiesRefs: vulnRefs });
-        return [key, filteredPackage];
-    })
-        .filter(([key, pkg]) => pkg.vulnerabilitiesRefs && pkg.vulnerabilitiesRefs.length > 0));
-}
+exports.GitHubActionsInputProvider = GitHubActionsInputProvider;
 
 
 /***/ }),
 
-/***/ 3032:
+/***/ 5934:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -513,106 +1532,93 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.generateSARIFReport = generateSARIFReport;
-exports.vulnerabilities2SARIF = vulnerabilities2SARIF;
+exports.SarifReportPresenter = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
-const report_1 = __nccwpck_require__(7531);
+const filtering_1 = __nccwpck_require__(6834);
 const package_json_1 = __nccwpck_require__(6625);
 const toolVersion = `${package_json_1.version}`;
 const dottedQuadToolVersion = `${package_json_1.version}.0`;
-function generateSARIFReport(data, groupByPackage, filters) {
-    let sarifOutput = vulnerabilities2SARIF(data, groupByPackage, filters);
-    core.setOutput("sarifReport", "./sarif.json");
-    fs_1.default.writeFileSync("./sarif.json", JSON.stringify(sarifOutput, null, 2));
-}
-function vulnerabilities2SARIF(data, groupByPackage, filters) {
-    const filteredPackages = (0, report_1.filterPackages)(data.result.packages, data.result.vulnerabilities, filters !== null && filters !== void 0 ? filters : {});
-    const filteredData = Object.assign(Object.assign({}, data), { result: Object.assign(Object.assign({}, data.result), { packages: filteredPackages }) });
-    let rules = [];
-    let results = [];
-    if (groupByPackage) {
-        [rules, results] = vulnerabilities2SARIFResByPackage(filteredData);
+class SarifReportPresenter {
+    constructor() {
+        // Sysdig to SARIF severity convertion
+        this.LEVELS = {
+            "error": ["High", "Critical"],
+            "warning": ["Medium"],
+            "note": ["Negligible", "Low"]
+        };
     }
-    else {
-        [rules, results] = vulnerabilities2SARIFRes(filteredData);
+    generateReport(data, groupByPackage, filters) {
+        let sarifOutput = this.vulnerabilities2SARIF(data, groupByPackage, filters);
+        core.setOutput("sarifReport", "./sarif.json");
+        fs_1.default.writeFileSync("./sarif.json", JSON.stringify(sarifOutput, null, 2));
     }
-    const runs = [{
-            tool: {
-                driver: {
-                    name: "sysdig-cli-scanner",
-                    fullName: "Sysdig Vulnerability CLI Scanner",
-                    informationUri: "https://docs.sysdig.com/en/docs/installation/sysdig-secure/install-vulnerability-cli-scanner",
-                    version: toolVersion,
-                    semanticVersion: toolVersion,
-                    dottedQuadFileVersion: dottedQuadToolVersion,
-                    rules: rules
-                }
-            },
-            logicalLocations: [
-                {
-                    name: "container-image",
-                    fullyQualifiedName: "container-image",
-                    kind: "namespace"
-                }
-            ],
-            results: results,
-            columnKind: "utf16CodeUnits",
-            properties: {
-                pullString: data.result.metadata.pullString,
-                digest: data.result.metadata.digest,
-                imageId: data.result.metadata.imageId,
-                architecture: data.result.metadata.architecture,
-                baseOs: data.result.metadata.baseOs,
-                os: data.result.metadata.os,
-                size: data.result.metadata.size,
-                layersCount: Object.values(data.result.layers).length,
-                resultUrl: data.info.resultUrl || "",
-                resultId: data.info.resultId || "",
-            }
-        }];
-    const sarifOutput = {
-        "$schema": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/errata01/os/schemas/sarif-schema-2.1.0.json",
-        version: "2.1.0",
-        runs: runs
-    };
-    return (sarifOutput);
-}
-function numericPriorityForSeverity(severity) {
-    let sevNum = report_1.SeverityNames.indexOf(severity.toLowerCase());
-    sevNum = sevNum === -1 ? 5 : sevNum;
-    return sevNum;
-}
-function vulnerabilities2SARIFResByPackage(data) {
-    let rules = [];
-    let results = [];
-    let resultUrl = "";
-    let baseUrl;
-    if (data.info && data.result) {
-        if (data.info.resultUrl) {
-            resultUrl = data.info.resultUrl;
-            baseUrl = resultUrl.slice(0, resultUrl.lastIndexOf('/'));
+    vulnerabilities2SARIF(data, groupByPackage, filters) {
+        let rules = [];
+        let results = [];
+        if (groupByPackage) {
+            [rules, results] = this.vulnerabilities2SARIFResByPackage(data, filters);
         }
-        Object.values(data.result.packages).forEach(pkg => {
-            let helpUri = "";
+        else {
+            [rules, results] = this.vulnerabilities2SARIFRes(data, filters);
+        }
+        const runs = [{
+                tool: {
+                    driver: {
+                        name: "sysdig-cli-scanner",
+                        fullName: "Sysdig Vulnerability CLI Scanner",
+                        informationUri: "https://docs.sysdig.com/en/docs/installation/sysdig-secure/install-vulnerability-cli-scanner",
+                        version: toolVersion,
+                        semanticVersion: toolVersion,
+                        dottedQuadFileVersion: dottedQuadToolVersion,
+                        rules: rules
+                    }
+                },
+                logicalLocations: [
+                    {
+                        name: "container-image",
+                        fullyQualifiedName: "container-image",
+                        kind: "namespace"
+                    }
+                ],
+                results: results,
+                columnKind: "utf16CodeUnits",
+                properties: {
+                    pullString: data.metadata.pullString,
+                    digest: data.metadata.digest,
+                    imageId: data.metadata.imageId,
+                    architecture: data.metadata.architecture,
+                    baseOs: data.metadata.baseOs,
+                    os: data.metadata.baseOs,
+                    size: data.metadata.sizeInBytes.toString(),
+                    layersCount: data.getLayers().length,
+                    resultUrl: "",
+                    resultId: "",
+                }
+            }];
+        const sarifOutput = {
+            "$schema": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/errata01/os/schemas/sarif-schema-2.1.0.json",
+            version: "2.1.0",
+            runs: runs
+        };
+        return (sarifOutput);
+    }
+    vulnerabilities2SARIFResByPackage(data, filters) {
+        let rules = [];
+        let results = [];
+        (0, filtering_1.filterPackages)(data.getPackages(), filters).forEach((pkg) => {
             let fullDescription = "";
             let severityLevel = "";
-            let minSeverityNum = 5;
-            let score = 0.0;
-            pkg.vulnerabilitiesRefs.forEach(vulnRef => {
-                const vuln = data.result.vulnerabilities[vulnRef];
-                fullDescription += `${getSARIFVulnFullDescription(pkg, vuln)}\n\n\n`;
-                const sevNum = numericPriorityForSeverity(vuln.severity);
-                if (sevNum < minSeverityNum) {
-                    severityLevel = vuln.severity.toLowerCase();
-                    minSeverityNum = sevNum;
-                }
-                if (vuln.cvssScore.score > score) {
-                    score = vuln.cvssScore.score;
+            let maxCvssFound = 0;
+            pkg.getVulnerabilities().forEach(vuln => {
+                fullDescription += `${this.getSARIFVulnFullDescription(pkg, vuln)} \
+\
+\
+`;
+                if (vuln.cvssScore > maxCvssFound) {
+                    maxCvssFound = vuln.cvssScore;
                 }
             });
-            if (baseUrl)
-                helpUri = `${baseUrl}/content?filter=freeText+in+("${pkg.name}")`;
             let rule = {
                 id: pkg.name,
                 name: pkg.name,
@@ -622,11 +1628,11 @@ function vulnerabilities2SARIFResByPackage(data) {
                 fullDescription: {
                     text: fullDescription
                 },
-                helpUri: helpUri,
-                help: getSARIFPkgHelp(pkg, data.result.vulnerabilities),
+                helpUri: "",
+                help: this.getSARIFPkgHelp(pkg),
                 properties: {
                     precision: "very-high",
-                    'security-severity': `${score}`,
+                    'security-severity': `${maxCvssFound}`,
                     tags: [
                         'vulnerability',
                         'security',
@@ -637,88 +1643,79 @@ function vulnerabilities2SARIFResByPackage(data) {
             rules.push(rule);
             let result = {
                 ruleId: pkg.name,
-                level: check_level(severityLevel),
+                level: this.check_level(severityLevel),
                 message: {
-                    text: getSARIFReportMessageByPackage(data, pkg, baseUrl)
+                    text: this.getSARIFReportMessageByPackage(pkg)
                 },
                 locations: [
                     {
                         physicalLocation: {
                             artifactLocation: {
-                                uri: `file:///${sanitizeImageName(data.result.metadata.pullString)}`,
+                                uri: `file:///${this.sanitizeImageName(data.metadata.pullString)}`,
                                 uriBaseId: "ROOTPATH"
                             }
                         },
                         message: {
-                            text: `${data.result.metadata.pullString} - ${pkg.name}@${pkg.version}`
+                            text: `${data.metadata.pullString} - ${pkg.name}@${pkg.version}`
                         }
                     }
                 ]
             };
             results.push(result);
         });
+        return [rules, results];
     }
-    return [rules, results];
-}
-function sanitizeImageName(imageName) {
-    // Replace / and : with -
-    return imageName.replace(/[\/:]/g, '-');
-}
-function vulnerabilities2SARIFRes(data) {
-    let results = [];
-    let rules = [];
-    let ruleIds = [];
-    let resultUrl = "";
-    let baseUrl;
-    if (data.info && data.result) {
-        if (data.info.resultUrl) {
-            resultUrl = data.info.resultUrl;
-            baseUrl = resultUrl.slice(0, resultUrl.lastIndexOf('/'));
-        }
-        Object.values(data.result.packages).forEach(pkg => {
-            pkg.vulnerabilitiesRefs.forEach(vulnRef => {
-                const vuln = data.result.vulnerabilities[vulnRef];
-                if (!(vuln.name in ruleIds)) {
-                    ruleIds.push(vuln.name);
+    sanitizeImageName(imageName) {
+        // Replace / and : with -
+        return imageName.replace(/[\/:]/g, '-');
+    }
+    vulnerabilities2SARIFRes(data, filters) {
+        let results = [];
+        let rules = [];
+        let ruleIds = [];
+        (0, filtering_1.filterPackages)(data.getPackages(), filters).forEach(pkg => {
+            pkg.getVulnerabilities().forEach(vuln => {
+                if (!(vuln.cve in ruleIds)) {
+                    ruleIds.push(vuln.cve);
                     let rule = {
-                        id: vuln.name,
-                        name: pkg.type,
+                        id: vuln.cve,
+                        name: pkg.packageType.toString(),
                         shortDescription: {
-                            text: getSARIFVulnShortDescription(pkg, vuln)
+                            text: this.getSARIFVulnShortDescription(pkg, vuln)
                         },
                         fullDescription: {
-                            text: getSARIFVulnFullDescription(pkg, vuln)
+                            text: this.getSARIFVulnFullDescription(pkg, vuln)
                         },
-                        helpUri: `https://nvd.nist.gov/vuln/detail/${vuln.name}`,
-                        help: getSARIFVulnHelp(pkg, vuln),
+                        helpUri: `https://nvd.nist.gov/vuln/detail/${vuln.cve}`,
+                        help: this.getSARIFVulnHelp(pkg, vuln),
                         properties: {
                             precision: "very-high",
-                            'security-severity': `${vuln.cvssScore.score}`,
+                            'security-severity': `${vuln.cvssScore}`,
                             tags: [
                                 'vulnerability',
                                 'security',
-                                vuln.severity
+                                vuln.severity.toString()
                             ]
                         }
                     };
                     rules.push(rule);
                 }
                 let result = {
-                    ruleId: vuln.name,
-                    level: check_level(vuln.severity),
+                    ruleId: vuln.cve,
+                    level: this.check_level(vuln.severity.toString()),
                     message: {
-                        text: getSARIFReportMessage(data, vuln, pkg, baseUrl)
+                        text: this.getSARIFReportMessage(data, vuln, pkg)
                     },
                     locations: [
                         {
                             physicalLocation: {
                                 artifactLocation: {
-                                    uri: `file:///${sanitizeImageName(data.result.metadata.pullString)}`,
+                                    uri: `file:///${this.sanitizeImageName(data.metadata.pullString)}`,
                                     uriBaseId: "ROOTPATH"
                                 }
                             },
                             message: {
-                                text: `${data.result.metadata.pullString} - ${pkg.name}@${pkg.version}`
+                                text: `${data.metadata.pullString} - ${pkg.name}@${pkg.version}`
                             }
                         }
                     ]
@@ -726,145 +1723,459 @@ function vulnerabilities2SARIFRes(data) {
                 results.push(result);
             });
         });
+        return [rules, results];
     }
-    return [rules, results];
-}
-function getSARIFVulnShortDescription(pkg, vuln) {
-    return `${vuln.name} Severity: ${vuln.severity} Package: ${pkg.name}`;
-}
-function getSARIFVulnFullDescription(pkg, vuln) {
-    return `${vuln.name}
-Severity: ${vuln.severity}
-Package: ${pkg.name}
-Type: ${pkg.type}
-Fix: ${pkg.suggestedFix || "No fix available"}
-URL: https://nvd.nist.gov/vuln/detail/${vuln.name}`;
-}
-function getSARIFPkgHelp(pkg, vulns) {
-    let text = "";
-    pkg.vulnerabilitiesRefs.forEach(vulnRef => {
-        const vuln = vulns[vulnRef];
-        text += `Vulnerability ${vuln.name}
+    getSARIFVulnShortDescription(pkg, vuln) {
+        return `${vuln.cve} Severity: ${vuln.severity} Package: ${pkg.name}`;
+    }
+    getSARIFVulnFullDescription(pkg, vuln) {
+        return `${vuln.cve}
   Severity: ${vuln.severity}
   Package: ${pkg.name}
-  CVSS Score: ${vuln.cvssScore.score}
-  CVSS Version: ${vuln.cvssScore.version}
-  CVSS Vector: ${vuln.cvssScore.vector}
+  Type: ${pkg.packageType.toString()}
+  Fix: ${vuln.fixVersion || "No fix available"}
+  URL: https://nvd.nist.gov/vuln/detail/${vuln.cve}`;
+    }
+    getSARIFPkgHelp(pkg) {
+        let text = "";
+        pkg.getVulnerabilities().forEach(vuln => {
+            text += `Vulnerability ${vuln.cve}
+    Severity: ${vuln.severity}
+    Package: ${pkg.name}
+    CVSS Score: ${vuln.cvssScore}
+    Version: ${pkg.version}
+    Fix Version: ${vuln.fixVersion || "No fix available"}
+    Exploitable: ${vuln.exploitable}
+    Type: ${pkg.packageType.toString()}
+    Location: ${pkg.path}
+    URL: https://nvd.nist.gov/vuln/detail/${vuln.cve}\n\n\n`;
+        });
+        let markdown = `| Vulnerability | Severity | CVSS Score | Exploitable |
+    | -------- | ------- | ---------- |  ----------- |
+`;
+        pkg.getVulnerabilities().forEach(vuln => {
+            markdown += `| ${vuln.cve} | ${vuln.severity} | ${vuln.cvssScore} | ${vuln.exploitable} |
+`;
+        });
+        return {
+            text: text,
+            markdown: markdown
+        };
+    }
+    getSARIFVulnHelp(pkg, vuln) {
+        return {
+            text: `Vulnerability ${vuln.cve}
+  Severity: ${vuln.severity}
+  Package: ${pkg.name}
+  CVSS Score: ${vuln.cvssScore}
   Version: ${pkg.version}
-  Fix Version: ${pkg.suggestedFix || "No fix available"}
+  Fix Version: ${vuln.fixVersion || "No fix available"}
   Exploitable: ${vuln.exploitable}
-  Type: ${pkg.type}
+  Type: ${pkg.packageType.toString()}
   Location: ${pkg.path}
-  URL: https://nvd.nist.gov/vuln/detail/${vuln.name}\n\n\n`;
-    });
-    let markdown = `| Vulnerability | Severity | CVSS Score | CVSS Version | CVSS Vector | Exploitable |
-  | -------- | ------- | ---------- | ------------ | -----------  | ----------- |\n`;
-    pkg.vulnerabilitiesRefs.forEach(vulnRef => {
-        const vuln = vulns[vulnRef];
-        markdown += `| ${vuln.name} | ${vuln.severity} | ${vuln.cvssScore.score} | ${vuln.cvssScore.version} | ${vuln.cvssScore.vector} | ${vuln.exploitable} |\n`;
-    });
-    return {
-        text: text,
-        markdown: markdown
-    };
-}
-function getSARIFVulnHelp(pkg, vuln) {
-    return {
-        text: `Vulnerability ${vuln.name}
-Severity: ${vuln.severity}
-Package: ${pkg.name}
-CVSS Score: ${vuln.cvssScore.score}
-CVSS Version: ${vuln.cvssScore.version}
-CVSS Vector: ${vuln.cvssScore.vector}
-Version: ${pkg.version}
-Fix Version: ${pkg.suggestedFix || "No fix available"}
-Exploitable: ${vuln.exploitable}
-Type: ${pkg.type}
-Location: ${pkg.path}
-URL: https://nvd.nist.gov/vuln/detail/${vuln.name}`,
-        markdown: `
-**Vulnerability [${vuln.name}](https://nvd.nist.gov/vuln/detail/${vuln.name})**
-| Severity | Package | CVSS Score | CVSS Version | CVSS Vector | Fixed Version | Exploitable |
-| -------- | ------- | ---------- | ------------ | ----------- | ------------- | ----------- |
-| ${vuln.severity} | ${pkg.name} | ${vuln.cvssScore.score} | ${vuln.cvssScore.version} | ${vuln.cvssScore.vector} | ${pkg.suggestedFix || "None"} | ${vuln.exploitable} |`
-    };
-}
-function getSARIFReportMessageByPackage(data, pkg, baseUrl) {
-    let message = `Full image scan results in Sysdig UI: [${data.result.metadata.pullString} scan result](${data.info.resultUrl})\n`;
-    if (baseUrl) {
-        message += `Package: [${pkg.name}](${baseUrl}/content?filter=freeText+in+("${pkg.name}"))\n`;
+  URL: https://nvd.nist.gov/vuln/detail/${vuln.cve}`,
+            markdown: `
+  **Vulnerability [${vuln.cve}](https://nvd.nist.gov/vuln/detail/${vuln.cve})**
+  | Severity | Package | CVSS Score | Fixed Version | Exploitable |
+  | -------- | ------- | ---------- | ------------- | ----------- |
+  | ${vuln.severity} | ${pkg.name} | ${vuln.cvssScore} | ${vuln.fixVersion || "None"} | ${vuln.exploitable} |
+`
+        };
     }
-    else {
-        message += `Package: ${pkg.name}\n`;
+    getSARIFReportMessageByPackage(pkg) {
+        let message = "Full scan result:";
+        message += `Package: ${pkg.name}
+`;
+        message += `Package type: ${pkg.packageType.toString()}
+    Installed Version: ${pkg.version}
+    Package path: ${pkg.path}
+`;
+        pkg.getVulnerabilities().forEach(vuln => {
+            message += ".\n";
+            message += `Vulnerability: ${vuln.cve}
+`;
+            message += `Severity: ${vuln.severity}
+      CVSS Score: ${vuln.cvssScore}
+      Fixed Version: ${(vuln.fixVersion || 'No fix available')}
+      Exploitable: ${vuln.exploitable}
+      Link to NVD: [${vuln.cve}](https://nvd.nist.gov/vuln/detail/${vuln.cve})
+`;
+        });
+        return message;
     }
-    message += `Package type: ${pkg.type}
-  Installed Version: ${pkg.version}
-  Package path: ${pkg.path}\n`;
-    pkg.vulnerabilitiesRefs.forEach(vulnRef => {
-        const vuln = data.result.vulnerabilities[vulnRef];
-        message += `.\n`;
-        if (baseUrl) {
-            message += `Vulnerability: [${vuln.name}](${baseUrl}/vulnerabilities?filter=freeText+in+("${vuln.name}"))\n`;
-        }
-        else {
-            message += `Vulnerability: ${vuln.name}\n`;
-        }
-        message += `Severity: ${vuln.severity}
-    CVSS Score: ${vuln.cvssScore.score}
-    CVSS Version: ${vuln.cvssScore.version}
-    CVSS Vector: ${vuln.cvssScore.vector}
+    getSARIFReportMessage(data, vuln, pkg) {
+        let message = `Full image scan results for ${data.metadata.pullString} scan result:
+`;
+        message += `Package: ${pkg.name}
+`;
+        message += `Package type: ${pkg.packageType.toString()}
+    Installed Version: ${pkg.version}
+    Package path: ${pkg.path}
+`;
+        message += `Vulnerability: ${vuln.cve}
+`;
+        message += `Severity: ${vuln.severity.toString()}
+    CVSS Score: ${vuln.cvssScore}
     Fixed Version: ${(vuln.fixVersion || 'No fix available')}
     Exploitable: ${vuln.exploitable}
-    Link to NVD: [${vuln.name}](https://nvd.nist.gov/vuln/detail/${vuln.name})\n`;
-    });
-    return message;
-}
-function getSARIFReportMessage(data, vuln, pkg, baseUrl) {
-    let message = `Full image scan results in Sysdig UI: [${data.result.metadata.pullString} scan result](${data.info.resultUrl})\n`;
-    if (baseUrl) {
-        message += `Package: [${pkg.name}](${baseUrl}/content?filter=freeText+in+("${pkg.name}"))\n`;
+    Link to NVD: [${vuln.cve}](https://nvd.nist.gov/vuln/detail/${vuln.cve})`;
+        return message;
     }
-    else {
-        message += `Package: ${pkg.name}\n`;
-    }
-    message += `Package type: ${pkg.type}
-  Installed Version: ${pkg.version}
-  Package path: ${pkg.path}\n`;
-    if (baseUrl) {
-        message += `Vulnerability: [${vuln.name}](${baseUrl}/vulnerabilities?filter=freeText+in+("${vuln.name}"))\n`;
-    }
-    else {
-        message += `Vulnerability: ${vuln.name}\n`;
-    }
-    message += `Severity: ${vuln.severity}
-  CVSS Score: ${vuln.cvssScore.score}
-  CVSS Version: ${vuln.cvssScore.version}
-  CVSS Vector: ${vuln.cvssScore.vector}
-  Fixed Version: ${(vuln.fixVersion || 'No fix available')}
-  Exploitable: ${vuln.exploitable}
-  Link to NVD: [${vuln.name}](https://nvd.nist.gov/vuln/detail/${vuln.name})`;
-    return message;
-}
-// Sysdig to SARIF severity convertion
-const LEVELS = {
-    "error": ["High", "Critical"],
-    "warning": ["Medium"],
-    "note": ["Negligible", "Low"]
-};
-function check_level(sev_value) {
-    let level = "note";
-    for (let key in LEVELS) {
-        if (sev_value in LEVELS[key]) {
-            level = key;
+    check_level(sev_value) {
+        let level = "note";
+        for (let key in this.LEVELS) {
+            if (sev_value in this.LEVELS[key]) {
+                level = key;
+            }
         }
+        return level;
     }
-    return level;
 }
+exports.SarifReportPresenter = SarifReportPresenter;
 
 
 /***/ }),
 
-/***/ 491:
+/***/ 9495:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SummaryReportPresenter = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const scanresult_1 = __nccwpck_require__(9056);
+const EVALUATION_RESULT_AS_EMOJI = {
+    "failed": "❌",
+    "passed": "✅"
+};
+class SummaryReportPresenter {
+    generateReport(data, _groupByPackage, filters) {
+        return __awaiter(this, void 0, void 0, function* () {
+            core.summary.emptyBuffer().clear();
+            core.summary.addHeading(`Scan Results for ${data.metadata.pullString}`);
+            this.addVulnTableToSummary(data, filters);
+            this.addVulnsByLayerTableToSummary(data, (filters === null || filters === void 0 ? void 0 : filters.minSeverity) || scanresult_1.Severity.Unknown);
+            this.addReportToSummary(data);
+            yield core.summary.write({ overwrite: true });
+        });
+    }
+    addVulnTableToSummary(data, filters) {
+        var _a;
+        const minSeverity = (_a = filters === null || filters === void 0 ? void 0 : filters.minSeverity) !== null && _a !== void 0 ? _a : scanresult_1.Severity.Unknown;
+        const vulns = data.getVulnerabilities()
+            .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity));
+        let colsToDisplay = SummaryReportPresenter.severities.filter(s => s.sev.isMoreSevereThanOrEqualTo(minSeverity));
+        const headerRow = [{ data: "", header: true }].concat(colsToDisplay.map(c => ({ data: c.label, header: true })));
+        const countBySeverity = (sev) => vulns.filter(v => v.severity === sev).length;
+        const totalRow = [{ data: "⚠️ Total Vulnerabilities", header: true }].concat(colsToDisplay.map(c => ({ data: countBySeverity(c.sev).toString(), header: false })));
+        const countFixableBySeverity = (sev) => vulns.filter(v => v.severity === sev && v.isFixable()).length;
+        const fixableRow = [{ data: "🔧 Fixable Vulnerabilities", header: true }].concat(colsToDisplay.map(c => ({ data: countFixableBySeverity(c.sev).toString(), header: false })));
+        core.summary.addHeading("Vulnerabilities summary", 2);
+        core.summary.addTable([headerRow, totalRow, fixableRow]);
+    }
+    addVulnsByLayerTableToSummary(data, minSeverity) {
+        core.summary.addHeading(`Package vulnerabilities per layer`, 2);
+        const orderedLayers = data.getLayers().sort((a, b) => a.index - b.index);
+        orderedLayers.forEach(layer => {
+            const vulnerablePackages = layer
+                .getPackages()
+                .filter(p => p
+                .getVulnerabilities()
+                .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity))
+                .length > 0);
+            const vulnerablePackagesSortedBySeverity = vulnerablePackages
+                .sort((a, b) => {
+                const sortedSeveritiesInA = a
+                    .getVulnerabilities()
+                    .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity))
+                    .map(v => v.severity.asNumber())
+                    .sort((va, vb) => va - vb);
+                const sortedSeveritiesInB = b
+                    .getVulnerabilities()
+                    .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity))
+                    .map(v => v.severity.asNumber())
+                    .sort((va, vb) => va - vb);
+                const minLength = Math.min(sortedSeveritiesInA.length, sortedSeveritiesInB.length);
+                for (let i = 0; i < minLength; i++) {
+                    if (sortedSeveritiesInA[i] !== sortedSeveritiesInB[i])
+                        return sortedSeveritiesInA[i] - sortedSeveritiesInB[i];
+                }
+                return sortedSeveritiesInA.length - sortedSeveritiesInB.length;
+            });
+            let colsToDisplay = SummaryReportPresenter.severities.filter(s => s.sev.isMoreSevereThanOrEqualTo(minSeverity));
+            const packageRows = vulnerablePackagesSortedBySeverity.map(pkg => {
+                var _a;
+                const vulns = pkg.getVulnerabilities();
+                const countBySeverity = (sev) => vulns.filter(v => v.severity === sev).length;
+                return [
+                    { data: pkg.name },
+                    { data: pkg.packageType.toString() },
+                    { data: pkg.version.toString() },
+                    { data: ((_a = pkg.suggestedFixVersion()) === null || _a === void 0 ? void 0 : _a.toString()) || "None" },
+                ].concat(colsToDisplay.map(c => ({ data: countBySeverity(c.sev).toString() }))).concat({ data: vulns.filter(v => v.exploitable).length.toString() });
+            });
+            core.summary.addCodeBlock(`LAYER ${layer.index} - ${layer.command.replace(/\$/g, "&#36;").replace(/\&/g, '&amp;')}`);
+            if (packageRows.length > 0) {
+                core.summary.addTable([
+                    [
+                        { data: 'Package', header: true },
+                        { data: 'Type', header: true },
+                        { data: 'Version', header: true },
+                        { data: 'Suggested fix', header: true },
+                        ...colsToDisplay.map(c => ({ data: c.label, header: true })),
+                        { data: 'Exploits', header: true },
+                    ],
+                    ...packageRows
+                ]);
+            }
+        });
+    }
+    addReportToSummary(data) {
+        let policies = data.getPolicies();
+        if (policies.length == 0) {
+            return;
+        }
+        core.summary.addHeading("Policy evaluation summary", 2);
+        core.summary.addRaw(`Evaluation result: ${data.getEvaluationResult().toString()} ${EVALUATION_RESULT_AS_EMOJI[data.getEvaluationResult().toString()]}`);
+        let table = [[
+                { data: 'Policy', header: true },
+                { data: 'Evaluation', header: true },
+            ]];
+        policies.forEach(policy => {
+            table.push([
+                { data: `${policy.name}` },
+                { data: `${EVALUATION_RESULT_AS_EMOJI[policy.getEvaluationResult().toString()]}` },
+            ]);
+        });
+        core.summary.addTable(table);
+        core.summary.addHeading("Policy failures", 2);
+        policies.forEach(policy => {
+            if (policy.getEvaluationResult().isFailed()) {
+                core.summary.addHeading(`Policy: ${policy.name}`, 3);
+                policy.getBundles().forEach(bundle => {
+                    core.summary.addHeading(`Rule Bundle: ${bundle.name}`, 4);
+                    bundle.getRules().forEach(rule => {
+                        core.summary.addHeading(`Rule: ${rule.description}`, 5);
+                        if (rule.evaluationResult.isFailed()) {
+                            if ((0, scanresult_1.isPkgRule)(rule)) {
+                                this.getRulePkgMessage(rule);
+                            }
+                            if ((0, scanresult_1.isImageRule)(rule)) {
+                                this.getRuleImageMessage(rule);
+                            }
+                        }
+                    });
+                });
+            }
+        });
+    }
+    getRulePkgMessage(rule) {
+        let table = [[
+                { data: 'Severity', header: true },
+                { data: 'Package', header: true },
+                { data: 'CVE ID', header: true },
+                { data: 'CVSS Score', header: true },
+                { data: 'Fixed Version', header: true },
+                { data: 'Exploitable', header: true }
+            ]];
+        rule.getFailures().forEach(failure => {
+            var _a;
+            table.push([
+                { data: `${failure.vuln.severity}` },
+                { data: `${failure.pkg.name}` },
+                { data: `${failure.vuln.cve}` },
+                { data: `${failure.vuln.cvssScore}` },
+                { data: `${((_a = failure.vuln.fixVersion) === null || _a === void 0 ? void 0 : _a.toString()) || "No fix available"}` },
+                { data: `${failure.vuln.exploitable}` },
+            ]);
+        });
+        core.summary.addTable(table);
+    }
+    getRuleImageMessage(rule) {
+        const reasons = rule.getFailures().map(failure => failure.reason());
+        core.summary.addList(reasons);
+    }
+}
+exports.SummaryReportPresenter = SummaryReportPresenter;
+SummaryReportPresenter.severities = [
+    { sev: scanresult_1.Severity.Critical, label: "🟣 Critical" },
+    { sev: scanresult_1.Severity.High, label: "🔴 High" },
+    { sev: scanresult_1.Severity.Medium, label: "🟠 Medium" },
+    { sev: scanresult_1.Severity.Low, label: "🟡 Low" },
+    { sev: scanresult_1.Severity.Negligible, label: "⚪ Negligible" },
+];
+
+
+/***/ }),
+
+/***/ 9381:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.JsonScanResultV1ToScanResultAdapter = void 0;
+const scanresult_1 = __nccwpck_require__(9056);
+// Helper interfaces to provide better typing than `any` for vulnerabilities and risks
+class JsonScanResultV1ToScanResultAdapter {
+    toScanResult(report) {
+        const scanResult = this.createScanResult(report.result.metadata);
+        const reportResult = report.result;
+        this.addLayers(reportResult, scanResult);
+        this.addAcceptedRisks(reportResult, scanResult);
+        this.addVulnerabilities(reportResult, scanResult);
+        this.addPackages(reportResult, scanResult);
+        this.addPolicies(reportResult, scanResult);
+        return scanResult;
+    }
+    createScanResult(metadata) {
+        var _a;
+        return new scanresult_1.ScanResult(scanresult_1.ScanType.Docker, // Assuming Docker scan type as in the Rust code
+        metadata.pullString, metadata.imageId, metadata.digest, new scanresult_1.OperatingSystem(scanresult_1.Family.fromString(metadata.os), metadata.baseOs), BigInt(metadata.size), scanresult_1.Architecture.fromString(metadata.architecture), (_a = metadata.labels) !== null && _a !== void 0 ? _a : {}, new Date(metadata.createdAt));
+    }
+    addLayers(reportResult, scanResult) {
+        var _a, _b;
+        for (const layerData of Object.values(reportResult.layers)) {
+            scanResult.addLayer((_a = layerData.digest) !== null && _a !== void 0 ? _a : '', layerData.index, layerData.size ? BigInt(layerData.size) : null, (_b = layerData.command) !== null && _b !== void 0 ? _b : '');
+        }
+    }
+    addAcceptedRisks(reportResult, scanResult) {
+        var _a;
+        for (const riskData of Object.values((_a = reportResult.riskAccepts) !== null && _a !== void 0 ? _a : {})) {
+            scanResult.addAcceptedRisk(riskData.id, scanresult_1.AcceptedRiskReason.fromString(riskData.reason), riskData.description, riskData.expirationDate ? new Date(riskData.expirationDate) : null, riskData.status.toLowerCase() === 'active', new Date(riskData.createdAt), new Date(riskData.updatedAt));
+        }
+    }
+    addVulnerabilities(reportResult, scanResult) {
+        var _a, _b;
+        for (const vulnData of Object.values(reportResult.vulnerabilities)) {
+            const vulnerability = scanResult.addVulnerability(vulnData.name, scanresult_1.Severity.fromString(vulnData.severity), vulnData.cvssScore.score, new Date(vulnData.disclosureDate), vulnData.solutionDate ? new Date(vulnData.solutionDate) : null, vulnData.exploitable, (_a = vulnData.fixVersion) !== null && _a !== void 0 ? _a : null);
+            if (vulnData.riskAcceptRefs) {
+                for (const riskRef of vulnData.riskAcceptRefs) {
+                    const riskData = (_b = reportResult.riskAccepts) === null || _b === void 0 ? void 0 : _b[riskRef];
+                    if (riskData) {
+                        const risk = scanResult.findAcceptedRiskById(riskData.id);
+                        if (risk) {
+                            vulnerability.addAcceptedRisk(risk);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    addPackages(reportResult, scanResult) {
+        var _a, _b;
+        for (const key in reportResult.packages) {
+            const pkgData = reportResult.packages[key];
+            const layerRef = reportResult.layers[pkgData.layerRef];
+            if (!layerRef)
+                continue;
+            const layer = scanResult.findLayerByDigest((_a = layerRef.digest) !== null && _a !== void 0 ? _a : '');
+            if (!layer)
+                continue;
+            const pkg = scanResult.addPackage(key, scanresult_1.PackageType.fromString(pkgData.type), pkgData.name, pkgData.version, pkgData.path, layer);
+            if (pkgData.vulnerabilitiesRefs) {
+                for (const vulnRef of pkgData.vulnerabilitiesRefs) {
+                    const jsonVuln = reportResult.vulnerabilities[vulnRef];
+                    if (jsonVuln) {
+                        const vulnerability = scanResult.findVulnerabilityByCve(jsonVuln.name);
+                        if (vulnerability) {
+                            pkg.addVulnerability(vulnerability);
+                            // Replicate indirect risk association from Rust code
+                            if (jsonVuln === null || jsonVuln === void 0 ? void 0 : jsonVuln.riskAcceptRefs) {
+                                for (const riskRef of jsonVuln.riskAcceptRefs) {
+                                    const riskData = (_b = reportResult.riskAccepts) === null || _b === void 0 ? void 0 : _b[riskRef];
+                                    if (riskData) {
+                                        const risk = scanResult.findAcceptedRiskById(riskData.id);
+                                        if (risk) {
+                                            pkg.addAcceptedRisk(risk);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    addPolicies(reportResult, scanResult) {
+        var _a, _b, _c;
+        for (const policyData of reportResult.policies.evaluations) {
+            const policy = scanResult.addPolicy(policyData.identifier, policyData.name, new Date(policyData.createdAt), new Date(policyData.updatedAt));
+            for (const bundleData of policyData.bundles) {
+                const bundle = scanResult.addPolicyBundle(bundleData.identifier, bundleData.name, policy);
+                for (const ruleData of bundleData.rules) {
+                    if (ruleData.failureType === 'imageConfigFailure') {
+                        const rule = new scanresult_1.PolicyBundleRuleImageConfig(String(ruleData.ruleId), ruleData.description, scanresult_1.EvaluationResult.fromString(ruleData.evaluationResult), bundle);
+                        for (const failureData of (_a = ruleData.failures) !== null && _a !== void 0 ? _a : []) {
+                            rule.addFailure((_b = failureData.remediation) !== null && _b !== void 0 ? _b : 'N/A');
+                        }
+                        bundle.addRule(rule);
+                    }
+                    if (ruleData.failureType === 'pkgVulnFailure') {
+                        const rule = new scanresult_1.PolicyBundleRulePkgVuln(String(ruleData.ruleId), ruleData.description, scanresult_1.EvaluationResult.fromString(ruleData.evaluationResult), bundle);
+                        for (const failureData of (_c = ruleData.failures) !== null && _c !== void 0 ? _c : []) {
+                            const pkg = scanResult.findPackageByID(failureData.packageRef);
+                            let jsonVuln = reportResult.vulnerabilities[failureData.vulnerabilityRef];
+                            const vuln = scanResult.findVulnerabilityByCve(jsonVuln.name);
+                            rule.addFailure(failureData.description || "", pkg, vuln);
+                        }
+                        bundle.addRule(rule);
+                    }
+                }
+            }
+        }
+    }
+}
+exports.JsonScanResultV1ToScanResultAdapter = JsonScanResultV1ToScanResultAdapter;
+
+
+/***/ }),
+
+/***/ 3993:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -915,15 +2226,161 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ScanMode = exports.cliScannerURL = exports.cliScannerResult = exports.cliScannerName = void 0;
-exports.pullScanner = pullScanner;
-exports.executeScan = executeScan;
-exports.scannerURLForVersion = scannerURLForVersion;
+exports.SysdigCliScanner = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
-const os_1 = __importDefault(__nccwpck_require__(2037));
 const process_1 = __importDefault(__nccwpck_require__(7282));
+const ScannerDTOs_1 = __nccwpck_require__(1699);
+const SysdigCliScannerConstants_1 = __nccwpck_require__(1500);
+const ReportParsingError_1 = __nccwpck_require__(93);
+const JsonScanResultV1ToScanResultAdapter_1 = __nccwpck_require__(9381);
 const performance = (__nccwpck_require__(4074).performance);
+class SysdigCliScanner {
+    executeScan(config) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.pullScanner(config.cliScannerURL, config.cliScannerVersion);
+            const scanFlags = this.composeFlags(config);
+            let { envvars, flags } = scanFlags;
+            let execOutput = '';
+            let errOutput = '';
+            const scanOptions = {
+                env: Object.assign(Object.assign({}, Object.fromEntries(Object.entries(process_1.default.env).map(([key, value]) => [key, value !== null && value !== void 0 ? value : ""]))), envvars),
+                silent: true,
+                ignoreReturnCode: true,
+                listeners: {
+                    stdout: (data) => {
+                        process_1.default.stdout.write(data);
+                    },
+                    stderr: (data) => {
+                        process_1.default.stderr.write(data);
+                    }
+                }
+            };
+            const catOptions = {
+                silent: true,
+                ignoreReturnCode: true,
+                listeners: {
+                    stdout: (data) => {
+                        execOutput += data.toString();
+                    },
+                    stderr: (data) => {
+                        errOutput += data.toString();
+                    }
+                }
+            };
+            let start = performance.now();
+            const command = `./${SysdigCliScannerConstants_1.cliScannerName}`;
+            const loggableFlags = flags.map(flag => flag.includes(' ') ? `"${flag}"` : flag);
+            core.info("Executing: " + command + " " + loggableFlags.join(' '));
+            let retCode = yield exec.exec(command, flags, scanOptions);
+            core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
+            if (retCode == 0 || retCode == 1) {
+                yield exec.exec(`cat ./${SysdigCliScannerConstants_1.cliScannerResult}`, undefined, catOptions);
+            }
+            try {
+                const jsonScanResult = JSON.parse(execOutput);
+                return new JsonScanResultV1ToScanResultAdapter_1.JsonScanResultV1ToScanResultAdapter().toScanResult(jsonScanResult);
+            }
+            catch (e) {
+                throw new ReportParsingError_1.ReportParsingError(execOutput);
+            }
+        });
+    }
+    pullScanner(scannerURL, version) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let url = scannerURL;
+            if (version && url === SysdigCliScannerConstants_1.cliScannerURL) { // cliScannerURL is the default
+                url = (0, SysdigCliScannerConstants_1.scannerURLForVersion)(version);
+            }
+            let start = performance.now();
+            core.info('Pulling cli-scanner from: ' + url);
+            let cmd = `wget ${url} -O ./${SysdigCliScannerConstants_1.cliScannerName}`;
+            let retCode = yield exec.exec(cmd, undefined, { silent: true });
+            if (retCode == 0) {
+                cmd = `chmod u+x ./${SysdigCliScannerConstants_1.cliScannerName}`;
+                yield exec.exec(cmd, undefined, { silent: true });
+            }
+            else {
+                core.error(`Falied to pull scanner using "${url}"`);
+            }
+            core.info("Scanner pull took " + Math.round(performance.now() - start) + " milliseconds.");
+            return retCode;
+        });
+    }
+    composeFlags(config) {
+        let envvars = {};
+        envvars['SECURE_API_TOKEN'] = config.sysdigSecureToken || "";
+        let flags = [];
+        if (config.registryUser) {
+            envvars['REGISTRY_USER'] = config.registryUser;
+        }
+        if (config.registryPassword) {
+            envvars['REGISTRY_PASSWORD'] = config.registryPassword;
+        }
+        if (config.standalone) {
+            flags.push("--standalone");
+        }
+        if (config.sysdigSecureURL) {
+            flags.push('--apiurl', config.sysdigSecureURL);
+        }
+        if (config.dbPath) {
+            flags.push(`--dbpath=${config.dbPath}`);
+        }
+        if (config.skipUpload) {
+            flags.push('--skipupload');
+        }
+        if (config.usePolicies) {
+            const policies = config.usePolicies.split(',').map(p => p.trim());
+            for (const policy of policies) {
+                flags.push('--policy', policy.replace(/"/g, ''));
+            }
+        }
+        if (config.sysdigSkipTLS) {
+            flags.push(`--skiptlsverify`);
+        }
+        if (config.overridePullString) {
+            flags.push(`--override-pullstring=${config.overridePullString}`);
+        }
+        if (config.extraParameters) {
+            flags.push(...config.extraParameters.split(' '));
+        }
+        if (config.mode == ScannerDTOs_1.ScanMode.iac) {
+            flags.push(`--iac`);
+            if (config.recursive) {
+                flags.push(`-r`);
+            }
+            if (config.minimumSeverity) {
+                flags.push(`-f=${config.minimumSeverity}`);
+            }
+            flags.push(config.iacScanPath);
+        }
+        if (config.mode == ScannerDTOs_1.ScanMode.vm) {
+            flags.push(`--output=json-file=${SysdigCliScannerConstants_1.cliScannerResult}`);
+            flags.push(config.imageTag);
+        }
+        return {
+            envvars: envvars,
+            flags: flags
+        };
+    }
+}
+exports.SysdigCliScanner = SysdigCliScanner;
+
+
+/***/ }),
+
+/***/ 1500:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.cliScannerURL = exports.cliScannerResult = exports.cliScannerName = void 0;
+exports.scannerURLForVersion = scannerURLForVersion;
+const os_1 = __importDefault(__nccwpck_require__(2037));
 const cliScannerVersion = "1.22.6";
 const cliScannerOS = getRunOS();
 const cliScannerArch = getRunArch();
@@ -931,82 +2388,6 @@ const cliScannerURLBase = "https://download.sysdig.com/scanning/bin/sysdig-cli-s
 exports.cliScannerName = "sysdig-cli-scanner";
 exports.cliScannerResult = "scan-result.json";
 exports.cliScannerURL = `${cliScannerURLBase}/${cliScannerVersion}/${cliScannerOS}/${cliScannerArch}/${exports.cliScannerName}`;
-var ScanMode;
-(function (ScanMode) {
-    ScanMode["vm"] = "vm";
-    ScanMode["iac"] = "iac";
-})(ScanMode || (exports.ScanMode = ScanMode = {}));
-(function (ScanMode) {
-    function fromString(str) {
-        switch (str.toLowerCase()) {
-            case "vm":
-                return ScanMode.vm;
-            case "iac":
-                return ScanMode.iac;
-        }
-    }
-    ScanMode.fromString = fromString;
-})(ScanMode || (exports.ScanMode = ScanMode = {}));
-function pullScanner(scannerURL) {
-    return __awaiter(this, void 0, void 0, function* () {
-        let start = performance.now();
-        core.info('Pulling cli-scanner from: ' + scannerURL);
-        let cmd = `wget ${scannerURL} -O ./${exports.cliScannerName}`;
-        let retCode = yield exec.exec(cmd, undefined, { silent: true });
-        if (retCode == 0) {
-            cmd = `chmod u+x ./${exports.cliScannerName}`;
-            yield exec.exec(cmd, undefined, { silent: true });
-        }
-        else {
-            core.error(`Falied to pull scanner using "${scannerURL}"`);
-        }
-        core.info("Scanner pull took " + Math.round(performance.now() - start) + " milliseconds.");
-        return retCode;
-    });
-}
-// If custom scanner version is specified
-function executeScan(scanFlags) {
-    return __awaiter(this, void 0, void 0, function* () {
-        let { envvars, flags } = scanFlags;
-        let execOutput = '';
-        let errOutput = '';
-        const scanOptions = {
-            env: Object.assign(Object.assign({}, Object.fromEntries(Object.entries(process_1.default.env).map(([key, value]) => [key, value !== null && value !== void 0 ? value : ""]))), envvars),
-            silent: true,
-            ignoreReturnCode: true,
-            listeners: {
-                stdout: (data) => {
-                    process_1.default.stdout.write(data);
-                },
-                stderr: (data) => {
-                    process_1.default.stderr.write(data);
-                }
-            }
-        };
-        const catOptions = {
-            silent: true,
-            ignoreReturnCode: true,
-            listeners: {
-                stdout: (data) => {
-                    execOutput += data.toString();
-                },
-                stderr: (data) => {
-                    errOutput += data.toString();
-                }
-            }
-        };
-        let start = performance.now();
-        const command = `./${exports.cliScannerName}`;
-        const loggableFlags = flags.map(flag => flag.includes(' ') ? `"${flag}"` : flag);
-        core.info("Executing: " + command + " " + loggableFlags.join(' '));
-        let retCode = yield exec.exec(command, flags, scanOptions);
-        core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
-        if (retCode == 0 || retCode == 1) {
-            yield exec.exec(`cat ./${exports.cliScannerResult}`, undefined, catOptions);
-        }
-        return { ReturnCode: retCode, Output: execOutput, Error: errOutput };
-    });
-}
 function scannerURLForVersion(version) {
     return `${cliScannerURLBase}/${version}/${cliScannerOS}/${cliScannerArch}/${exports.cliScannerName}`;
 }
@@ -1029,288 +2410,6 @@ function getRunOS() {
         os_name = "darwin";
     }
     return os_name;
-}
-
-
-/***/ }),
-
-/***/ 5389:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.generateSummary = generateSummary;
-const core = __importStar(__nccwpck_require__(2186));
-const report_1 = __nccwpck_require__(7531);
-const EVALUATION = {
-    "failed": "❌",
-    "passed": "✅"
-};
-function generateSummary(opts, data, filters) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const filteredPkgs = (0, report_1.filterPackages)(data.result.packages, data.result.vulnerabilities, filters || {});
-        let filteredData = Object.assign(Object.assign({}, data), { result: Object.assign(Object.assign({}, data.result), { packages: filteredPkgs }) });
-        core.summary.emptyBuffer().clear();
-        core.summary.addHeading(`Scan Results for ${opts.overridePullString || opts.imageTag}`);
-        addVulnTableToSummary(filteredData, filters === null || filters === void 0 ? void 0 : filters.minSeverity);
-        addVulnsByLayerTableToSummary(filteredData, filters === null || filters === void 0 ? void 0 : filters.minSeverity);
-        if (!opts.standalone) {
-            addReportToSummary(data);
-        }
-        yield core.summary.write({ overwrite: true });
-    });
-}
-const SEVERITY_ORDER = ["critical", "high", "medium", "low", "negligible"];
-const SEVERITY_LABELS = {
-    critical: "🟣 Critical",
-    high: "🔴 High",
-    medium: "🟠 Medium",
-    low: "🟡 Low",
-    negligible: "⚪ Negligible"
-};
-function countVulnsBySeverity(packages, vulnerabilities, minSeverity) {
-    var _a;
-    const result = {
-        total: { critical: 0, high: 0, medium: 0, low: 0, negligible: 0 },
-        fixable: { critical: 0, high: 0, medium: 0, low: 0, negligible: 0 }
-    };
-    for (const pkg of Object.values(packages)) {
-        for (const vulnRef of (_a = pkg.vulnerabilitiesRefs) !== null && _a !== void 0 ? _a : []) {
-            const vuln = vulnerabilities[vulnRef];
-            const sev = vuln.severity.toLowerCase();
-            if (!minSeverity || (0, report_1.isSeverityGte)(sev, minSeverity)) {
-                result.total[sev]++;
-                if (vuln.fixVersion || pkg.suggestedFix) {
-                    result.fixable[sev]++;
-                }
-            }
-        }
-    }
-    return result;
-}
-function addVulnTableToSummary(data, minSeverity) {
-    const pkgs = data.result.packages;
-    const vulns = data.result.vulnerabilities;
-    const visibleSeverities = SEVERITY_ORDER.filter(sev => !minSeverity || (0, report_1.isSeverityGte)(sev, minSeverity));
-    const totalVulns = countVulnsBySeverity(pkgs, vulns, minSeverity);
-    core.summary.addHeading(`Vulnerabilities summary`, 2);
-    core.summary.addTable([
-        [
-            { data: '', header: true },
-            ...visibleSeverities.map(s => ({ data: SEVERITY_LABELS[s], header: true }))
-        ],
-        [
-            { data: '⚠️ Total Vulnerabilities', header: true },
-            ...visibleSeverities.map(s => { var _a; return `${(_a = totalVulns.total[s]) !== null && _a !== void 0 ? _a : 0}`; })
-        ],
-        [
-            { data: '🔧 Fixable Vulnerabilities', header: true },
-            ...visibleSeverities.map(s => { var _a; return `${(_a = totalVulns.fixable[s]) !== null && _a !== void 0 ? _a : 0}`; })
-        ],
-    ]);
-}
-function findLayerByDigestOrRef(data, refOrDigest) {
-    const layer = refOrDigest ? data.result.layers[refOrDigest] : undefined;
-    if (layer)
-        return layer;
-    return Object.values(data.result.layers).find(layer => {
-        return layer.digest && layer.digest === refOrDigest;
-    });
-}
-function addVulnsByLayerTableToSummary(data, minSeverity) {
-    const visibleSeverities = SEVERITY_ORDER.filter(sev => !minSeverity || (0, report_1.isSeverityGte)(sev, minSeverity));
-    core.summary.addHeading(`Package vulnerabilities per layer`, 2);
-    let packagesPerLayer = {};
-    Object.values(data.result.packages).forEach(pkg => {
-        var _a;
-        const layer = findLayerByDigestOrRef(data, pkg.layerRef);
-        if (layer && layer.digest) {
-            packagesPerLayer[layer.digest] = ((_a = packagesPerLayer[layer.digest]) !== null && _a !== void 0 ? _a : []).concat(pkg);
-        }
-    });
-    const orderedLayers = Object.values(data.result.layers).sort((a, b) => a.index - b.index);
-    orderedLayers.forEach(layer => {
-        var _a;
-        core.summary.addCodeBlock(`LAYER ${layer.index} - ${layer.command.replace(/\$/g, "&#36;").replace(/\&/g, '&amp;')}`);
-        if (!layer.digest) {
-            return;
-        }
-        let packagesWithVulns = ((_a = packagesPerLayer[layer.digest]) !== null && _a !== void 0 ? _a : []).filter(pkg => pkg.vulnerabilitiesRefs && pkg.vulnerabilitiesRefs.length > 0);
-        if (packagesWithVulns.length === 0) {
-            return;
-        }
-        let orderedPackagesBySeverity = packagesWithVulns.sort((a, b) => {
-            const getSeverityVector = (pkg) => report_1.SeverityNames.map(severity => {
-                var _a, _b;
-                return (_b = (_a = pkg.vulnerabilitiesRefs) === null || _a === void 0 ? void 0 : _a.filter(ref => {
-                    const vul = data.result.vulnerabilities[ref];
-                    return vul.severity.toLowerCase() === severity;
-                }).length) !== null && _b !== void 0 ? _b : 0;
-            });
-            const aVector = getSeverityVector(a);
-            const bVector = getSeverityVector(b);
-            for (let i = 0; i < report_1.SeverityNames.length; i++) {
-                if (aVector[i] !== bVector[i]) {
-                    return bVector[i] - aVector[i];
-                }
-            }
-            return 0;
-        });
-        let tableData = orderedPackagesBySeverity.map(pkg => {
-            var _a;
-            return [
-                { data: pkg.name },
-                { data: pkg.type },
-                { data: pkg.version },
-                { data: pkg.suggestedFix || "" },
-                ...visibleSeverities.map(s => {
-                    var _a;
-                    return `${(_a = pkg.vulnerabilitiesRefs.filter(vulnRef => {
-                        const vuln = data.result.vulnerabilities[vulnRef];
-                        return vuln.severity.toLowerCase() === s;
-                    }).length) !== null && _a !== void 0 ? _a : 0}`;
-                }),
-                `${(_a = pkg.vulnerabilitiesRefs.filter(vulnRef => {
-                    const vuln = data.result.vulnerabilities[vulnRef];
-                    return vuln.exploitable;
-                }).length) !== null && _a !== void 0 ? _a : 0}`,
-            ];
-        });
-        core.summary.addTable([
-            [
-                { data: 'Package', header: true },
-                { data: 'Type', header: true },
-                { data: 'Version', header: true },
-                { data: 'Suggested fix', header: true },
-                ...visibleSeverities.map(s => ({ data: SEVERITY_LABELS[s], header: true })),
-                { data: 'Exploit', header: true },
-            ],
-            ...tableData
-        ]);
-    });
-}
-function addReportToSummary(data) {
-    let policyEvaluations = data.result.policies.evaluations;
-    let packages = data.result.packages;
-    let vulns = data.result.vulnerabilities;
-    core.summary.addHeading("Policy evaluation summary", 2);
-    core.summary.addRaw(`Evaluation result: ${data.result.policies.globalEvaluation} ${EVALUATION[data.result.policies.globalEvaluation]}`);
-    let table = [[
-            { data: 'Policy', header: true },
-            { data: 'Evaluation', header: true },
-        ]];
-    policyEvaluations.forEach(policy => {
-        table.push([
-            { data: `${policy.name}` },
-            { data: `${EVALUATION[policy.evaluation]}` },
-        ]);
-    });
-    core.summary.addTable(table);
-    core.summary.addHeading("Policy failures", 2);
-    policyEvaluations.forEach(policy => {
-        if (policy.evaluation != "passed") {
-            core.summary.addHeading(`Policy: ${policy.name}`, 3);
-            policy.bundles.forEach(bundle => {
-                core.summary.addHeading(`Rule Bundle: ${bundle.name}`, 4);
-                bundle.rules.forEach(rule => {
-                    core.summary.addHeading(`Rule: ${rule.description}`, 5);
-                    if (rule.evaluationResult != "passed") {
-                        if (rule.failureType == "pkgVulnFailure") {
-                            getRulePkgMessage(rule, packages, vulns);
-                        }
-                        else {
-                            getRuleImageMessage(rule);
-                        }
-                    }
-                });
-            });
-        }
-    });
-}
-function getRulePkgMessage(rule, packages, vulns) {
-    var _a;
-    let table = [[
-            { data: 'Severity', header: true },
-            { data: 'Package', header: true },
-            { data: 'CVE ID', header: true },
-            { data: 'CVSS Score', header: true },
-            { data: 'CVSS Version', header: true },
-            { data: 'CVSS Vector', header: true },
-            { data: 'Fixed Version', header: true },
-            { data: 'Exploitable', header: true }
-        ]];
-    (_a = rule.failures) === null || _a === void 0 ? void 0 : _a.forEach(failure => {
-        var _a, _b;
-        let pkgRef = (_a = failure.packageRef) !== null && _a !== void 0 ? _a : 0;
-        let vulnRef = (_b = failure.vulnerabilityRef) !== null && _b !== void 0 ? _b : 0;
-        let pkg = packages[pkgRef];
-        let vuln = vulns[vulnRef];
-        if (vuln) {
-            table.push([
-                { data: `${vuln.severity}` },
-                { data: `${pkg.name}` },
-                { data: `${vuln.name}` },
-                { data: `${vuln.cvssScore.score}` },
-                { data: `${vuln.cvssScore.version}` },
-                { data: `${vuln.cvssScore.vector}` },
-                { data: `${pkg.suggestedFix || "No fix available"}` },
-                { data: `${vuln.exploitable}` },
-            ]);
-        }
-    });
-    core.summary.addTable(table);
-}
-function getRuleImageMessage(rule) {
-    var _a, _b;
-    let message = [];
-    (_a = rule.failures) === null || _a === void 0 ? void 0 : _a.map(failure => failure.remediation);
-    (_b = rule.failures) === null || _b === void 0 ? void 0 : _b.forEach(failure => {
-        message.push(`${failure.remediation}`);
-    });
-    core.summary.addList(message);
 }
 
 
