@@ -1,5 +1,5 @@
 import { ScanMode } from './ScannerDTOs';
-import { Severity } from '../../domain/value-objects/severity';
+import { Severity } from '../../domain/scanresult';
 
 export interface ScanConfig {
   cliScannerURL: string;

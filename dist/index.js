@@ -1314,23 +1314,6 @@ function filterPackages(pkgs, filters) {
 
 /***/ }),
 
-/***/ 8118:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.SeverityNames = void 0;
-exports.isSeverityGte = isSeverityGte;
-exports.SeverityNames = ["critical", "high", "medium", "low", "negligible"];
-const severityOrder = ["negligible", "low", "medium", "high", "critical"];
-function isSeverityGte(a, b) {
-    return severityOrder.indexOf(a.toLocaleLowerCase()) >= severityOrder.indexOf(b.toLocaleLowerCase());
-}
-
-
-/***/ }),
-
 /***/ 4767:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -1374,7 +1357,7 @@ exports.ActionInputs = exports.defaultSecureEndpoint = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const SysdigCliScannerConstants_1 = __nccwpck_require__(3554);
 const ScannerDTOs_1 = __nccwpck_require__(1699);
-const severity_1 = __nccwpck_require__(8118);
+const scanresult_1 = __nccwpck_require__(9056);
 exports.defaultSecureEndpoint = "https://secure.sysdig.com/";
 class ActionInputs {
     get params() {
@@ -1477,7 +1460,7 @@ class ActionInputs {
             core.setFailed("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
             throw new Error("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
         }
-        if (params.severityAtLeast && params.severityAtLeast != "any" && !severity_1.SeverityNames.includes(params.severityAtLeast.toLowerCase())) {
+        if (params.severityAtLeast && params.severityAtLeast.toLowerCase() !== 'any' && scanresult_1.Severity.fromString(params.severityAtLeast) === scanresult_1.Severity.Unknown) {
             core.setFailed(`Invalid severity-at-least value "${params.severityAtLeast}". Allowed values: any, critical, high, medium, low, negligible.`);
             throw new Error(`Invalid severity-at-least value "${params.severityAtLeast}". Allowed values: any, critical, high, medium, low, negligible.`);
         }

@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import { cliScannerURL } from './adapters/SysdigCliScannerConstants';
 import { ScanMode } from '../application/ports/ScannerDTOs';
-import { Severity, SeverityNames } from '../domain/value-objects/severity';
+import { Severity } from '../domain/scanresult';
 
 export const defaultSecureEndpoint = "https://secure.sysdig.com/"
 
@@ -162,7 +162,7 @@ export class ActionInputs {
       throw new Error("iac-scan-path can't be empty, please specify the path you want to scan your manifest resources.");
     }
 
-    if (params.severityAtLeast && params.severityAtLeast != "any" && !SeverityNames.includes(params.severityAtLeast.toLowerCase() as Severity)) {
+    if (params.severityAtLeast && params.severityAtLeast.toLowerCase() !== 'any' && Severity.fromString(params.severityAtLeast) === Severity.Unknown) {
       core.setFailed(`Invalid severity-at-least value "${params.severityAtLeast}". Allowed values: any, critical, high, medium, low, negligible.`);
       throw new Error(`Invalid severity-at-least value "${params.severityAtLeast}". Allowed values: any, critical, high, medium, low, negligible.`);
     }
