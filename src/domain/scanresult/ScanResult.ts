@@ -22,7 +22,7 @@ export class Metadata {
     public readonly architecture: Architecture,
     public readonly labels: Record<string, string>,
     public readonly createdAt: Date
-  ) {}
+  ) { }
 }
 
 export class ScanResult {
@@ -72,13 +72,14 @@ export class ScanResult {
   }
 
   addPackage(
+    id: string,
     packageType: PackageType,
     name: string,
     version: string,
     path: string,
     foundInLayer: Layer
   ): Package {
-    const pkg = new Package(packageType, name, version, path, foundInLayer);
+    const pkg = new Package(id, packageType, name, version, path, foundInLayer);
     foundInLayer.addPackage(pkg);
     this.packages.add(pkg);
     return pkg;
@@ -88,9 +89,14 @@ export class ScanResult {
     return Array.from(this.packages);
   }
 
+  findPackageByID(id: string): Package | undefined {
+    return this.getPackages().find(p => p.id == id)
+  }
+
   addVulnerability(
     cve: string,
     severity: Severity,
+    cvssScore: number,
     disclosureDate: Date,
     solutionDate: Date | null,
     exploitable: boolean,
@@ -102,6 +108,7 @@ export class ScanResult {
     const vuln = new Vulnerability(
       cve,
       severity,
+      cvssScore,
       disclosureDate,
       solutionDate,
       exploitable,
@@ -188,15 +195,9 @@ export class ScanResult {
   }
 
   getEvaluationResult(): EvaluationResult {
-    for (const policy of this.policies.values()) {
-      // We need to check the bundles associated with this policy.
-      // Since we can't iterate WeakSet, we'll check all bundles.
-      for (const bundle of this.policyBundles.values()) {
-        // A real implementation would need a way to link policies to bundles efficiently.
-        // For now, we assume any failed bundle fails the entire scan.
-        if (bundle.getEvaluationResult() === EvaluationResult.Failed) {
-          return EvaluationResult.Failed;
-        }
+    for (const policy of this.getPolicies()) {
+      if (policy.getEvaluationResult().isFailed()) {
+        return EvaluationResult.Failed;
       }
     }
     return EvaluationResult.Passed;

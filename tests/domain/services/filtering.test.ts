@@ -1,162 +1,97 @@
 import { FilterOptions, filterPackages } from '../../../src/domain/services/filtering';
-import { JsonPackage, JsonScanResultV1 } from '../../../src/infrastructure/entities/JsonScanResultV1';
-import { Vulnerability } from '../../../src/domain/entities/vulnerability';
-import { Severity } from '../../../src/domain/value-objects/severity';
-const fixtureReport : JsonScanResultV1 = require("../../fixtures/report-test-v1.json"); // require is needed here, otherwise the import statement adds a .default attribute to the json
+import { Package, PackageType, Severity, Vulnerability, Layer, AcceptedRisk, AcceptedRiskReason } from '../../../src/domain/scanresult';
 
-const newBasePkg = (vulnerabilitiesRefs: String[] | null = [], type = "os") => ({
-  type,
-  name: "foo",
-  version: "1.0",
-  path: "/foo",
-  vulnerabilitiesRefs
-} as JsonPackage);
-
-const newVuln = (severity: string, riskAcceptRefs: string[] = []): Vulnerability => ({
-  name: "CVE-1234",
-  severity: severity,
-  cvssScore: { version: "3.1", score: 7.5, vector: "AV:N/AC:L/..." },
-  mainProvider: "sysdig",
-  disclosureDate: "2023-01-01",
-  exploitable: true,
-  fixVersion: "1.2",
-  providersMetadata: { "vulndb": {publicationDate: "2023-01-01" }},
-  riskAcceptRefs: riskAcceptRefs,
-  packageRef: ""
-});
-
-const mockVulns: {[key:string]: Vulnerability} = {
-  "id-high": newVuln("high"),
-  "id-low": newVuln("low"),
+const newVuln = (name: string, severity: Severity): Vulnerability => {
+    return new Vulnerability(name, severity, 0, new Date(), null, false, "1.1");
 };
 
+const newLayer = (digest: string = "sha256:dummy"): Layer => {
+    return new Layer(digest, 0, null, "cmd");
+}
+
+const newPkg = (name: string, type: PackageType, vulnerabilities: Vulnerability[] = []): Package => {
+    const pkg = new Package(name, type, name, "1.0", "/foo", newLayer());
+    vulnerabilities.forEach(v => pkg.addVulnerability(v));
+    return pkg;
+};
+
+const newAcceptedRisk = (): AcceptedRisk => {
+    return new AcceptedRisk("id", AcceptedRiskReason.RiskOwned, "desc", null, true, new Date(), new Date());
+}
+
+
 describe("filterPackages", () => {
+    const highVuln = newVuln("CVE-high", Severity.High);
+    const lowVuln = newVuln("CVE-low", Severity.Low);
 
-  it("filters by minSeverity", () => {
-    const pkgs: {[key:string]: JsonPackage} = {
-      "pkg1": newBasePkg(["id-high"]),
-      "pkg2": newBasePkg(["id-low"]),
-    };
+    it("filters by minSeverity", () => {
+        const pkgs = [
+            newPkg("pkg1", PackageType.Os, [highVuln, lowVuln]),
+            newPkg("pkg2", PackageType.Os, [lowVuln]),
+        ];
 
-    const filters: FilterOptions = { minSeverity: "high" };
-    const result = Object.values(filterPackages(pkgs, mockVulns, filters));
-    expect(result.length).toBe(1);
-    if (result[0].vulnerabilitiesRefs) {
-      expect(mockVulns[result[0].vulnerabilitiesRefs[0]].severity).toBe("high");
-    }
-  });
+        const filters: FilterOptions = { minSeverity: Severity.High };
+        const result = filterPackages(pkgs, filters);
+        expect(result.length).toBe(1);
+        expect(result[0].name).toBe("pkg1");
+    });
 
-  it("filters by packageTypes", () => {
-    const pkgs = {
-      "pkg1": newBasePkg(["id-high"], "os"),
-      "pkg2": newBasePkg(["id-high"], "java"),
-    };
+    it("filters by packageTypes", () => {
+        const pkgs = [
+            newPkg("pkg1", PackageType.Os, [highVuln]),
+            newPkg("pkg2", PackageType.Java, [highVuln]),
+        ];
 
-    const filters: FilterOptions = { packageTypes: ["java"] };
-    const result = Object.values(filterPackages(pkgs, mockVulns, filters));
-    expect(result.length).toBe(1);
-    expect(result[0].type).toBe("java");
-  });
+        const filters: FilterOptions = { packageTypes: ["java"] };
+        const result = filterPackages(pkgs, filters);
+        expect(result.length).toBe(1);
+        expect(result[0].name).toBe("pkg2");
+    });
 
-  it("filters by notPackageTypes", () => {
-    const pkgs = {
-      "pkg1": newBasePkg(["id-high"], "os"),
-      "pkg2": newBasePkg(["id-high"], "java"),
-    };
+    it("filters by notPackageTypes", () => {
+        const pkgs = [
+            newPkg("pkg1", PackageType.Os, [highVuln]),
+            newPkg("pkg2", PackageType.Java, [highVuln]),
+        ];
 
-    const filters: FilterOptions = { notPackageTypes: ["os"] };
-    const result =  Object.values(filterPackages(pkgs, mockVulns, filters));
-    expect(result.length).toBe(1);
-    expect(result[0].type).toBe("java");
-  });
+        const filters: FilterOptions = { notPackageTypes: ["os"] };
+        const result = filterPackages(pkgs, filters);
+        expect(result.length).toBe(1);
+        expect(result[0].name).toBe("pkg2");
+    });
 
-  it("filters out accepted risks if excludeAccepted is true", () => {
-    const vulnsWithAcceptedRisk: {[key:string]: Vulnerability} = {
-      "id-high": newVuln("high", ["some-accepted-risk"]),
-      "id-low": newVuln("low"),
-    };
+    it("filters out accepted risks if excludeAccepted is true", () => {
+        const pkgWithAcceptedRisk = newPkg("pkg1", PackageType.Os, [highVuln]);
+        pkgWithAcceptedRisk.addAcceptedRisk(newAcceptedRisk());
 
-    const pkgs = {
-      "pkg1": newBasePkg(["id-high"], "os"),
-      "pkg2": newBasePkg(["id-low"], "java"),
-    };
+        const pkgWithoutAcceptedRisk = newPkg("pkg2", PackageType.Java, [lowVuln]);
 
-    const filters: FilterOptions = { excludeAccepted: true };
-    const result =  Object.values(filterPackages(pkgs, vulnsWithAcceptedRisk, filters));
-    expect(result.length).toBe(1);
-    if (result[0].vulnerabilitiesRefs) {
-      expect(vulnsWithAcceptedRisk[result[0].vulnerabilitiesRefs[0]].riskAcceptRefs).toEqual([]);
-    }
-  });
+        const pkgs = [pkgWithAcceptedRisk, pkgWithoutAcceptedRisk];
 
-  it("removes packages with no vulns after filtering", () => {
-    const vulnsWithAcceptedRisk: {[key:string]: Vulnerability} = {
-      "id-high": newVuln("high", ["some-accepted-risk"]),
-      "id-low": newVuln("low"),
-    };
+        const filters: FilterOptions = { excludeAccepted: true };
+        const result = filterPackages(pkgs, filters);
+        expect(result.length).toBe(1);
+        expect(result[0].name).toBe("pkg2");
+    });
 
-    const pkgs = {
-      "pkg1": newBasePkg(["id-high"], "os"),
-    };
+    it("returns empty array if all packages are filtered out", () => {
+        const pkgs = [
+            newPkg("pkg1", PackageType.Os, [lowVuln]),
+        ];
 
-    const filters: FilterOptions = { excludeAccepted: true };
-    const result = Object.values(filterPackages(pkgs, vulnsWithAcceptedRisk, filters));
-    expect(result.length).toBe(0);
-  });
-});
+        const filters: FilterOptions = { minSeverity: Severity.High };
+        const result = filterPackages(pkgs, filters);
+        expect(result.length).toBe(0);
+    });
 
-describe("filterPackages with fixture report", () => {
+    it("should not filter if no filters are provided", () => {
+        const pkgs = [
+            newPkg("pkg1", PackageType.Os, [highVuln]),
+            newPkg("pkg2", PackageType.Java, [lowVuln]),
+        ];
 
-  it("should return only packages with critical vulnerabilities", () => {
-    const filters: FilterOptions = { minSeverity: "Critical" as Severity };
-    const pkgs = fixtureReport.result.packages;
-    const vulns = fixtureReport.result.vulnerabilities;
-    const result = filterPackages(pkgs, vulns, filters);
-
-    expect(
-      Object.values(result).every(pkg =>
-        pkg.vulnerabilitiesRefs && pkg.vulnerabilitiesRefs.every(ref => vulns[ref].severity.toLowerCase() === "critical")
-      )
-    ).toBe(true);
-
-    // ref of CVE-2023-38545 (critical)
-    expect(JSON.stringify(result)).toContain("f869c8ec-eda5-4725-82e4-d6588d3312a0");
-    // ref of CVE-2024-50349 is low
-    expect(JSON.stringify(result)).not.toContain("9caf0bbd-304b-4cc9-be2a-452205252daf");
-  });
-
-  it("should exclude packages with only accepted risks when excludeAccepted is true", () => {
-    const filters: FilterOptions = { excludeAccepted: true, minSeverity: "High" as Severity };
-    const pkgs = fixtureReport.result.packages;
-    const vulns = fixtureReport.result.vulnerabilities;
-    const result = filterPackages(pkgs, vulns, filters);
-
-    // Vuln with accepted risks should be removed
-    expect(
-      Object.values(result).some(pkg =>
-        pkg.vulnerabilitiesRefs && pkg.vulnerabilitiesRefs.some(ref => (vulns[ref].riskAcceptRefs && vulns[ref].riskAcceptRefs.length > 0))
-      )
-    ).toBe(false);
-  });
-
-  it("should filter by packageTypes", () => {
-    const filters: FilterOptions = { packageTypes: ["os"] };
-    const pkgs = fixtureReport.result.packages;
-    const vulns = fixtureReport.result.vulnerabilities;
-    const result = filterPackages(pkgs, vulns, filters);
-
-    // All packages must be "os"
-    expect(Object.values(result).every(pkg => pkg.type === "os")).toBe(true);
-  });
-
-  it("should filter out 'os' packages when notPackageTypes is ['os']", () => {
-    const filters: FilterOptions = { notPackageTypes: ["os"] };
-    const pkgs = fixtureReport.result.packages;
-    const vulns = fixtureReport.result.vulnerabilities;
-    const result = filterPackages(pkgs, vulns, filters);
-
-    // No package must be "os"
-    expect(Object.values(result).every(pkg => pkg.type !== "os")).toBe(true);
-  });
-
+        const filters: FilterOptions = {};
+        const result = filterPackages(pkgs, filters);
+        expect(result.length).toBe(2);
+    });
 });

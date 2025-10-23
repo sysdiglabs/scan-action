@@ -1,8 +1,8 @@
+import { ReportToScanResultAdapter } from '../../../src/infrastructure/adapters/ReportToScanResultAdapter';
 import { RunScanUseCase } from '../../../src/application/use-cases/RunScanUseCase';
 import { IInputProvider } from '../../../src/application/ports/IInputProvider';
 import { IScanner } from '../../../src/application/ports/IScanner';
 import { IReportPresenter } from '../../../src/application/ports/IReportPresenter';
-import { IReportRepository } from '../../../src/application/ports/IReportRepository';
 import { ScanMode } from '../../../src/application/ports/ScannerDTOs';
 import * as core from '@actions/core';
 import * as report_test from "../../fixtures/report-test-v1.json";
@@ -14,12 +14,13 @@ jest.mock('@actions/core');
 const mockCore = jest.mocked(core);
 
 const exampleReport: JsonScanResultV1 = report_test as JsonScanResultV1;
+const adapter = new ReportToScanResultAdapter();
+const exampleScanResult = adapter.toScanResult(exampleReport);
 
 describe('RunScanUseCase', () => {
   let inputProvider: jest.Mocked<IInputProvider>;
   let scanner: jest.Mocked<IScanner>;
   let reportPresenter: jest.Mocked<IReportPresenter>;
-  let reportRepository: jest.Mocked<IReportRepository>;
   let useCase: RunScanUseCase;
   let scanConfig: ScanConfig;
 
@@ -36,9 +37,6 @@ describe('RunScanUseCase', () => {
     };
     reportPresenter = {
       generateReport: jest.fn(),
-    };
-    reportRepository = {
-      writeReport: jest.fn(),
     };
 
     mockCore.getInput.mockImplementation((name: string) => {
@@ -82,25 +80,35 @@ describe('RunScanUseCase', () => {
   });
 
   const executeUseCase = () => {
-    useCase = new RunScanUseCase(inputProvider, scanner, [reportPresenter], reportRepository);
+    useCase = new RunScanUseCase(scanner, [reportPresenter], inputProvider);
     return useCase.execute();
   };
 
   it('should end successfully if scan passes', async () => {
-    const exampleReportPassed = { ...exampleReport, result: { ...exampleReport.result, policies: { ...exampleReport.result.policies, globalEvaluation: 'passed' } } };
-    scanner.executeScan.mockResolvedValue(exampleReportPassed);
+    const passedReport = JSON.parse(JSON.stringify(exampleReport));
+    passedReport.result.policies.globalEvaluation = 'passed';
+    passedReport.result.policies.evaluations.forEach((ev: { bundles: any[]; }) => {
+      ev.bundles.forEach((b: { rules: any[]; }) => {
+        b.rules.forEach((r: { evaluationResult: string; }) => {
+          r.evaluationResult = 'passed';
+        });
+      });
+    });
+
+    const passedScanResult = adapter.toScanResult(passedReport);
+    scanner.executeScan.mockResolvedValue(passedScanResult);
 
     await executeUseCase();
 
     expect(scanner.executeScan).toHaveBeenCalled();
-    expect(reportRepository.writeReport).toHaveBeenCalledWith(exampleReportPassed);
     expect(reportPresenter.generateReport).toHaveBeenCalled();
     expect(mockCore.setFailed).not.toHaveBeenCalled();
   });
 
   it('should fail if policy evaluation fails and stopOnFailedPolicyEval is true', async () => {
     const failedReport = { ...exampleReport, result: { ...exampleReport.result, policies: { ...exampleReport.result.policies, globalEvaluation: 'failed' } } };
-    scanner.executeScan.mockResolvedValue(failedReport);
+    const failedScanResult = adapter.toScanResult(failedReport);
+    scanner.executeScan.mockResolvedValue(failedScanResult);
 
     await executeUseCase();
 
@@ -111,7 +119,8 @@ describe('RunScanUseCase', () => {
     scanConfig.stopOnFailedPolicyEval = false;
     inputProvider.getInputs.mockReturnValue(scanConfig);
     const failedReport = { ...exampleReport, result: { ...exampleReport.result, policies: { ...exampleReport.result.policies, globalEvaluation: 'failed' } } };
-    scanner.executeScan.mockResolvedValue(failedReport);
+    const failedScanResult = adapter.toScanResult(failedReport);
+    scanner.executeScan.mockResolvedValue(failedScanResult);
 
     await executeUseCase();
 
@@ -130,11 +139,10 @@ describe('RunScanUseCase', () => {
   it('should not generate reports if scan is not for VM mode', async () => {
     scanConfig.mode = ScanMode.iac;
     inputProvider.getInputs.mockReturnValue(scanConfig);
-    scanner.executeScan.mockResolvedValue(exampleReport);
+    scanner.executeScan.mockResolvedValue(exampleScanResult);
 
     await executeUseCase();
 
-    expect(reportRepository.writeReport).not.toHaveBeenCalled();
     expect(reportPresenter.generateReport).not.toHaveBeenCalled();
   });
 });

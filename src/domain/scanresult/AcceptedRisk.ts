@@ -3,8 +3,8 @@ import { Package } from './Package';
 import { Vulnerability } from './Vulnerability';
 
 export class AcceptedRisk {
-  private readonly assignedToVulnerabilities: WeakSet<Vulnerability> = new WeakSet();
-  private readonly assignedToPackages: WeakSet<Package> = new WeakSet();
+  private readonly assignedToVulnerabilities: Set<Vulnerability> = new Set();
+  private readonly assignedToPackages: Set<Package> = new Set();
 
   constructor(
     public readonly id: string,
@@ -23,10 +23,18 @@ export class AcceptedRisk {
     }
   }
 
+  getVulnerabilities(): Vulnerability[] {
+    return Array.from(this.assignedToVulnerabilities);
+  }
+
   addForPackage(pkg: Package) {
     if (!this.assignedToPackages.has(pkg)) {
       this.assignedToPackages.add(pkg);
       pkg.addAcceptedRisk(this);
     }
+  }
+
+  getPackages(): Package[] {
+    return Array.from(this.assignedToPackages);
   }
 }

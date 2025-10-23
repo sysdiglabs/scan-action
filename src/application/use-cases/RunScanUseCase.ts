@@ -3,19 +3,17 @@ import { ScanMode } from '../ports/ScannerDTOs';
 import { IInputProvider } from '../ports/IInputProvider';
 import { IScanner } from '../ports/IScanner';
 import { IReportPresenter } from '../ports/IReportPresenter';
-import { IReportRepository } from '../ports/IReportRepository';
 import { JsonScanResultV1 } from '../../infrastructure/entities/JsonScanResultV1';
 import { FilterOptions } from '../../domain/services/filtering';
-import { Severity } from '../../domain/value-objects/severity';
+import { Severity } from '../../domain/scanresult';
 import { ScanConfig } from '../ports/ScanConfig';
 import { ScanExecutionError } from '../errors/ScanExecutionError';
 
 export class RunScanUseCase {
   constructor(
-    private readonly inputProvider: IInputProvider,
     private readonly scanner: IScanner,
     private readonly reportPresenters: IReportPresenter[],
-    private readonly reportRepository: IReportRepository
+    private readonly inputProvider: IInputProvider
     ) {}
 
   private parseCsvList(str?: string): string[] {
@@ -32,11 +30,10 @@ export class RunScanUseCase {
       const report = await this.scanner.executeScan(config);
 
       if (config.mode === ScanMode.vm && report) {
-        this.reportRepository.writeReport(report);
 
         const filters: FilterOptions = {
           minSeverity: (config.severityAtLeast && config.severityAtLeast.toLowerCase() !== "any")
-            ? config.severityAtLeast.toLowerCase() as Severity
+            ? Severity.fromString(config.severityAtLeast)
             : undefined,
           packageTypes: this.parseCsvList(config.packageTypes),
           notPackageTypes: this.parseCsvList(config.notPackageTypes),
@@ -48,8 +45,8 @@ export class RunScanUseCase {
         }
       }
 
-      const policyEvaluation = report?.result?.policies?.globalEvaluation;
-      if (policyEvaluation === 'failed') {
+      const policyEvaluation = report?.getEvaluationResult();
+      if (policyEvaluation?.isFailed()) {
         this.setFinalStatus(config, 1);
       } else {
         this.setFinalStatus(config, 0);

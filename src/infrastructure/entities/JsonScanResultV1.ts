@@ -25,7 +25,7 @@ export interface JsonResult {
   producer: JsonProducer
   riskAccepts?: { [key: string]: any }
   stage: string
-  vulnerabilities: { [key: string]: any }
+  vulnerabilities: { [key: string]: JsonVulnerability }
 }
 
 export interface JsonLayer {
@@ -118,7 +118,46 @@ export interface JsonRulePredicateExtra {
   vulnIds?: string[]
 }
 
-
 export interface JsonProducer {
   producedAt: string
+}
+
+export interface JsonVulnerability {
+  cvssScore: JsonCvssScore
+  disclosureDate: string
+  exploitable: boolean
+  fixVersion?: string
+  mainProvider: string
+  name: string
+  packageRef: string
+  providersMetadata: { [key: string]: JsonVulnerabilityProviderMetadata }
+  riskAcceptRefs?: string[] | null
+  severity: string
+  solutionDate?: string
+}
+
+export interface JsonCvssScore {
+  version: string
+  score: number
+  vector: string
+}
+
+export interface JsonVulnerabilityProviderMetadata {
+  severity?: string
+  cvssScore?: JsonCvssScore
+  publicationDate?: string
+  epssScore?: object
+}
+
+export interface JsonRiskAccept {
+  context: any[]
+  createdAt: string
+  description: string
+  entityType: string
+  entityValue: string
+  expirationDate?: string
+  id: string
+  reason: string
+  status: string
+  updatedAt: string
 }

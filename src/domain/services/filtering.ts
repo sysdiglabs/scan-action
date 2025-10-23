@@ -1,6 +1,4 @@
-import { JsonPackage } from "../../infrastructure/entities/JsonScanResultV1";
-import { Vulnerability } from "../entities/vulnerability";
-import { isSeverityGte, Severity } from "../value-objects/severity";
+import { Package, Severity } from "../scanresult";
 
 export interface FilterOptions {
   minSeverity?: Severity;
@@ -9,29 +7,61 @@ export interface FilterOptions {
   excludeAccepted?: boolean;
 }
 
-export function filterPackages(pkgs: {[key:string]: JsonPackage}, vulns: {[key:string]: Vulnerability}, filters: FilterOptions): {[key:string]: JsonPackage} {
-  const filteredPackages = Object.entries(pkgs)
-    .filter(([key, pkg]) => {
-      const pkgType = pkg.type?.toLowerCase();
-      if (filters.packageTypes && filters.packageTypes.length > 0 &&
-        !filters.packageTypes.map(t => t.toLowerCase()).includes(pkgType)) return false;
-      if (filters.notPackageTypes && filters.notPackageTypes.length > 0 &&
-        filters.notPackageTypes.map(t => t.toLowerCase()).includes(pkgType)) return false;
-      return true;
-    })
+export type PackageFilterOption = (pkgs: Package[]) => Package[];
 
-    return Object.fromEntries(filteredPackages
-      .map(([key, pkg]) => {
-        let vulnRefs = pkg.vulnerabilitiesRefs?.filter((vulnRef: string) => {
-          const vuln = vulns[vulnRef];
-          if (filters.minSeverity && vuln && !isSeverityGte(vuln.severity, filters.minSeverity)) {
-            return false;
-          }
-          if (filters.excludeAccepted && vuln && Array.isArray(vuln.riskAcceptRefs) && vuln.riskAcceptRefs.length > 0) return false;
-          return true;
-        });
-        const filteredPackage = { ...pkg, vulnerabilitiesRefs: vulnRefs}
-        return [ key, filteredPackage] as [string, JsonPackage];
-      })
-      .filter(([key, pkg]) => pkg.vulnerabilitiesRefs && pkg.vulnerabilitiesRefs.length > 0));
+export function withPackageTypes(packageTypes: string[]): PackageFilterOption {
+  return (pkgs: Package[]) =>
+    pkgs.filter((pkg) =>
+      packageTypes.includes(pkg.packageType.toString().toLowerCase())
+    );
+}
+
+export function withoutPackageTypes(
+  packageTypes: string[]
+): PackageFilterOption {
+  return (pkgs: Package[]) =>
+    pkgs.filter(
+      (pkg) => !packageTypes.includes(pkg.packageType.toString().toLowerCase())
+    );
+}
+
+export function withMinSeverity(minSeverity: Severity): PackageFilterOption {
+  return (pkgs: Package[]) =>
+    pkgs.filter((pkg) =>
+      pkg
+        .getVulnerabilities()
+        .some((vuln) => vuln.severity.isMoreSevereThanOrEqualTo(minSeverity))
+    );
+}
+
+export function withoutAcceptedRisks(): PackageFilterOption {
+  return (pkgs: Package[]) =>
+    pkgs.filter((pkg) => pkg.getAcceptedRisks().length === 0);
+}
+
+export function filterPackages(
+  pkgs: Package[],
+  filters?: FilterOptions
+): Package[] {
+  const filterOptions: PackageFilterOption[] = [];
+
+  if (filters) {
+    if (filters.packageTypes && filters.packageTypes.length > 0) {
+      filterOptions.push(withPackageTypes(filters.packageTypes));
+    }
+
+    if (filters.notPackageTypes && filters.notPackageTypes.length > 0) {
+      filterOptions.push(withoutPackageTypes(filters.notPackageTypes));
+    }
+
+    if (filters.minSeverity) {
+      filterOptions.push(withMinSeverity(filters.minSeverity));
+    }
+
+    if (filters.excludeAccepted) {
+      filterOptions.push(withoutAcceptedRisks());
+    }
+  }
+
+  return filterOptions.reduce((acc, filter) => filter(acc), pkgs);
 }

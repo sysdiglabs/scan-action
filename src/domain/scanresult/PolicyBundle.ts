@@ -4,7 +4,7 @@ import { PolicyBundleRule } from './PolicyBundleRule';
 
 export class PolicyBundle {
   private readonly rules: Set<PolicyBundleRule> = new Set();
-  private readonly foundInPolicies: WeakSet<Policy> = new WeakSet();
+  private readonly foundInPolicies: Set<Policy> = new Set();
 
   constructor(public readonly id: string, public readonly name: string) {}
 
@@ -13,6 +13,10 @@ export class PolicyBundle {
       this.foundInPolicies.add(policy);
       policy.addBundle(this);
     }
+  }
+
+  getPolicies(): Policy[] {
+    return Array.from(this.foundInPolicies);
   }
 
   addRule(rule: PolicyBundleRule) {
@@ -25,7 +29,7 @@ export class PolicyBundle {
 
   getEvaluationResult(): EvaluationResult {
     for (const rule of this.rules) {
-      if (rule.evaluationResult === EvaluationResult.Failed) {
+      if (rule.evaluationResult.isFailed()) {
         return EvaluationResult.Failed;
       }
     }

@@ -1,6 +1,6 @@
-import { JsonScanResultV1 } from '../../infrastructure/entities/JsonScanResultV1';
+import { ScanResult } from '../../domain/scanresult';
 import { ScanConfig } from './ScanConfig';
 
 export interface IScanner {
-  executeScan(config: ScanConfig): Promise<JsonScanResultV1>;
+  executeScan(config: ScanConfig): Promise<ScanResult>;
 }

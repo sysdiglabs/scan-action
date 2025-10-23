@@ -2,7 +2,7 @@ import { EvaluationResult } from './EvaluationResult';
 import { PolicyBundle } from './PolicyBundle';
 
 export class Policy {
-  private readonly bundles: WeakSet<PolicyBundle> = new WeakSet();
+  private readonly bundles: Set<PolicyBundle> = new Set();
 
   constructor(
     public readonly id: string,
@@ -18,9 +18,16 @@ export class Policy {
     }
   }
 
+  getBundles(): PolicyBundle[] {
+    return Array.from(this.bundles);
+  }
+
   getEvaluationResult(): EvaluationResult {
-    // As WeakSet is not iterable, we can't implement this here.
-    // This logic will be handled in the ScanResult class.
-    throw new Error('WeakSet is not iterable. Cannot get evaluation result from policy.');
+    for (const bundle of this.bundles) {
+      if (bundle.getEvaluationResult().isFailed()) {
+        return EvaluationResult.Failed;
+      }
+    }
+    return EvaluationResult.Passed;
   }
 }

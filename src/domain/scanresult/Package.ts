@@ -5,15 +5,16 @@ import { Vulnerability } from './Vulnerability';
 
 export class Package {
   private readonly vulnerabilities: Set<Vulnerability> = new Set();
-  private readonly acceptedRisks: WeakSet<AcceptedRisk> = new WeakSet();
+  private readonly acceptedRisks: Set<AcceptedRisk> = new Set();
 
   constructor(
+    readonly id: string,
     public readonly packageType: PackageType,
     public readonly name: string,
     public readonly version: string,
     public readonly path: string,
     public readonly foundInLayer: Layer
-  ) {}
+  ) { }
 
   addVulnerability(vulnerability: Vulnerability) {
     if (!this.vulnerabilities.has(vulnerability)) {
@@ -31,5 +32,9 @@ export class Package {
       this.acceptedRisks.add(risk);
       risk.addForPackage(this);
     }
+  }
+
+  getAcceptedRisks(): AcceptedRisk[] {
+    return Array.from(this.acceptedRisks);
   }
 }

@@ -4,7 +4,6 @@ import { GitHubActionsInputProvider } from './src/infrastructure/adapters/GitHub
 import { SysdigCliScanner } from './src/infrastructure/adapters/SysdigCliScanner';
 import { SarifReportPresenter } from './src/infrastructure/presenters/SarifReportPresenter';
 import { SummaryReportPresenter } from './src/infrastructure/presenters/SummaryReportPresenter';
-import { FileSystemReportRepository } from './src/infrastructure/repositories/FileSystemReportRepository';
 import { IReportPresenter } from './src/application/ports/IReportPresenter';
 
 async function run(): Promise<void> {
@@ -13,30 +12,18 @@ async function run(): Promise<void> {
     const config = inputProvider.getInputs();
 
     const scanner = new SysdigCliScanner();
-    const reportRepository = new FileSystemReportRepository();
 
     const presenters: IReportPresenter[] = [
       new SarifReportPresenter(),
     ];
 
     if (!config.skipSummary) {
-      presenters.push(new SummaryReportPresenter(
-        config.imageTag,
-        config.overridePullString,
-        config.standalone
-      ));
+      presenters.push(new SummaryReportPresenter());
     }
 
-    const useCase = new RunScanUseCase(
-      inputProvider,
-      scanner,
-      presenters,
-      reportRepository
-    );
-
-    await useCase.execute();
-
-  } catch (error) {
+  const useCase = new RunScanUseCase(scanner, presenters, inputProvider);
+  await useCase.execute();
+} catch (error) {
     if (error instanceof Error) {
       core.setFailed(error.message);
     } else {

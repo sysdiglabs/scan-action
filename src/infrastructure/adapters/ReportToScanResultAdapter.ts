@@ -1,131 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { JsonScanResultV1, JsonResult as ReportResult, JsonMetadata as ReportMetadata, JsonLayer as JsonLayer, JsonPackage as JsonPackage } from '../entities/JsonScanResultV1';
+import { JsonScanResultV1, JsonResult as ReportResult, JsonMetadata as ReportMetadata, JsonLayer as JsonLayer, JsonRiskAccept, JsonVulnerability } from '../entities/JsonScanResultV1';
 import {
-  AcceptedRisk,
   AcceptedRiskReason,
   Architecture,
   EvaluationResult,
   Family,
-  Layer,
   OperatingSystem,
-  Package,
   PackageType,
-  Policy,
-  PolicyBundle,
-  PolicyBundleRule,
+  PolicyBundleRuleImageConfig,
+  PolicyBundleRulePkgVuln,
   ScanResult,
   ScanType,
   Severity,
-  Vulnerability,
 } from '../../domain/scanresult';
 
 // Helper interfaces to provide better typing than `any` for vulnerabilities and risks
-interface JsonVulnerability {
-  name: string;
-  severity: string;
-  disclosureDate: string;
-  solutionDate?: string;
-  exploitable: boolean;
-  fixVersion?: string;
-  riskAcceptRefs?: string[];
-}
-
-interface JsonRiskAccept {
-  id: string;
-  reason: string;
-  description: string;
-  expirationDate?: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// --- Mappers from String to Domain Enum ---
-
-function mapStringToSeverity(severity: string): Severity {
-  switch (severity.toLowerCase()) {
-    case 'critical':
-      return Severity.Critical;
-    case 'high':
-      return Severity.High;
-    case 'medium':
-      return Severity.Medium;
-    case 'low':
-      return Severity.Low;
-    case 'negligible':
-      return Severity.Negligible;
-    default:
-      return Severity.Unknown;
-  }
-}
-
-function mapStringToPackageType(type: string): PackageType {
-  switch (type.toLowerCase()) {
-    case 'c#':
-      return PackageType.CSharp;
-    case 'golang':
-      return PackageType.Golang;
-    case 'java':
-      return PackageType.Java;
-    case 'javascript':
-      return PackageType.Javascript;
-    case 'os':
-      return PackageType.Os;
-    case 'php':
-      return PackageType.Php;
-    case 'python':
-      return PackageType.Python;
-    case 'ruby':
-      return PackageType.Ruby;
-    case 'rust':
-      return PackageType.Rust;
-    default:
-      return PackageType.Unknown;
-  }
-}
-
-function mapStringToArchitecture(arch: string): Architecture {
-  switch (arch.toLowerCase()) {
-    case 'amd64':
-      return Architecture.Amd64;
-    case 'arm64':
-      return Architecture.Arm64;
-    default:
-      return Architecture.Unknown;
-  }
-}
-
-function mapStringToFamily(os: string): Family {
-  switch (os.toLowerCase()) {
-    case 'linux':
-      return Family.Linux;
-    case 'darwin':
-      return Family.Darwin;
-    case 'windows':
-      return Family.Windows;
-    default:
-      return Family.Unknown;
-  }
-}
-
-function mapStringToAcceptedRiskReason(reason: string): AcceptedRiskReason {
-  const reasonMap: { [key: string]: AcceptedRiskReason } = {
-    riskowned: AcceptedRiskReason.RiskOwned,
-    risktransferred: AcceptedRiskReason.RiskTransferred,
-    riskavoided: AcceptedRiskReason.RiskAvoided,
-    riskmitigated: AcceptedRiskReason.RiskMitigated,
-    risknotrelevant: AcceptedRiskReason.RiskNotRelevant,
-    custom: AcceptedRiskReason.Custom,
-  };
-  return reasonMap[reason.toLowerCase()] || AcceptedRiskReason.Unknown;
-}
-
-function mapStringToEvaluationResult(result: string): EvaluationResult {
-  return result.toLowerCase() === 'failed' ? EvaluationResult.Failed : EvaluationResult.Passed;
-}
-
-// --- Adapter Class ---
-
 export class ReportToScanResultAdapter {
   public toScanResult(report: JsonScanResultV1): ScanResult {
     const scanResult = this.createScanResult(report.result.metadata);
@@ -146,9 +35,9 @@ export class ReportToScanResultAdapter {
       metadata.pullString,
       metadata.imageId,
       metadata.digest,
-      new OperatingSystem(mapStringToFamily(metadata.os), metadata.baseOs),
+      new OperatingSystem(Family.fromString(metadata.os), metadata.baseOs),
       BigInt(metadata.size),
-      mapStringToArchitecture(metadata.architecture),
+      Architecture.fromString(metadata.architecture),
       metadata.labels ?? {},
       new Date(metadata.createdAt)
     );
@@ -169,7 +58,7 @@ export class ReportToScanResultAdapter {
     for (const riskData of Object.values(reportResult.riskAccepts ?? {}) as JsonRiskAccept[]) {
       scanResult.addAcceptedRisk(
         riskData.id,
-        mapStringToAcceptedRiskReason(riskData.reason),
+        AcceptedRiskReason.fromString(riskData.reason),
         riskData.description,
         riskData.expirationDate ? new Date(riskData.expirationDate) : null,
         riskData.status.toLowerCase() === 'active',
@@ -183,7 +72,8 @@ export class ReportToScanResultAdapter {
     for (const vulnData of Object.values(reportResult.vulnerabilities) as JsonVulnerability[]) {
       const vulnerability = scanResult.addVulnerability(
         vulnData.name,
-        mapStringToSeverity(vulnData.severity),
+        Severity.fromString(vulnData.severity),
+        vulnData.cvssScore.score,
         new Date(vulnData.disclosureDate),
         vulnData.solutionDate ? new Date(vulnData.solutionDate) : null,
         vulnData.exploitable,
@@ -205,7 +95,8 @@ export class ReportToScanResultAdapter {
   }
 
   private addPackages(reportResult: ReportResult, scanResult: ScanResult): void {
-    for (const pkgData of Object.values(reportResult.packages) as JsonPackage[]) {
+    for (const key in reportResult.packages) {
+      const pkgData = reportResult.packages[key];
       const layerRef = reportResult.layers[pkgData.layerRef];
       if (!layerRef) continue;
 
@@ -213,7 +104,8 @@ export class ReportToScanResultAdapter {
       if (!layer) continue;
 
       const pkg = scanResult.addPackage(
-        mapStringToPackageType(pkgData.type),
+        key,
+        PackageType.fromString(pkgData.type),
         pkgData.name,
         pkgData.version,
         pkgData.path,
@@ -264,43 +156,44 @@ export class ReportToScanResultAdapter {
         );
 
         for (const ruleData of bundleData.rules) {
-          const rule = new PolicyBundleRule(
-            String(ruleData.ruleId),
-            ruleData.description,
-            mapStringToEvaluationResult(ruleData.evaluationResult),
-            bundle
-          );
-          bundle.addRule(rule);
 
-          for (const failureData of ruleData.failures ?? []) {
-            if (ruleData.failureType === 'imageConfigFailure') {
-              rule.addImageConfigFailure(failureData.remediation ?? 'N/A');
-            } else if (ruleData.failureType === 'pkgVulnFailure') {
-              rule.addPkgVulnFailure(
-                this.getFailureMessage(
-                  reportResult,
-                  failureData.packageRef,
-                  failureData.vulnerabilityRef
-                )
+          if (ruleData.failureType === 'imageConfigFailure') {
+            const rule = new PolicyBundleRuleImageConfig(
+              String(ruleData.ruleId),
+              ruleData.description,
+              EvaluationResult.fromString(ruleData.evaluationResult),
+              bundle
+            );
+            for (const failureData of ruleData.failures ?? []) {
+              rule.addFailure(failureData.remediation ?? 'N/A');
+            }
+            bundle.addRule(rule);
+          }
+
+          if (ruleData.failureType === 'pkgVulnFailure') {
+            const rule = new PolicyBundleRulePkgVuln(
+              String(ruleData.ruleId),
+              ruleData.description,
+              EvaluationResult.fromString(ruleData.evaluationResult),
+              bundle
+            );
+            for (const failureData of ruleData.failures ?? []) {
+              const pkg = scanResult.findPackageByID(failureData.packageRef)!;
+              let jsonVuln = reportResult.vulnerabilities[failureData.vulnerabilityRef] as JsonVulnerability;
+              const vuln = scanResult.findVulnerabilityByCve(jsonVuln.name)!;
+
+              rule.addFailure(
+                failureData.description || "",
+                pkg,
+                vuln
               );
             }
+
+            bundle.addRule(rule);
           }
         }
       }
     }
   }
 
-  private getFailureMessage(
-    reportResult: ReportResult,
-    packageRef: string,
-    vulnerabilityRef: string
-  ): string {
-    const pkg = reportResult.packages[packageRef];
-    const vuln = reportResult.vulnerabilities[vulnerabilityRef] as JsonVulnerability;
-
-    if (pkg && vuln) {
-      return `${vuln.name} found in ${pkg.name} (${pkg.version})`;
-    }
-    return `vuln ref ${vulnerabilityRef} found in package ref ${packageRef}`;
-  }
 }

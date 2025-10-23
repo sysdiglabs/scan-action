@@ -1,6 +1,5 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
-import os from 'os';
 import process from 'process';
 import { IScanner } from '../../application/ports/IScanner';
 import { ComposeFlags, ScanMode } from '../../application/ports/ScannerDTOs';
@@ -8,11 +7,13 @@ import { cliScannerName, cliScannerResult, cliScannerURL, scannerURLForVersion }
 import { ScanConfig } from '../../application/ports/ScanConfig';
 import { JsonScanResultV1 } from '../entities/JsonScanResultV1';
 import { ReportParsingError } from '../../application/errors/ReportParsingError';
+import { ScanResult } from '../../domain/scanresult';
+import { ReportToScanResultAdapter } from './ReportToScanResultAdapter';
 const performance = require('perf_hooks').performance;
 
 export class SysdigCliScanner implements IScanner {
 
-  async executeScan(config: ScanConfig): Promise<JsonScanResultV1> {
+  async executeScan(config: ScanConfig): Promise<ScanResult> {
     await this.pullScanner(config.cliScannerURL, config.cliScannerVersion)
 
     const scanFlags = this.composeFlags(config);
@@ -23,11 +24,11 @@ export class SysdigCliScanner implements IScanner {
 
     const scanOptions: exec.ExecOptions = {
       env: {
-      ...Object.fromEntries(
-        Object.entries(process.env).map(([key, value]) => [key, value ?? ""])
-      ),
-      ...envvars,
-    },
+        ...Object.fromEntries(
+          Object.entries(process.env).map(([key, value]) => [key, value ?? ""])
+        ),
+        ...envvars,
+      },
       silent: true,
       ignoreReturnCode: true,
       listeners: {
@@ -65,7 +66,8 @@ export class SysdigCliScanner implements IScanner {
     }
 
     try {
-      return JSON.parse(execOutput) as JsonScanResultV1;
+      const jsonScanResult = JSON.parse(execOutput) as JsonScanResultV1;
+      return new ReportToScanResultAdapter().toScanResult(jsonScanResult);
     } catch (e) {
       throw new ReportParsingError(execOutput);
     }
