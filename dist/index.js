@@ -518,12 +518,13 @@ exports.OperatingSystem = OperatingSystem;
 /***/ }),
 
 /***/ 6913:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Package = void 0;
+const Severity_1 = __nccwpck_require__(4231);
 class Package {
     constructor(id, packageType, name, version, path, foundInLayer) {
         this.id = id;
@@ -552,6 +553,60 @@ class Package {
     }
     getAcceptedRisks() {
         return Array.from(this.acceptedRisks);
+    }
+    suggestedFixVersion() {
+        const vulnerabilities = this.getVulnerabilities();
+        if (vulnerabilities.length === 0) {
+            return undefined;
+        }
+        const candidateVersions = vulnerabilities
+            .filter((vuln) => vuln.fixVersion)
+            .map((vuln) => vuln.fixVersion)
+            .reduce((unique, item) => {
+            if (!unique.some((v) => v.equals(item))) {
+                unique.push(item);
+            }
+            return unique;
+        }, []);
+        if (candidateVersions.length === 0) {
+            return undefined;
+        }
+        const severityOrder = [
+            Severity_1.Severity.Critical,
+            Severity_1.Severity.High,
+            Severity_1.Severity.Medium,
+            Severity_1.Severity.Low,
+            Severity_1.Severity.Negligible,
+            Severity_1.Severity.Unknown,
+        ];
+        const scores = new Map();
+        for (const candidate of candidateVersions) {
+            const score = new Map();
+            for (const severity of severityOrder) {
+                score.set(severity, 0);
+            }
+            for (const vuln of vulnerabilities) {
+                if (vuln.fixVersion && vuln.fixVersion.equals(candidate)) { // fixVersion == candidate
+                    const currentCount = score.get(vuln.severity) || 0;
+                    score.set(vuln.severity, currentCount + 1);
+                }
+            }
+            scores.set(candidate, score);
+        }
+        candidateVersions.sort((a, b) => {
+            const scoreA = scores.get(a);
+            const scoreB = scores.get(b);
+            for (const severity of severityOrder) {
+                const countA = scoreA.get(severity);
+                const countB = scoreB.get(severity);
+                if (countA !== countB) {
+                    return countB - countA; // Higher count is better
+                }
+            }
+            // If scores are identical, lower version is better
+            return a.greaterThan(b) ? 1 : (a.lessThan(b) ? -1 : 0);
+        });
+        return candidateVersions[0];
     }
 }
 exports.Package = Package;
