@@ -1,6 +1,6 @@
-import { SarifReportPresenter } from '../../../src/infrastructure/presenters/SarifReportPresenter';
-import { ReportToScanResultAdapter } from '../../../src/infrastructure/adapters/ReportToScanResultAdapter';
-import { JsonScanResultV1 } from '../../../src/infrastructure/entities/JsonScanResultV1';
+import { SarifReportPresenter } from '../../../src/infrastructure/github/SarifReportPresenter';
+import { JsonScanResultV1ToScanResultAdapter } from '../../../src/infrastructure/sysdig/JsonScanResultV1ToScanResultAdapter';
+import { JsonScanResultV1 } from '../../../src/infrastructure/sysdig/JsonScanResultV1';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -18,7 +18,7 @@ describe('SarifReportPresenter', () => {
     // Arrange: Create a realistic ScanResult from a fixture
     const fixturePath = path.join(__dirname, '../../fixtures/report-test-v1.json');
     const rawReport: JsonScanResultV1 = JSON.parse(fs.readFileSync(fixturePath, 'utf-8'));
-    const adapter = new ReportToScanResultAdapter();
+    const adapter = new JsonScanResultV1ToScanResultAdapter();
     const scanResult = adapter.toScanResult(rawReport);
     const presenter = new SarifReportPresenter();
 

@@ -1,10 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { JsonScanResultV1 } from '../../../src/infrastructure/entities/JsonScanResultV1';
+import { JsonScanResultV1 } from '../../../src/infrastructure/sysdig/JsonScanResultV1';
 import { Severity } from '../../../src/domain/scanresult';
-import { ReportToScanResultAdapter } from '../../../src/infrastructure/adapters/ReportToScanResultAdapter';
+import { JsonScanResultV1ToScanResultAdapter } from '../../../src/infrastructure/sysdig/JsonScanResultV1ToScanResultAdapter';
 
-describe('ReportToScanResultAdapter', () => {
+describe('JsonScanResultV1ToScanResultAdapter', () => {
   let report: JsonScanResultV1;
 
   beforeAll(() => {
@@ -14,7 +14,7 @@ describe('ReportToScanResultAdapter', () => {
   });
 
   it('should correctly convert a Report to a ScanResult', () => {
-    const adapter = new ReportToScanResultAdapter();
+    const adapter = new JsonScanResultV1ToScanResultAdapter();
     const scanResult = adapter.toScanResult(report);
 
     // Assertions based on the reference Rust test implementation

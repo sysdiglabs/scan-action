@@ -3,7 +3,6 @@ import { ScanMode } from '../ports/ScannerDTOs';
 import { IInputProvider } from '../ports/IInputProvider';
 import { IScanner } from '../ports/IScanner';
 import { IReportPresenter } from '../ports/IReportPresenter';
-import { JsonScanResultV1 } from '../../infrastructure/entities/JsonScanResultV1';
 import { FilterOptions } from '../../domain/services/filtering';
 import { Severity } from '../../domain/scanresult';
 import { ScanConfig } from '../ports/ScanConfig';

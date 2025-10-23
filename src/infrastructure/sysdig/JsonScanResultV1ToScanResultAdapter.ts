@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { JsonScanResultV1, JsonResult as ReportResult, JsonMetadata as ReportMetadata, JsonLayer as JsonLayer, JsonRiskAccept, JsonVulnerability } from '../entities/JsonScanResultV1';
+import { JsonScanResultV1, JsonResult as ReportResult, JsonMetadata as ReportMetadata, JsonLayer as JsonLayer, JsonRiskAccept, JsonVulnerability } from './JsonScanResultV1';
 import {
   AcceptedRiskReason,
   Architecture,
@@ -15,7 +15,7 @@ import {
 } from '../../domain/scanresult';
 
 // Helper interfaces to provide better typing than `any` for vulnerabilities and risks
-export class ReportToScanResultAdapter {
+export class JsonScanResultV1ToScanResultAdapter {
   public toScanResult(report: JsonScanResultV1): ScanResult {
     const scanResult = this.createScanResult(report.result.metadata);
     const reportResult = report.result;

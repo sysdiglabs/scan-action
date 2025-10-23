@@ -5,10 +5,10 @@ import { IScanner } from '../../application/ports/IScanner';
 import { ComposeFlags, ScanMode } from '../../application/ports/ScannerDTOs';
 import { cliScannerName, cliScannerResult, cliScannerURL, scannerURLForVersion } from './SysdigCliScannerConstants';
 import { ScanConfig } from '../../application/ports/ScanConfig';
-import { JsonScanResultV1 } from '../entities/JsonScanResultV1';
+import { JsonScanResultV1 } from './JsonScanResultV1';
 import { ReportParsingError } from '../../application/errors/ReportParsingError';
 import { ScanResult } from '../../domain/scanresult';
-import { ReportToScanResultAdapter } from './ReportToScanResultAdapter';
+import { JsonScanResultV1ToScanResultAdapter } from './JsonScanResultV1ToScanResultAdapter';
 const performance = require('perf_hooks').performance;
 
 export class SysdigCliScanner implements IScanner {
@@ -67,7 +67,7 @@ export class SysdigCliScanner implements IScanner {
 
     try {
       const jsonScanResult = JSON.parse(execOutput) as JsonScanResultV1;
-      return new ReportToScanResultAdapter().toScanResult(jsonScanResult);
+      return new JsonScanResultV1ToScanResultAdapter().toScanResult(jsonScanResult);
     } catch (e) {
       throw new ReportParsingError(execOutput);
     }

@@ -1,9 +1,9 @@
 import * as core from '@actions/core';
 import { RunScanUseCase } from './src/application/use-cases/RunScanUseCase';
-import { GitHubActionsInputProvider } from './src/infrastructure/adapters/GitHubActionsInputProvider';
-import { SysdigCliScanner } from './src/infrastructure/adapters/SysdigCliScanner';
-import { SarifReportPresenter } from './src/infrastructure/presenters/SarifReportPresenter';
-import { SummaryReportPresenter } from './src/infrastructure/presenters/SummaryReportPresenter';
+import { GitHubActionsInputProvider } from './src/infrastructure/github/GitHubActionsInputProvider';
+import { SysdigCliScanner } from './src/infrastructure/sysdig/SysdigCliScanner';
+import { SarifReportPresenter } from './src/infrastructure/github/SarifReportPresenter';
+import { SummaryReportPresenter } from './src/infrastructure/github/SummaryReportPresenter';
 import { IReportPresenter } from './src/application/ports/IReportPresenter';
 
 async function run(): Promise<void> {

@@ -1,4 +1,4 @@
-import { ReportToScanResultAdapter } from '../../../src/infrastructure/adapters/ReportToScanResultAdapter';
+import { JsonScanResultV1ToScanResultAdapter } from '../../../src/infrastructure/sysdig/JsonScanResultV1ToScanResultAdapter';
 import { RunScanUseCase } from '../../../src/application/use-cases/RunScanUseCase';
 import { IInputProvider } from '../../../src/application/ports/IInputProvider';
 import { IScanner } from '../../../src/application/ports/IScanner';
@@ -7,14 +7,14 @@ import { ScanMode } from '../../../src/application/ports/ScannerDTOs';
 import * as core from '@actions/core';
 import * as report_test from "../../fixtures/report-test-v1.json";
 import { ScanConfig } from '../../../src/application/ports/ScanConfig';
-import { JsonScanResultV1 } from '../../../src/infrastructure/entities/JsonScanResultV1';
+import { JsonScanResultV1 } from '../../../src/infrastructure/sysdig/JsonScanResultV1';
 
 jest.mock('@actions/core');
 
 const mockCore = jest.mocked(core);
 
 const exampleReport: JsonScanResultV1 = report_test as JsonScanResultV1;
-const adapter = new ReportToScanResultAdapter();
+const adapter = new JsonScanResultV1ToScanResultAdapter();
 const exampleScanResult = adapter.toScanResult(exampleReport);
 
 describe('RunScanUseCase', () => {

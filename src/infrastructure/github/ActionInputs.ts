@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
-import { cliScannerURL } from './adapters/SysdigCliScannerConstants';
-import { ScanMode } from '../application/ports/ScannerDTOs';
-import { Severity } from '../domain/scanresult';
+import { cliScannerURL } from '../sysdig/SysdigCliScannerConstants';
+import { ScanMode } from '../../application/ports/ScannerDTOs';
+import { Severity } from '../../domain/scanresult';
 
 export const defaultSecureEndpoint = "https://secure.sysdig.com/"
 

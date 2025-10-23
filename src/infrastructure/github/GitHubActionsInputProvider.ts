@@ -1,4 +1,4 @@
-import { ActionInputs } from '../ActionInputs';
+import { ActionInputs } from './ActionInputs';
 import { IInputProvider } from '../../application/ports/IInputProvider';
 import { ScanConfig } from '../../application/ports/ScanConfig';
 

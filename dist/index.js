@@ -51,10 +51,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const RunScanUseCase_1 = __nccwpck_require__(59);
-const GitHubActionsInputProvider_1 = __nccwpck_require__(5696);
-const SysdigCliScanner_1 = __nccwpck_require__(1624);
-const SarifReportPresenter_1 = __nccwpck_require__(4167);
-const SummaryReportPresenter_1 = __nccwpck_require__(9563);
+const GitHubActionsInputProvider_1 = __nccwpck_require__(6315);
+const SysdigCliScanner_1 = __nccwpck_require__(3993);
+const SarifReportPresenter_1 = __nccwpck_require__(5934);
+const SummaryReportPresenter_1 = __nccwpck_require__(9495);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -1314,7 +1314,7 @@ function filterPackages(pkgs, filters) {
 
 /***/ }),
 
-/***/ 4767:
+/***/ 6254:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -1355,7 +1355,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ActionInputs = exports.defaultSecureEndpoint = void 0;
 const core = __importStar(__nccwpck_require__(2186));
-const SysdigCliScannerConstants_1 = __nccwpck_require__(3554);
+const SysdigCliScannerConstants_1 = __nccwpck_require__(1500);
 const ScannerDTOs_1 = __nccwpck_require__(1699);
 const scanresult_1 = __nccwpck_require__(9056);
 exports.defaultSecureEndpoint = "https://secure.sysdig.com/";
@@ -1471,14 +1471,14 @@ exports.ActionInputs = ActionInputs;
 
 /***/ }),
 
-/***/ 5696:
+/***/ 6315:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GitHubActionsInputProvider = void 0;
-const ActionInputs_1 = __nccwpck_require__(4767);
+const ActionInputs_1 = __nccwpck_require__(6254);
 class GitHubActionsInputProvider {
     getInputs() {
         const actionInputs = ActionInputs_1.ActionInputs.parseActionInputs();
@@ -1490,371 +1490,7 @@ exports.GitHubActionsInputProvider = GitHubActionsInputProvider;
 
 /***/ }),
 
-/***/ 8294:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ReportToScanResultAdapter = void 0;
-const scanresult_1 = __nccwpck_require__(9056);
-// Helper interfaces to provide better typing than `any` for vulnerabilities and risks
-class ReportToScanResultAdapter {
-    toScanResult(report) {
-        const scanResult = this.createScanResult(report.result.metadata);
-        const reportResult = report.result;
-        this.addLayers(reportResult, scanResult);
-        this.addAcceptedRisks(reportResult, scanResult);
-        this.addVulnerabilities(reportResult, scanResult);
-        this.addPackages(reportResult, scanResult);
-        this.addPolicies(reportResult, scanResult);
-        return scanResult;
-    }
-    createScanResult(metadata) {
-        var _a;
-        return new scanresult_1.ScanResult(scanresult_1.ScanType.Docker, // Assuming Docker scan type as in the Rust code
-        metadata.pullString, metadata.imageId, metadata.digest, new scanresult_1.OperatingSystem(scanresult_1.Family.fromString(metadata.os), metadata.baseOs), BigInt(metadata.size), scanresult_1.Architecture.fromString(metadata.architecture), (_a = metadata.labels) !== null && _a !== void 0 ? _a : {}, new Date(metadata.createdAt));
-    }
-    addLayers(reportResult, scanResult) {
-        var _a, _b;
-        for (const layerData of Object.values(reportResult.layers)) {
-            scanResult.addLayer((_a = layerData.digest) !== null && _a !== void 0 ? _a : '', layerData.index, layerData.size ? BigInt(layerData.size) : null, (_b = layerData.command) !== null && _b !== void 0 ? _b : '');
-        }
-    }
-    addAcceptedRisks(reportResult, scanResult) {
-        var _a;
-        for (const riskData of Object.values((_a = reportResult.riskAccepts) !== null && _a !== void 0 ? _a : {})) {
-            scanResult.addAcceptedRisk(riskData.id, scanresult_1.AcceptedRiskReason.fromString(riskData.reason), riskData.description, riskData.expirationDate ? new Date(riskData.expirationDate) : null, riskData.status.toLowerCase() === 'active', new Date(riskData.createdAt), new Date(riskData.updatedAt));
-        }
-    }
-    addVulnerabilities(reportResult, scanResult) {
-        var _a, _b;
-        for (const vulnData of Object.values(reportResult.vulnerabilities)) {
-            const vulnerability = scanResult.addVulnerability(vulnData.name, scanresult_1.Severity.fromString(vulnData.severity), vulnData.cvssScore.score, new Date(vulnData.disclosureDate), vulnData.solutionDate ? new Date(vulnData.solutionDate) : null, vulnData.exploitable, (_a = vulnData.fixVersion) !== null && _a !== void 0 ? _a : null);
-            if (vulnData.riskAcceptRefs) {
-                for (const riskRef of vulnData.riskAcceptRefs) {
-                    const riskData = (_b = reportResult.riskAccepts) === null || _b === void 0 ? void 0 : _b[riskRef];
-                    if (riskData) {
-                        const risk = scanResult.findAcceptedRiskById(riskData.id);
-                        if (risk) {
-                            vulnerability.addAcceptedRisk(risk);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    addPackages(reportResult, scanResult) {
-        var _a, _b;
-        for (const key in reportResult.packages) {
-            const pkgData = reportResult.packages[key];
-            const layerRef = reportResult.layers[pkgData.layerRef];
-            if (!layerRef)
-                continue;
-            const layer = scanResult.findLayerByDigest((_a = layerRef.digest) !== null && _a !== void 0 ? _a : '');
-            if (!layer)
-                continue;
-            const pkg = scanResult.addPackage(key, scanresult_1.PackageType.fromString(pkgData.type), pkgData.name, pkgData.version, pkgData.path, layer);
-            if (pkgData.vulnerabilitiesRefs) {
-                for (const vulnRef of pkgData.vulnerabilitiesRefs) {
-                    const jsonVuln = reportResult.vulnerabilities[vulnRef];
-                    if (jsonVuln) {
-                        const vulnerability = scanResult.findVulnerabilityByCve(jsonVuln.name);
-                        if (vulnerability) {
-                            pkg.addVulnerability(vulnerability);
-                            // Replicate indirect risk association from Rust code
-                            if (jsonVuln === null || jsonVuln === void 0 ? void 0 : jsonVuln.riskAcceptRefs) {
-                                for (const riskRef of jsonVuln.riskAcceptRefs) {
-                                    const riskData = (_b = reportResult.riskAccepts) === null || _b === void 0 ? void 0 : _b[riskRef];
-                                    if (riskData) {
-                                        const risk = scanResult.findAcceptedRiskById(riskData.id);
-                                        if (risk) {
-                                            pkg.addAcceptedRisk(risk);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    addPolicies(reportResult, scanResult) {
-        var _a, _b, _c;
-        for (const policyData of reportResult.policies.evaluations) {
-            const policy = scanResult.addPolicy(policyData.identifier, policyData.name, new Date(policyData.createdAt), new Date(policyData.updatedAt));
-            for (const bundleData of policyData.bundles) {
-                const bundle = scanResult.addPolicyBundle(bundleData.identifier, bundleData.name, policy);
-                for (const ruleData of bundleData.rules) {
-                    if (ruleData.failureType === 'imageConfigFailure') {
-                        const rule = new scanresult_1.PolicyBundleRuleImageConfig(String(ruleData.ruleId), ruleData.description, scanresult_1.EvaluationResult.fromString(ruleData.evaluationResult), bundle);
-                        for (const failureData of (_a = ruleData.failures) !== null && _a !== void 0 ? _a : []) {
-                            rule.addFailure((_b = failureData.remediation) !== null && _b !== void 0 ? _b : 'N/A');
-                        }
-                        bundle.addRule(rule);
-                    }
-                    if (ruleData.failureType === 'pkgVulnFailure') {
-                        const rule = new scanresult_1.PolicyBundleRulePkgVuln(String(ruleData.ruleId), ruleData.description, scanresult_1.EvaluationResult.fromString(ruleData.evaluationResult), bundle);
-                        for (const failureData of (_c = ruleData.failures) !== null && _c !== void 0 ? _c : []) {
-                            const pkg = scanResult.findPackageByID(failureData.packageRef);
-                            let jsonVuln = reportResult.vulnerabilities[failureData.vulnerabilityRef];
-                            const vuln = scanResult.findVulnerabilityByCve(jsonVuln.name);
-                            rule.addFailure(failureData.description || "", pkg, vuln);
-                        }
-                        bundle.addRule(rule);
-                    }
-                }
-            }
-        }
-    }
-}
-exports.ReportToScanResultAdapter = ReportToScanResultAdapter;
-
-
-/***/ }),
-
-/***/ 1624:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.SysdigCliScanner = void 0;
-const core = __importStar(__nccwpck_require__(2186));
-const exec = __importStar(__nccwpck_require__(1514));
-const process_1 = __importDefault(__nccwpck_require__(7282));
-const ScannerDTOs_1 = __nccwpck_require__(1699);
-const SysdigCliScannerConstants_1 = __nccwpck_require__(3554);
-const ReportParsingError_1 = __nccwpck_require__(93);
-const ReportToScanResultAdapter_1 = __nccwpck_require__(8294);
-const performance = (__nccwpck_require__(4074).performance);
-class SysdigCliScanner {
-    executeScan(config) {
-        return __awaiter(this, void 0, void 0, function* () {
-            yield this.pullScanner(config.cliScannerURL, config.cliScannerVersion);
-            const scanFlags = this.composeFlags(config);
-            let { envvars, flags } = scanFlags;
-            let execOutput = '';
-            let errOutput = '';
-            const scanOptions = {
-                env: Object.assign(Object.assign({}, Object.fromEntries(Object.entries(process_1.default.env).map(([key, value]) => [key, value !== null && value !== void 0 ? value : ""]))), envvars),
-                silent: true,
-                ignoreReturnCode: true,
-                listeners: {
-                    stdout: (data) => {
-                        process_1.default.stdout.write(data);
-                    },
-                    stderr: (data) => {
-                        process_1.default.stderr.write(data);
-                    }
-                }
-            };
-            const catOptions = {
-                silent: true,
-                ignoreReturnCode: true,
-                listeners: {
-                    stdout: (data) => {
-                        execOutput += data.toString();
-                    },
-                    stderr: (data) => {
-                        errOutput += data.toString();
-                    }
-                }
-            };
-            let start = performance.now();
-            const command = `./${SysdigCliScannerConstants_1.cliScannerName}`;
-            const loggableFlags = flags.map(flag => flag.includes(' ') ? `"${flag}"` : flag);
-            core.info("Executing: " + command + " " + loggableFlags.join(' '));
-            let retCode = yield exec.exec(command, flags, scanOptions);
-            core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
-            if (retCode == 0 || retCode == 1) {
-                yield exec.exec(`cat ./${SysdigCliScannerConstants_1.cliScannerResult}`, undefined, catOptions);
-            }
-            try {
-                const jsonScanResult = JSON.parse(execOutput);
-                return new ReportToScanResultAdapter_1.ReportToScanResultAdapter().toScanResult(jsonScanResult);
-            }
-            catch (e) {
-                throw new ReportParsingError_1.ReportParsingError(execOutput);
-            }
-        });
-    }
-    pullScanner(scannerURL, version) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let url = scannerURL;
-            if (version && url === SysdigCliScannerConstants_1.cliScannerURL) { // cliScannerURL is the default
-                url = (0, SysdigCliScannerConstants_1.scannerURLForVersion)(version);
-            }
-            let start = performance.now();
-            core.info('Pulling cli-scanner from: ' + url);
-            let cmd = `wget ${url} -O ./${SysdigCliScannerConstants_1.cliScannerName}`;
-            let retCode = yield exec.exec(cmd, undefined, { silent: true });
-            if (retCode == 0) {
-                cmd = `chmod u+x ./${SysdigCliScannerConstants_1.cliScannerName}`;
-                yield exec.exec(cmd, undefined, { silent: true });
-            }
-            else {
-                core.error(`Falied to pull scanner using "${url}"`);
-            }
-            core.info("Scanner pull took " + Math.round(performance.now() - start) + " milliseconds.");
-            return retCode;
-        });
-    }
-    composeFlags(config) {
-        let envvars = {};
-        envvars['SECURE_API_TOKEN'] = config.sysdigSecureToken || "";
-        let flags = [];
-        if (config.registryUser) {
-            envvars['REGISTRY_USER'] = config.registryUser;
-        }
-        if (config.registryPassword) {
-            envvars['REGISTRY_PASSWORD'] = config.registryPassword;
-        }
-        if (config.standalone) {
-            flags.push("--standalone");
-        }
-        if (config.sysdigSecureURL) {
-            flags.push('--apiurl', config.sysdigSecureURL);
-        }
-        if (config.dbPath) {
-            flags.push(`--dbpath=${config.dbPath}`);
-        }
-        if (config.skipUpload) {
-            flags.push('--skipupload');
-        }
-        if (config.usePolicies) {
-            const policies = config.usePolicies.split(',').map(p => p.trim());
-            for (const policy of policies) {
-                flags.push('--policy', policy.replace(/"/g, ''));
-            }
-        }
-        if (config.sysdigSkipTLS) {
-            flags.push(`--skiptlsverify`);
-        }
-        if (config.overridePullString) {
-            flags.push(`--override-pullstring=${config.overridePullString}`);
-        }
-        if (config.extraParameters) {
-            flags.push(...config.extraParameters.split(' '));
-        }
-        if (config.mode == ScannerDTOs_1.ScanMode.iac) {
-            flags.push(`--iac`);
-            if (config.recursive) {
-                flags.push(`-r`);
-            }
-            if (config.minimumSeverity) {
-                flags.push(`-f=${config.minimumSeverity}`);
-            }
-            flags.push(config.iacScanPath);
-        }
-        if (config.mode == ScannerDTOs_1.ScanMode.vm) {
-            flags.push(`--output=json-file=${SysdigCliScannerConstants_1.cliScannerResult}`);
-            flags.push(config.imageTag);
-        }
-        return {
-            envvars: envvars,
-            flags: flags
-        };
-    }
-}
-exports.SysdigCliScanner = SysdigCliScanner;
-
-
-/***/ }),
-
-/***/ 3554:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.cliScannerURL = exports.cliScannerResult = exports.cliScannerName = void 0;
-exports.scannerURLForVersion = scannerURLForVersion;
-const os_1 = __importDefault(__nccwpck_require__(2037));
-const cliScannerVersion = "1.22.6";
-const cliScannerOS = getRunOS();
-const cliScannerArch = getRunArch();
-const cliScannerURLBase = "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner";
-exports.cliScannerName = "sysdig-cli-scanner";
-exports.cliScannerResult = "scan-result.json";
-exports.cliScannerURL = `${cliScannerURLBase}/${cliScannerVersion}/${cliScannerOS}/${cliScannerArch}/${exports.cliScannerName}`;
-function scannerURLForVersion(version) {
-    return `${cliScannerURLBase}/${version}/${cliScannerOS}/${cliScannerArch}/${exports.cliScannerName}`;
-}
-function getRunArch() {
-    let arch = "unknown";
-    if (os_1.default.arch() == "x64") {
-        arch = "amd64";
-    }
-    else if (os_1.default.arch() == "arm64") {
-        arch = "arm64";
-    }
-    return arch;
-}
-function getRunOS() {
-    let os_name = "unknown";
-    if (os_1.default.platform() == "linux") {
-        os_name = "linux";
-    }
-    else if (os_1.default.platform() == "darwin") {
-        os_name = "darwin";
-    }
-    return os_name;
-}
-
-
-/***/ }),
-
-/***/ 4167:
+/***/ 5934:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -2200,7 +1836,7 @@ exports.SarifReportPresenter = SarifReportPresenter;
 
 /***/ }),
 
-/***/ 9563:
+/***/ 9495:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -2411,6 +2047,370 @@ SummaryReportPresenter.severities = [
     { sev: scanresult_1.Severity.Low, label: "🟡 Low" },
     { sev: scanresult_1.Severity.Negligible, label: "⚪ Negligible" },
 ];
+
+
+/***/ }),
+
+/***/ 9381:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.JsonScanResultV1ToScanResultAdapter = void 0;
+const scanresult_1 = __nccwpck_require__(9056);
+// Helper interfaces to provide better typing than `any` for vulnerabilities and risks
+class JsonScanResultV1ToScanResultAdapter {
+    toScanResult(report) {
+        const scanResult = this.createScanResult(report.result.metadata);
+        const reportResult = report.result;
+        this.addLayers(reportResult, scanResult);
+        this.addAcceptedRisks(reportResult, scanResult);
+        this.addVulnerabilities(reportResult, scanResult);
+        this.addPackages(reportResult, scanResult);
+        this.addPolicies(reportResult, scanResult);
+        return scanResult;
+    }
+    createScanResult(metadata) {
+        var _a;
+        return new scanresult_1.ScanResult(scanresult_1.ScanType.Docker, // Assuming Docker scan type as in the Rust code
+        metadata.pullString, metadata.imageId, metadata.digest, new scanresult_1.OperatingSystem(scanresult_1.Family.fromString(metadata.os), metadata.baseOs), BigInt(metadata.size), scanresult_1.Architecture.fromString(metadata.architecture), (_a = metadata.labels) !== null && _a !== void 0 ? _a : {}, new Date(metadata.createdAt));
+    }
+    addLayers(reportResult, scanResult) {
+        var _a, _b;
+        for (const layerData of Object.values(reportResult.layers)) {
+            scanResult.addLayer((_a = layerData.digest) !== null && _a !== void 0 ? _a : '', layerData.index, layerData.size ? BigInt(layerData.size) : null, (_b = layerData.command) !== null && _b !== void 0 ? _b : '');
+        }
+    }
+    addAcceptedRisks(reportResult, scanResult) {
+        var _a;
+        for (const riskData of Object.values((_a = reportResult.riskAccepts) !== null && _a !== void 0 ? _a : {})) {
+            scanResult.addAcceptedRisk(riskData.id, scanresult_1.AcceptedRiskReason.fromString(riskData.reason), riskData.description, riskData.expirationDate ? new Date(riskData.expirationDate) : null, riskData.status.toLowerCase() === 'active', new Date(riskData.createdAt), new Date(riskData.updatedAt));
+        }
+    }
+    addVulnerabilities(reportResult, scanResult) {
+        var _a, _b;
+        for (const vulnData of Object.values(reportResult.vulnerabilities)) {
+            const vulnerability = scanResult.addVulnerability(vulnData.name, scanresult_1.Severity.fromString(vulnData.severity), vulnData.cvssScore.score, new Date(vulnData.disclosureDate), vulnData.solutionDate ? new Date(vulnData.solutionDate) : null, vulnData.exploitable, (_a = vulnData.fixVersion) !== null && _a !== void 0 ? _a : null);
+            if (vulnData.riskAcceptRefs) {
+                for (const riskRef of vulnData.riskAcceptRefs) {
+                    const riskData = (_b = reportResult.riskAccepts) === null || _b === void 0 ? void 0 : _b[riskRef];
+                    if (riskData) {
+                        const risk = scanResult.findAcceptedRiskById(riskData.id);
+                        if (risk) {
+                            vulnerability.addAcceptedRisk(risk);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    addPackages(reportResult, scanResult) {
+        var _a, _b;
+        for (const key in reportResult.packages) {
+            const pkgData = reportResult.packages[key];
+            const layerRef = reportResult.layers[pkgData.layerRef];
+            if (!layerRef)
+                continue;
+            const layer = scanResult.findLayerByDigest((_a = layerRef.digest) !== null && _a !== void 0 ? _a : '');
+            if (!layer)
+                continue;
+            const pkg = scanResult.addPackage(key, scanresult_1.PackageType.fromString(pkgData.type), pkgData.name, pkgData.version, pkgData.path, layer);
+            if (pkgData.vulnerabilitiesRefs) {
+                for (const vulnRef of pkgData.vulnerabilitiesRefs) {
+                    const jsonVuln = reportResult.vulnerabilities[vulnRef];
+                    if (jsonVuln) {
+                        const vulnerability = scanResult.findVulnerabilityByCve(jsonVuln.name);
+                        if (vulnerability) {
+                            pkg.addVulnerability(vulnerability);
+                            // Replicate indirect risk association from Rust code
+                            if (jsonVuln === null || jsonVuln === void 0 ? void 0 : jsonVuln.riskAcceptRefs) {
+                                for (const riskRef of jsonVuln.riskAcceptRefs) {
+                                    const riskData = (_b = reportResult.riskAccepts) === null || _b === void 0 ? void 0 : _b[riskRef];
+                                    if (riskData) {
+                                        const risk = scanResult.findAcceptedRiskById(riskData.id);
+                                        if (risk) {
+                                            pkg.addAcceptedRisk(risk);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    addPolicies(reportResult, scanResult) {
+        var _a, _b, _c;
+        for (const policyData of reportResult.policies.evaluations) {
+            const policy = scanResult.addPolicy(policyData.identifier, policyData.name, new Date(policyData.createdAt), new Date(policyData.updatedAt));
+            for (const bundleData of policyData.bundles) {
+                const bundle = scanResult.addPolicyBundle(bundleData.identifier, bundleData.name, policy);
+                for (const ruleData of bundleData.rules) {
+                    if (ruleData.failureType === 'imageConfigFailure') {
+                        const rule = new scanresult_1.PolicyBundleRuleImageConfig(String(ruleData.ruleId), ruleData.description, scanresult_1.EvaluationResult.fromString(ruleData.evaluationResult), bundle);
+                        for (const failureData of (_a = ruleData.failures) !== null && _a !== void 0 ? _a : []) {
+                            rule.addFailure((_b = failureData.remediation) !== null && _b !== void 0 ? _b : 'N/A');
+                        }
+                        bundle.addRule(rule);
+                    }
+                    if (ruleData.failureType === 'pkgVulnFailure') {
+                        const rule = new scanresult_1.PolicyBundleRulePkgVuln(String(ruleData.ruleId), ruleData.description, scanresult_1.EvaluationResult.fromString(ruleData.evaluationResult), bundle);
+                        for (const failureData of (_c = ruleData.failures) !== null && _c !== void 0 ? _c : []) {
+                            const pkg = scanResult.findPackageByID(failureData.packageRef);
+                            let jsonVuln = reportResult.vulnerabilities[failureData.vulnerabilityRef];
+                            const vuln = scanResult.findVulnerabilityByCve(jsonVuln.name);
+                            rule.addFailure(failureData.description || "", pkg, vuln);
+                        }
+                        bundle.addRule(rule);
+                    }
+                }
+            }
+        }
+    }
+}
+exports.JsonScanResultV1ToScanResultAdapter = JsonScanResultV1ToScanResultAdapter;
+
+
+/***/ }),
+
+/***/ 3993:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SysdigCliScanner = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const exec = __importStar(__nccwpck_require__(1514));
+const process_1 = __importDefault(__nccwpck_require__(7282));
+const ScannerDTOs_1 = __nccwpck_require__(1699);
+const SysdigCliScannerConstants_1 = __nccwpck_require__(1500);
+const ReportParsingError_1 = __nccwpck_require__(93);
+const JsonScanResultV1ToScanResultAdapter_1 = __nccwpck_require__(9381);
+const performance = (__nccwpck_require__(4074).performance);
+class SysdigCliScanner {
+    executeScan(config) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.pullScanner(config.cliScannerURL, config.cliScannerVersion);
+            const scanFlags = this.composeFlags(config);
+            let { envvars, flags } = scanFlags;
+            let execOutput = '';
+            let errOutput = '';
+            const scanOptions = {
+                env: Object.assign(Object.assign({}, Object.fromEntries(Object.entries(process_1.default.env).map(([key, value]) => [key, value !== null && value !== void 0 ? value : ""]))), envvars),
+                silent: true,
+                ignoreReturnCode: true,
+                listeners: {
+                    stdout: (data) => {
+                        process_1.default.stdout.write(data);
+                    },
+                    stderr: (data) => {
+                        process_1.default.stderr.write(data);
+                    }
+                }
+            };
+            const catOptions = {
+                silent: true,
+                ignoreReturnCode: true,
+                listeners: {
+                    stdout: (data) => {
+                        execOutput += data.toString();
+                    },
+                    stderr: (data) => {
+                        errOutput += data.toString();
+                    }
+                }
+            };
+            let start = performance.now();
+            const command = `./${SysdigCliScannerConstants_1.cliScannerName}`;
+            const loggableFlags = flags.map(flag => flag.includes(' ') ? `"${flag}"` : flag);
+            core.info("Executing: " + command + " " + loggableFlags.join(' '));
+            let retCode = yield exec.exec(command, flags, scanOptions);
+            core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
+            if (retCode == 0 || retCode == 1) {
+                yield exec.exec(`cat ./${SysdigCliScannerConstants_1.cliScannerResult}`, undefined, catOptions);
+            }
+            try {
+                const jsonScanResult = JSON.parse(execOutput);
+                return new JsonScanResultV1ToScanResultAdapter_1.JsonScanResultV1ToScanResultAdapter().toScanResult(jsonScanResult);
+            }
+            catch (e) {
+                throw new ReportParsingError_1.ReportParsingError(execOutput);
+            }
+        });
+    }
+    pullScanner(scannerURL, version) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let url = scannerURL;
+            if (version && url === SysdigCliScannerConstants_1.cliScannerURL) { // cliScannerURL is the default
+                url = (0, SysdigCliScannerConstants_1.scannerURLForVersion)(version);
+            }
+            let start = performance.now();
+            core.info('Pulling cli-scanner from: ' + url);
+            let cmd = `wget ${url} -O ./${SysdigCliScannerConstants_1.cliScannerName}`;
+            let retCode = yield exec.exec(cmd, undefined, { silent: true });
+            if (retCode == 0) {
+                cmd = `chmod u+x ./${SysdigCliScannerConstants_1.cliScannerName}`;
+                yield exec.exec(cmd, undefined, { silent: true });
+            }
+            else {
+                core.error(`Falied to pull scanner using "${url}"`);
+            }
+            core.info("Scanner pull took " + Math.round(performance.now() - start) + " milliseconds.");
+            return retCode;
+        });
+    }
+    composeFlags(config) {
+        let envvars = {};
+        envvars['SECURE_API_TOKEN'] = config.sysdigSecureToken || "";
+        let flags = [];
+        if (config.registryUser) {
+            envvars['REGISTRY_USER'] = config.registryUser;
+        }
+        if (config.registryPassword) {
+            envvars['REGISTRY_PASSWORD'] = config.registryPassword;
+        }
+        if (config.standalone) {
+            flags.push("--standalone");
+        }
+        if (config.sysdigSecureURL) {
+            flags.push('--apiurl', config.sysdigSecureURL);
+        }
+        if (config.dbPath) {
+            flags.push(`--dbpath=${config.dbPath}`);
+        }
+        if (config.skipUpload) {
+            flags.push('--skipupload');
+        }
+        if (config.usePolicies) {
+            const policies = config.usePolicies.split(',').map(p => p.trim());
+            for (const policy of policies) {
+                flags.push('--policy', policy.replace(/"/g, ''));
+            }
+        }
+        if (config.sysdigSkipTLS) {
+            flags.push(`--skiptlsverify`);
+        }
+        if (config.overridePullString) {
+            flags.push(`--override-pullstring=${config.overridePullString}`);
+        }
+        if (config.extraParameters) {
+            flags.push(...config.extraParameters.split(' '));
+        }
+        if (config.mode == ScannerDTOs_1.ScanMode.iac) {
+            flags.push(`--iac`);
+            if (config.recursive) {
+                flags.push(`-r`);
+            }
+            if (config.minimumSeverity) {
+                flags.push(`-f=${config.minimumSeverity}`);
+            }
+            flags.push(config.iacScanPath);
+        }
+        if (config.mode == ScannerDTOs_1.ScanMode.vm) {
+            flags.push(`--output=json-file=${SysdigCliScannerConstants_1.cliScannerResult}`);
+            flags.push(config.imageTag);
+        }
+        return {
+            envvars: envvars,
+            flags: flags
+        };
+    }
+}
+exports.SysdigCliScanner = SysdigCliScanner;
+
+
+/***/ }),
+
+/***/ 1500:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.cliScannerURL = exports.cliScannerResult = exports.cliScannerName = void 0;
+exports.scannerURLForVersion = scannerURLForVersion;
+const os_1 = __importDefault(__nccwpck_require__(2037));
+const cliScannerVersion = "1.22.6";
+const cliScannerOS = getRunOS();
+const cliScannerArch = getRunArch();
+const cliScannerURLBase = "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner";
+exports.cliScannerName = "sysdig-cli-scanner";
+exports.cliScannerResult = "scan-result.json";
+exports.cliScannerURL = `${cliScannerURLBase}/${cliScannerVersion}/${cliScannerOS}/${cliScannerArch}/${exports.cliScannerName}`;
+function scannerURLForVersion(version) {
+    return `${cliScannerURLBase}/${version}/${cliScannerOS}/${cliScannerArch}/${exports.cliScannerName}`;
+}
+function getRunArch() {
+    let arch = "unknown";
+    if (os_1.default.arch() == "x64") {
+        arch = "amd64";
+    }
+    else if (os_1.default.arch() == "arm64") {
+        arch = "arm64";
+    }
+    return arch;
+}
+function getRunOS() {
+    let os_name = "unknown";
+    if (os_1.default.platform() == "linux") {
+        os_name = "linux";
+    }
+    else if (os_1.default.platform() == "darwin") {
+        os_name = "darwin";
+    }
+    return os_name;
+}
 
 
 /***/ }),
