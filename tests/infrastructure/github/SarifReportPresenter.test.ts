@@ -16,7 +16,7 @@ describe('SarifReportPresenter', () => {
 
   it('should produce a valid SARIF JSON file for a given scan result', () => {
     // Arrange: Create a realistic ScanResult from a fixture
-    const fixturePath = path.join(__dirname, '../../fixtures/report-test-v1.json');
+    const fixturePath = path.join(__dirname, '../../fixtures/vm/report-test-v1.json');
     const rawReport: JsonScanResultV1 = JSON.parse(fs.readFileSync(fixturePath, 'utf-8'));
     const adapter = new JsonScanResultV1ToScanResultAdapter();
     const scanResult = adapter.toScanResult(rawReport);

@@ -8,7 +8,7 @@ describe('JsonScanResultV1ToScanResultAdapter', () => {
   let report: JsonScanResultV1;
 
   beforeAll(() => {
-    const filePath = path.join(__dirname, '../../fixtures/postgres_13.json');
+    const filePath = path.join(__dirname, '../../fixtures/vm/postgres_13.json');
     const fileContent = fs.readFileSync(filePath, 'utf-8');
     report = JSON.parse(fileContent) as JsonScanResultV1;
   });

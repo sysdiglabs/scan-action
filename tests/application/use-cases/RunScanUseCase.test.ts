@@ -5,7 +5,7 @@ import { IScanner } from '../../../src/application/ports/IScanner';
 import { IReportPresenter } from '../../../src/application/ports/IReportPresenter';
 import { ScanMode } from '../../../src/application/ports/ScannerDTOs';
 import * as core from '@actions/core';
-import * as report_test from "../../fixtures/report-test-v1.json";
+import * as report_test from "../../fixtures/vm/report-test-v1.json";
 import { ScanConfig } from '../../../src/application/ports/ScanConfig';
 import { JsonScanResultV1 } from '../../../src/infrastructure/sysdig/JsonScanResultV1';
 
