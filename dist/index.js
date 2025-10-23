@@ -2311,14 +2311,14 @@ class SummaryReportPresenter {
             });
             let colsToDisplay = SummaryReportPresenter.severities.filter(s => s.sev.isMoreSevereThanOrEqualTo(minSeverity));
             const packageRows = vulnerablePackagesSortedBySeverity.map(pkg => {
+                var _a;
                 const vulns = pkg.getVulnerabilities();
                 const countBySeverity = (sev) => vulns.filter(v => v.severity === sev).length;
-                const fixedInVersions = vulns.map(v => { var _a; return (_a = v.fixVersion) === null || _a === void 0 ? void 0 : _a.toString(); }).join(", ") || "";
                 return [
                     { data: pkg.name },
                     { data: pkg.packageType.toString() },
                     { data: pkg.version.toString() },
-                    { data: fixedInVersions },
+                    { data: ((_a = pkg.suggestedFixVersion()) === null || _a === void 0 ? void 0 : _a.toString()) || "None" },
                 ].concat(colsToDisplay.map(c => ({ data: countBySeverity(c.sev).toString() }))).concat({ data: vulns.filter(v => v.exploitable).length.toString() });
             });
             core.summary.addCodeBlock(`LAYER ${layer.index} - ${layer.command.replace(/\$/g, "&#36;").replace(/\&/g, '&amp;')}`);

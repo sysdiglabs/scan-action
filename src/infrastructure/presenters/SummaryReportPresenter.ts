@@ -101,7 +101,6 @@ export class SummaryReportPresenter implements IReportPresenter {
       const packageRows = vulnerablePackagesSortedBySeverity.map(pkg => {
         const vulns = pkg.getVulnerabilities();
         const countBySeverity = (sev: Severity) => vulns.filter(v => v.severity === sev).length;
-        const fixedInVersions = vulns.map(v => v.fixVersion?.toString()).join(", ") || "";
 
 
 
@@ -109,7 +108,7 @@ export class SummaryReportPresenter implements IReportPresenter {
           { data: pkg.name },
           { data: pkg.packageType.toString() },
           { data: pkg.version.toString() },
-          { data: fixedInVersions },
+          { data: pkg.suggestedFixVersion()?.toString() || "None" },
         ].concat(
           colsToDisplay.map(c => ({ data: countBySeverity(c.sev).toString() })),
         ).concat(
