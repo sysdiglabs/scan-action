@@ -101,14 +101,14 @@ export class SummaryReportPresenter implements IReportPresenter {
       const packageRows = vulnerablePackagesSortedBySeverity.map(pkg => {
         const vulns = pkg.getVulnerabilities();
         const countBySeverity = (sev: Severity) => vulns.filter(v => v.severity === sev).length;
-        const fixedInVersions = vulns.map(v => v.fixVersion).join(", ") || "";
+        const fixedInVersions = vulns.map(v => v.fixVersion?.toString()).join(", ") || "";
 
 
 
         return [
           { data: pkg.name },
           { data: pkg.packageType.toString() },
-          { data: pkg.version },
+          { data: pkg.version.toString() },
           { data: fixedInVersions },
         ].concat(
           colsToDisplay.map(c => ({ data: countBySeverity(c.sev).toString() })),
@@ -198,7 +198,7 @@ export class SummaryReportPresenter implements IReportPresenter {
         { data: `${failure.pkg.name}` },
         { data: `${failure.vuln.cve}` },
         { data: `${failure.vuln.cvssScore}` },
-        { data: `${failure.vuln.fixVersion || "No fix available"}` },
+        { data: `${failure.vuln.fixVersion?.toString() || "No fix available"}` },
         { data: `${failure.vuln.exploitable}` },
       ]);
     });

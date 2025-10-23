@@ -1,6 +1,7 @@
 import { AcceptedRisk } from './AcceptedRisk';
 import { Layer } from './Layer';
 import { PackageType } from './PackageType';
+import { Version } from './Version';
 import { Vulnerability } from './Vulnerability';
 
 export class Package {
@@ -11,7 +12,7 @@ export class Package {
     readonly id: string,
     public readonly packageType: PackageType,
     public readonly name: string,
-    public readonly version: string,
+    public readonly version: Version,
     public readonly path: string,
     public readonly foundInLayer: Layer
   ) { }

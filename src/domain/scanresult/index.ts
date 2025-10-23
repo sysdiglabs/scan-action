@@ -13,3 +13,4 @@ export * from './ScanResult';
 export * from './ScanType';
 export * from './Severity';
 export * from './Vulnerability';
+export * from './Version';

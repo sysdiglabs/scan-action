@@ -10,6 +10,7 @@ import { Policy } from './Policy';
 import { PolicyBundle } from './PolicyBundle';
 import { ScanType } from './ScanType';
 import { Severity } from './Severity';
+import { Version } from './Version';
 import { Vulnerability } from './Vulnerability';
 
 export class Metadata {
@@ -79,7 +80,7 @@ export class ScanResult {
     path: string,
     foundInLayer: Layer
   ): Package {
-    const pkg = new Package(id, packageType, name, version, path, foundInLayer);
+    const pkg = new Package(id, packageType, name, new Version(version), path, foundInLayer);
     foundInLayer.addPackage(pkg);
     this.packages.add(pkg);
     return pkg;
@@ -112,7 +113,7 @@ export class ScanResult {
       disclosureDate,
       solutionDate,
       exploitable,
-      fixVersion
+      fixVersion ? new Version(fixVersion) : null
     );
     this.vulnerabilities.set(cve, vuln);
     return vuln;

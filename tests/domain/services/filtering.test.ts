@@ -1,8 +1,8 @@
 import { FilterOptions, filterPackages } from '../../../src/domain/services/filtering';
-import { Package, PackageType, Severity, Vulnerability, Layer, AcceptedRisk, AcceptedRiskReason } from '../../../src/domain/scanresult';
+import { Package, PackageType, Severity, Vulnerability, Layer, AcceptedRisk, AcceptedRiskReason, Version } from '../../../src/domain/scanresult';
 
 const newVuln = (name: string, severity: Severity): Vulnerability => {
-    return new Vulnerability(name, severity, 0, new Date(), null, false, "1.1");
+    return new Vulnerability(name, severity, 0, new Date(), null, false, new Version("1.1"));
 };
 
 const newLayer = (digest: string = "sha256:dummy"): Layer => {
@@ -10,7 +10,7 @@ const newLayer = (digest: string = "sha256:dummy"): Layer => {
 }
 
 const newPkg = (name: string, type: PackageType, vulnerabilities: Vulnerability[] = []): Package => {
-    const pkg = new Package(name, type, name, "1.0", "/foo", newLayer());
+    const pkg = new Package(name, type, name, new Version("1.0"), "/foo", newLayer());
     vulnerabilities.forEach(v => pkg.addVulnerability(v));
     return pkg;
 };

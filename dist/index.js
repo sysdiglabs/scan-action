@@ -780,6 +780,7 @@ const Layer_1 = __nccwpck_require__(6293);
 const Package_1 = __nccwpck_require__(6913);
 const Policy_1 = __nccwpck_require__(4023);
 const PolicyBundle_1 = __nccwpck_require__(7747);
+const Version_1 = __nccwpck_require__(8979);
 const Vulnerability_1 = __nccwpck_require__(6246);
 class Metadata {
     constructor(pullString, imageId, digest, baseOs, sizeInBytes, architecture, labels, createdAt) {
@@ -817,7 +818,7 @@ class ScanResult {
         return [...this.layers].sort((a, b) => a.index - b.index);
     }
     addPackage(id, packageType, name, version, path, foundInLayer) {
-        const pkg = new Package_1.Package(id, packageType, name, version, path, foundInLayer);
+        const pkg = new Package_1.Package(id, packageType, name, new Version_1.Version(version), path, foundInLayer);
         foundInLayer.addPackage(pkg);
         this.packages.add(pkg);
         return pkg;
@@ -832,7 +833,7 @@ class ScanResult {
         if (this.vulnerabilities.has(cve)) {
             return this.vulnerabilities.get(cve);
         }
-        const vuln = new Vulnerability_1.Vulnerability(cve, severity, cvssScore, disclosureDate, solutionDate, exploitable, fixVersion);
+        const vuln = new Vulnerability_1.Vulnerability(cve, severity, cvssScore, disclosureDate, solutionDate, exploitable, fixVersion ? new Version_1.Version(fixVersion) : null);
         this.vulnerabilities.set(cve, vuln);
         return vuln;
     }
@@ -1006,6 +1007,118 @@ Severity.values = [
 
 /***/ }),
 
+/***/ 8979:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Version = void 0;
+class Version {
+    constructor(value) {
+        this.value = value;
+        if (!value) {
+            throw new Error('Version string cannot be empty');
+        }
+    }
+    toString() {
+        return this.value;
+    }
+    equals(other) {
+        return this.compareTo(other) === 0;
+    }
+    greaterThan(other) {
+        return this.compareTo(other) > 0;
+    }
+    lessThan(other) {
+        return this.compareTo(other) < 0;
+    }
+    /**
+     * Compares this version with another.
+     * @returns 0 if equal, 1 if greater, -1 if less.
+     */
+    compareTo(other) {
+        const thisParts = Version.parse(this.value);
+        const otherParts = Version.parse(other.value);
+        // Compare core version parts
+        for (let i = 0; i < 3; i++) {
+            if (thisParts.core[i] > otherParts.core[i])
+                return 1;
+            if (thisParts.core[i] < otherParts.core[i])
+                return -1;
+        }
+        // Core versions are same, check pre-release
+        const thisPre = thisParts.preRelease;
+        const otherPre = otherParts.preRelease;
+        if (thisPre && !otherPre)
+            return -1; // 1.0.0-alpha < 1.0.0
+        if (!thisPre && otherPre)
+            return 1; // 1.0.0 > 1.0.0-alpha
+        if (!thisPre && !otherPre)
+            return 0; // 1.0.0 == 1.0.0
+        if (!thisPre || !otherPre)
+            return 0; // Should not happen because of previous checks, but makes typescript happy
+        // Both have pre-release tags, compare them identifier by identifier
+        const preLen = Math.max(thisPre.length, otherPre.length);
+        for (let i = 0; i < preLen; i++) {
+            if (thisPre[i] === undefined)
+                return -1; // this is shorter, so smaller
+            if (otherPre[i] === undefined)
+                return 1;
+            const thisIdent = thisPre[i];
+            const otherIdent = otherPre[i];
+            if (thisIdent === otherIdent)
+                continue;
+            const thisIsNum = typeof thisIdent === 'number';
+            const otherIsNum = typeof otherIdent === 'number';
+            if (thisIsNum && !otherIsNum)
+                return -1; // numeric is smaller than string
+            if (!thisIsNum && otherIsNum)
+                return 1;
+            if (thisIdent > otherIdent)
+                return 1;
+            if (thisIdent < otherIdent)
+                return -1;
+        }
+        return 0; // pre-releases are identical
+    }
+    static parse(versionString) {
+        const value = versionString.replace(/^v/, '');
+        const preReleaseIndex = value.indexOf('-');
+        const buildIndex = value.indexOf('+');
+        let corePart;
+        let preReleasePart = null;
+        if (preReleaseIndex > -1) {
+            corePart = value.substring(0, preReleaseIndex);
+            const endOfPreRelease = buildIndex > -1 && buildIndex > preReleaseIndex ? buildIndex : value.length;
+            preReleasePart = value.substring(preReleaseIndex + 1, endOfPreRelease);
+        }
+        else if (buildIndex > -1) {
+            corePart = value.substring(0, buildIndex);
+        }
+        else {
+            corePart = value;
+        }
+        const core = corePart.split('.').map(p => parseInt(p, 10) || 0);
+        // Pad with zeros to ensure it has at least 3 parts (major, minor, patch)
+        while (core.length < 3) {
+            core.push(0);
+        }
+        if (preReleasePart) {
+            const preRelease = preReleasePart.split('.').map(ident => {
+                const num = parseInt(ident, 10);
+                return isNaN(num) || String(num) !== ident ? ident : num;
+            });
+            return { core, preRelease };
+        }
+        return { core, preRelease: null };
+    }
+}
+exports.Version = Version;
+
+
+/***/ }),
+
 /***/ 6246:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -1094,6 +1207,7 @@ __exportStar(__nccwpck_require__(9061), exports);
 __exportStar(__nccwpck_require__(4378), exports);
 __exportStar(__nccwpck_require__(4231), exports);
 __exportStar(__nccwpck_require__(6246), exports);
+__exportStar(__nccwpck_require__(8979), exports);
 
 
 /***/ }),
@@ -2161,11 +2275,11 @@ class SummaryReportPresenter {
             const packageRows = vulnerablePackagesSortedBySeverity.map(pkg => {
                 const vulns = pkg.getVulnerabilities();
                 const countBySeverity = (sev) => vulns.filter(v => v.severity === sev).length;
-                const fixedInVersions = vulns.map(v => v.fixVersion).join(", ") || "";
+                const fixedInVersions = vulns.map(v => { var _a; return (_a = v.fixVersion) === null || _a === void 0 ? void 0 : _a.toString(); }).join(", ") || "";
                 return [
                     { data: pkg.name },
                     { data: pkg.packageType.toString() },
-                    { data: pkg.version },
+                    { data: pkg.version.toString() },
                     { data: fixedInVersions },
                 ].concat(colsToDisplay.map(c => ({ data: countBySeverity(c.sev).toString() }))).concat({ data: vulns.filter(v => v.exploitable).length.toString() });
             });
@@ -2234,12 +2348,13 @@ class SummaryReportPresenter {
                 { data: 'Exploitable', header: true }
             ]];
         rule.getFailures().forEach(failure => {
+            var _a;
             table.push([
                 { data: `${failure.vuln.severity}` },
                 { data: `${failure.pkg.name}` },
                 { data: `${failure.vuln.cve}` },
                 { data: `${failure.vuln.cvssScore}` },
-                { data: `${failure.vuln.fixVersion || "No fix available"}` },
+                { data: `${((_a = failure.vuln.fixVersion) === null || _a === void 0 ? void 0 : _a.toString()) || "No fix available"}` },
                 { data: `${failure.vuln.exploitable}` },
             ]);
         });
