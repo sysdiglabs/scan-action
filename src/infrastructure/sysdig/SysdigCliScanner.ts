@@ -11,10 +11,17 @@ import { ScanResult } from '../../domain/scanresult';
 import { JsonScanResultV1ToScanResultAdapter } from './JsonScanResultV1ToScanResultAdapter';
 const performance = require('perf_hooks').performance;
 
+import { SysdigCliScannerDownloader } from './SysdigCliScannerDownloader';
+
 export class SysdigCliScanner implements IScanner {
+  private readonly downloader: SysdigCliScannerDownloader;
+
+  constructor(downloader: SysdigCliScannerDownloader) {
+    this.downloader = downloader;
+  }
 
   async executeScan(config: ScanConfig): Promise<ScanResult> {
-    await this.pullScanner(config.cliScannerURL, config.cliScannerVersion)
+    const scannerPath = await this.downloader.download(config.cliScannerVersion, config.cliScannerURL);
 
     const scanFlags = this.composeFlags(config);
     let { envvars, flags } = scanFlags;
@@ -55,7 +62,7 @@ export class SysdigCliScanner implements IScanner {
     }
 
     let start = performance.now();
-    const command = `./${cliScannerName}`;
+    const command = scannerPath;
     const loggableFlags = flags.map(flag => flag.includes(' ') ? `"${flag}"` : flag);
     core.info("Executing: " + command + " " + loggableFlags.join(' '));
     let retCode = await exec.exec(command, flags, scanOptions);
@@ -73,27 +80,7 @@ export class SysdigCliScanner implements IScanner {
     }
   }
 
-  private async pullScanner(scannerURL: string, version: string | undefined): Promise<number> {
-    let url = scannerURL;
-    if (version && url === cliScannerURL) { // cliScannerURL is the default
-      url = scannerURLForVersion(version);
-    }
 
-    let start = performance.now();
-    core.info('Pulling cli-scanner from: ' + url);
-    let cmd = `wget ${url} -O ./${cliScannerName}`;
-    let retCode = await exec.exec(cmd, undefined, { silent: true });
-
-    if (retCode == 0) {
-      cmd = `chmod u+x ./${cliScannerName}`;
-      await exec.exec(cmd, undefined, { silent: true });
-    } else {
-      core.error(`Falied to pull scanner using "${url}"`)
-    }
-
-    core.info("Scanner pull took " + Math.round(performance.now() - start) + " milliseconds.");
-    return retCode;
-  }
 
   private composeFlags(config: ScanConfig): ComposeFlags {
     let envvars: { [key: string]: string } = {}

@@ -5,13 +5,25 @@ import { SysdigCliScanner } from './src/infrastructure/sysdig/SysdigCliScanner';
 import { SarifReportPresenter } from './src/infrastructure/github/SarifReportPresenter';
 import { SummaryReportPresenter } from './src/infrastructure/github/SummaryReportPresenter';
 import { IReportPresenter } from './src/application/ports/IReportPresenter';
+import {
+  SysdigCliScannerDownloader,
+  withSha256Sum,
+  SysdigCliScannerDownloaderOption
+} from './src/infrastructure/sysdig/SysdigCliScannerDownloader';
 
 async function run(): Promise<void> {
   try {
     const inputProvider = new GitHubActionsInputProvider();
     const config = inputProvider.getInputs();
 
-    const scanner = new SysdigCliScanner();
+    const downloaderOptions: SysdigCliScannerDownloaderOption[] = [];
+    if (config.cliScannerSha256sum) {
+      downloaderOptions.push(withSha256Sum(config.cliScannerSha256sum));
+    }
+
+    const downloader = new SysdigCliScannerDownloader(...downloaderOptions);
+
+    const scanner = new SysdigCliScanner(downloader);
 
     const presenters: IReportPresenter[] = [
       new SarifReportPresenter(),
@@ -21,8 +33,9 @@ async function run(): Promise<void> {
       presenters.push(new SummaryReportPresenter());
     }
 
-  const useCase = new RunScanUseCase(scanner, presenters, inputProvider);
-  await useCase.execute();
+    const useCase = new RunScanUseCase(scanner, presenters, inputProvider);
+    await useCase.execute();
+
 } catch (error) {
     if (error instanceof Error) {
       core.setFailed(error.message);

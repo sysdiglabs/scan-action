@@ -55,12 +55,18 @@ const GitHubActionsInputProvider_1 = __nccwpck_require__(6315);
 const SysdigCliScanner_1 = __nccwpck_require__(3993);
 const SarifReportPresenter_1 = __nccwpck_require__(5934);
 const SummaryReportPresenter_1 = __nccwpck_require__(9495);
+const SysdigCliScannerDownloader_1 = __nccwpck_require__(1216);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const inputProvider = new GitHubActionsInputProvider_1.GitHubActionsInputProvider();
             const config = inputProvider.getInputs();
-            const scanner = new SysdigCliScanner_1.SysdigCliScanner();
+            const downloaderOptions = [];
+            if (config.cliScannerSha256sum) {
+                downloaderOptions.push((0, SysdigCliScannerDownloader_1.withSha256Sum)(config.cliScannerSha256sum));
+            }
+            const downloader = new SysdigCliScannerDownloader_1.SysdigCliScannerDownloader(...downloaderOptions);
+            const scanner = new SysdigCliScanner_1.SysdigCliScanner(downloader);
             const presenters = [
                 new SarifReportPresenter_1.SarifReportPresenter(),
             ];
@@ -81,6 +87,24 @@ function run() {
     });
 }
 run();
+
+
+/***/ }),
+
+/***/ 1114:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ChecksumVerificationError = void 0;
+class ChecksumVerificationError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = 'ChecksumVerificationError';
+    }
+}
+exports.ChecksumVerificationError = ChecksumVerificationError;
 
 
 /***/ }),
@@ -182,6 +206,7 @@ exports.RunScanUseCase = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const ScannerDTOs_1 = __nccwpck_require__(1699);
 const scanresult_1 = __nccwpck_require__(9056);
+const ChecksumVerificationError_1 = __nccwpck_require__(1114);
 class RunScanUseCase {
     constructor(scanner, reportPresenters, inputProvider) {
         this.scanner = scanner;
@@ -223,7 +248,10 @@ class RunScanUseCase {
             }
             catch (error) {
                 const errorMessage = `Unexpected error: ${error instanceof Error ? error.stack : String(error)}`;
-                if (config.stopOnProcessingError) {
+                if (error instanceof ChecksumVerificationError_1.ChecksumVerificationError) {
+                    core.setFailed(errorMessage);
+                }
+                else if (config.stopOnProcessingError) {
                     core.setFailed(errorMessage);
                 }
                 else {
@@ -1380,6 +1408,7 @@ class ActionInputs {
         const params = {
             cliScannerURL: core.getInput('cli-scanner-url') || SysdigCliScannerConstants_1.cliScannerURL,
             cliScannerVersion: core.getInput('cli-scanner-version') || undefined,
+            cliScannerSha256sum: core.getInput('cli-scanner-sha256sum') || undefined,
             registryUser: core.getInput('registry-user'),
             registryPassword: core.getInput('registry-password'),
             stopOnFailedPolicyEval: core.getInput('stop-on-failed-policy-eval') == 'true',
@@ -2236,9 +2265,12 @@ const ReportParsingError_1 = __nccwpck_require__(93);
 const JsonScanResultV1ToScanResultAdapter_1 = __nccwpck_require__(9381);
 const performance = (__nccwpck_require__(4074).performance);
 class SysdigCliScanner {
+    constructor(downloader) {
+        this.downloader = downloader;
+    }
     executeScan(config) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.pullScanner(config.cliScannerURL, config.cliScannerVersion);
+            const scannerPath = yield this.downloader.download(config.cliScannerVersion, config.cliScannerURL);
             const scanFlags = this.composeFlags(config);
             let { envvars, flags } = scanFlags;
             let execOutput = '';
@@ -2269,7 +2301,7 @@ class SysdigCliScanner {
                 }
             };
             let start = performance.now();
-            const command = `./${SysdigCliScannerConstants_1.cliScannerName}`;
+            const command = scannerPath;
             const loggableFlags = flags.map(flag => flag.includes(' ') ? `"${flag}"` : flag);
             core.info("Executing: " + command + " " + loggableFlags.join(' '));
             let retCode = yield exec.exec(command, flags, scanOptions);
@@ -2284,27 +2316,6 @@ class SysdigCliScanner {
             catch (e) {
                 throw new ReportParsingError_1.ReportParsingError(execOutput);
             }
-        });
-    }
-    pullScanner(scannerURL, version) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let url = scannerURL;
-            if (version && url === SysdigCliScannerConstants_1.cliScannerURL) { // cliScannerURL is the default
-                url = (0, SysdigCliScannerConstants_1.scannerURLForVersion)(version);
-            }
-            let start = performance.now();
-            core.info('Pulling cli-scanner from: ' + url);
-            let cmd = `wget ${url} -O ./${SysdigCliScannerConstants_1.cliScannerName}`;
-            let retCode = yield exec.exec(cmd, undefined, { silent: true });
-            if (retCode == 0) {
-                cmd = `chmod u+x ./${SysdigCliScannerConstants_1.cliScannerName}`;
-                yield exec.exec(cmd, undefined, { silent: true });
-            }
-            else {
-                core.error(`Falied to pull scanner using "${url}"`);
-            }
-            core.info("Scanner pull took " + Math.round(performance.now() - start) + " milliseconds.");
-            return retCode;
         });
     }
     composeFlags(config) {
@@ -2411,6 +2422,139 @@ function getRunOS() {
     }
     return os_name;
 }
+
+
+/***/ }),
+
+/***/ 1216:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SysdigCliScannerDownloader = void 0;
+exports.withSha256Sum = withSha256Sum;
+const core = __importStar(__nccwpck_require__(2186));
+const exec = __importStar(__nccwpck_require__(1514));
+const crypto = __importStar(__nccwpck_require__(6113));
+const fs = __importStar(__nccwpck_require__(7147));
+const ChecksumVerificationError_1 = __nccwpck_require__(1114);
+const SysdigCliScannerConstants_1 = __nccwpck_require__(1500);
+function withSha256Sum(sha256sum) {
+    return (config) => {
+        config.sha256sum = sha256sum;
+    };
+}
+class SysdigCliScannerDownloader {
+    constructor(...options) {
+        const config = {};
+        options.forEach(option => option(config));
+        this.sha256sum = config.sha256sum;
+    }
+    download(version, customURL) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let url = customURL;
+            if (!url) {
+                url = SysdigCliScannerConstants_1.cliScannerURL;
+            }
+            if (version && url === SysdigCliScannerConstants_1.cliScannerURL) { // cliScannerURL is the default
+                url = (0, SysdigCliScannerConstants_1.scannerURLForVersion)(version);
+            }
+            if (!url) {
+                throw Error("download url is empty");
+            }
+            const destination = `./${SysdigCliScannerConstants_1.cliScannerName}`;
+            core.info(`Pulling cli-scanner from: ${url}`);
+            yield exec.exec(`wget ${url} -O ${destination}`, undefined, { silent: true });
+            let expectedSum = yield this.expectedSumFor(url);
+            if (!expectedSum) {
+                throw Error("unable to verify the sum of the scanner, the expected sum is empty");
+            }
+            yield this.verifyChecksum(destination, expectedSum);
+            return destination;
+        });
+    }
+    expectedSumFor(url) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let expectedSum = this.sha256sum;
+            if (expectedSum) {
+                core.info(`Manually provided checksum: ${expectedSum}`);
+                return expectedSum;
+            }
+            const checksumUrl = `${url}.sha256`;
+            core.info(`Downloading checksum from: ${checksumUrl}`);
+            let checksumOutput = '';
+            yield exec.exec(`wget ${checksumUrl} -O -`, undefined, {
+                silent: true,
+                listeners: {
+                    stdout: (data) => {
+                        checksumOutput += data.toString();
+                    },
+                },
+            });
+            expectedSum = checksumOutput.split(' ')[0].trim();
+            core.info(`Checksum downloaded: ${expectedSum}`);
+            return expectedSum;
+        });
+    }
+    verifyChecksum(filePath, expectedSha256sum) {
+        return __awaiter(this, void 0, void 0, function* () {
+            core.info(`Verifying checksum for ${filePath}`);
+            const fileBuffer = fs.readFileSync(filePath);
+            const hash = crypto.createHash('sha256');
+            hash.update(fileBuffer);
+            const calculatedSum = hash.digest('hex');
+            if (calculatedSum !== expectedSha256sum) {
+                throw new ChecksumVerificationError_1.ChecksumVerificationError(`Checksum verification failed. Expected ${expectedSha256sum} but got ${calculatedSum}`);
+            }
+            core.info('Checksum verified successfully.');
+            yield exec.exec(`chmod u+x ${filePath}`, undefined, { silent: true });
+        });
+    }
+}
+exports.SysdigCliScannerDownloader = SysdigCliScannerDownloader;
 
 
 /***/ }),
