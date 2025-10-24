@@ -7,6 +7,7 @@ import { FilterOptions } from '../../domain/services/filtering';
 import { Severity } from '../../domain/scanresult';
 import { ScanConfig } from '../ports/ScanConfig';
 import { ScanExecutionError } from '../errors/ScanExecutionError';
+import { ChecksumVerificationError } from '../errors/ChecksumVerificationError';
 
 export class RunScanUseCase {
   constructor(
@@ -53,7 +54,9 @@ export class RunScanUseCase {
 
     } catch (error) {
       const errorMessage = `Unexpected error: ${error instanceof Error ? error.stack : String(error)}`;
-      if (config!.stopOnProcessingError) {
+      if (error instanceof ChecksumVerificationError) {
+        core.setFailed(errorMessage);
+      } else if (config!.stopOnProcessingError) {
         core.setFailed(errorMessage);
       } else {
         core.error(errorMessage);

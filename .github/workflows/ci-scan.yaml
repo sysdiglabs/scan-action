@@ -180,3 +180,55 @@ jobs:
             echo "Scan failed but it should have succeeded."
             exit 1
           fi
+
+  scan-with-correct-checksum:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Scan with correct checksum
+        id: scan
+        uses: ./
+        with:
+          cli-scanner-version: '1.22.6'
+          cli-scanner-sha256sum: '68ec2fc48c6ad61eba60a2469c5548153700fedab40ac79e34b7baa5f2e86e42'
+          image-tag: sysdiglabs/dummy-vuln-app:latest
+          sysdig-secure-token: ${{ secrets.KUBELAB_SECURE_API_TOKEN }}
+          stop-on-failed-policy-eval: false
+
+      - name: Check that the scan has succeeded
+        run: |
+          if [ "${{ steps.scan.outcome }}" == "success" ]; then
+            echo "Scan succeeded as expected."
+          else
+            echo "Scan failed but it should have succeeded."
+            exit 1
+          fi
+
+  scan-with-incorrect-checksum:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Scan with incorrect checksum
+        id: scan
+        uses: ./
+        continue-on-error: true
+        with:
+          cli-scanner-version: '1.22.6'
+          cli-scanner-sha256sum: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+          image-tag: sysdiglabs/dummy-vuln-app:latest
+          sysdig-secure-token: ${{ secrets.KUBELAB_SECURE_API_TOKEN }}
+
+      - name: Check that the scan has failed
+        run: |
+          if [ "${{ steps.scan.outcome }}" == "failure" ]; then
+            echo "Scan failed as expected."
+          else
+            echo "Scan succeeded but it should have failed due to incorrect checksum."
+            exit 1
+          fi

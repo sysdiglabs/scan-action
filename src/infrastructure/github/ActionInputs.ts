@@ -8,6 +8,7 @@ export const defaultSecureEndpoint = "https://secure.sysdig.com/"
 interface ActionInputParameters {
   cliScannerURL: string;
   cliScannerVersion?: string;
+  cliScannerSha256sum?: string;
   registryUser: string;
   registryPassword: string;
   stopOnFailedPolicyEval: boolean;
@@ -61,6 +62,7 @@ export class ActionInputs {
     const params: ActionInputParameters = {
       cliScannerURL: core.getInput('cli-scanner-url') || cliScannerURL,
       cliScannerVersion: core.getInput('cli-scanner-version') || undefined,
+      cliScannerSha256sum: core.getInput('cli-scanner-sha256sum') || undefined,
       registryUser: core.getInput('registry-user'),
       registryPassword: core.getInput('registry-password'),
       stopOnFailedPolicyEval: core.getInput('stop-on-failed-policy-eval') == 'true',

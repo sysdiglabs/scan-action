@@ -4,6 +4,7 @@ import { Severity } from '../../domain/scanresult';
 export interface ScanConfig {
   cliScannerURL: string;
   cliScannerVersion?: string;
+  cliScannerSha256sum?: string;
   stopOnFailedPolicyEval: boolean;
   stopOnProcessingError: boolean;
   standalone: boolean;
