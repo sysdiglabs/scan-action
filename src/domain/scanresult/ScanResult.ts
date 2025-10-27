@@ -34,6 +34,7 @@ export class ScanResult {
   private readonly policies: Map<string, Policy> = new Map();
   private readonly policyBundles: Map<string, PolicyBundle> = new Map();
   private readonly acceptedRisks: Map<string, AcceptedRisk> = new Map();
+  private readonly evaluationResult: EvaluationResult;
 
   constructor(
     public readonly scanType: ScanType,
@@ -44,7 +45,8 @@ export class ScanResult {
     sizeInBytes: bigint,
     architecture: Architecture,
     labels: Record<string, string>,
-    createdAt: Date
+    createdAt: Date,
+    evaluationResult: EvaluationResult
   ) {
     this.metadata = new Metadata(
       pullString,
@@ -56,6 +58,7 @@ export class ScanResult {
       labels,
       createdAt
     );
+    this.evaluationResult = evaluationResult;
   }
 
   addLayer(digest: string, index: number, size: bigint | null, command: string): Layer {
@@ -196,11 +199,6 @@ export class ScanResult {
   }
 
   getEvaluationResult(): EvaluationResult {
-    for (const policy of this.getPolicies()) {
-      if (policy.getEvaluationResult().isFailed()) {
-        return EvaluationResult.Failed;
-      }
-    }
-    return EvaluationResult.Passed;
+    return this.evaluationResult;
   }
 }

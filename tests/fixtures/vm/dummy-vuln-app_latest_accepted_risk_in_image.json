@@ -1,0 +1,4801 @@
+{
+  "info": {
+    "scanTime": "2025-10-27T09:09:07.847678363+01:00",
+    "scanDuration": "7.670060769s",
+    "resultUrl": "https://us2.app.sysdig.com/secure/#/vulnerabilities/results/18724ab53a1afb03ba696801d65fd660/overview",
+    "resultId": "18724ab53a1afb03ba696801d65fd660"
+  },
+  "scanner": {
+    "name": "sysdig-cli-scanner",
+    "version": "1.23.0"
+  },
+  "result": {
+    "assetType": "containerImage",
+    "baseImages": {},
+    "layers": {
+      "10ce8a2fbd029291": {
+        "command": "/bin/sh -c pip install flask",
+        "digest": "sha256:980978806ac1da1b1224c0b885a8f6aa8255fbb0889878b1f0c927754e36f1e0",
+        "index": 3,
+        "size": 4902912
+      },
+      "158a37cf6e488199": {
+        "command": "/bin/sh -c #(nop)  EXPOSE 22 5000",
+        "digest": "",
+        "index": 5,
+        "size": null
+      },
+      "2af06c143a086817": {
+        "command": "/bin/sh -c #(nop)  ENTRYPOINT [\"python\" \"./app.py\"]",
+        "digest": "",
+        "index": 6,
+        "size": null
+      },
+      "31a0a1d45c23ce34": {
+        "command": "/bin/sh -c #(nop) COPY file:9cbfaa7e6b333851016009ed95a6f73cd0f4f9cb4743330409bd1ee73d0f8e31 in /app.py ",
+        "digest": "sha256:76662c1ec2a365f8cb3bec9f27d811f58234044aac44d81c310bf76eb58baa6d",
+        "index": 4,
+        "size": 2048
+      },
+      "4be272535c3a362a": {
+        "command": "/bin/sh -c #(nop)  CMD [\"bash\"]",
+        "digest": "",
+        "index": 1,
+        "size": null
+      },
+      "969a6ecde46816e5": {
+        "command": "/bin/sh -c #(nop) ADD file:a28d8a949b7577768d87fcbac346797fc5f7bad0539625339edcd09a32d6bf77 in / ",
+        "digest": "sha256:4e38024e7e09292105545a625272c47b49dbd1db721040f2e85662e0a41ad587",
+        "index": 0,
+        "size": 105593344
+      },
+      "dc0dd833a677c244": {
+        "command": "/bin/sh -c apt update \u0026\u0026 apt install python-pip python-numpy openssh-server -y \u0026\u0026 rm -rf /var/lib/apt",
+        "digest": "sha256:4b929c45d08bf5d05ab82c6028d3068bcedffd928587bdaa36c148959b1e3e22",
+        "index": 2,
+        "size": 441342464
+      }
+    },
+    "metadata": {
+      "architecture": "amd64",
+      "author": "",
+      "baseOs": "debian 9.13",
+      "createdAt": "2020-08-05T08:56:35.707397928Z",
+      "digest": "sha256:bc86e8ba5741ab71ce50f13fbf89a1f27dc4e1d3b0c3345cee8e3238bc30022b",
+      "imageId": "sha256:b670c067178c876d17363baec279d483ae07384351d1a0be7646230442471ac6",
+      "os": "linux",
+      "pullString": "sysdiglabs/dummy-vuln-app:latest",
+      "size": 551840768
+    },
+    "packages": {
+      "0097a23a-571a-4263-b3f0-426e4dd2cb66": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL",
+        "name": "cpp",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "4:6.3.0-4",
+        "vulnerabilitiesRefs": null
+      },
+      "00a745bc-4bb2-4fe1-95b7-bf626bcd3cd7": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libncurses5",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.0+20161126-1+deb9u2",
+        "vulnerabilitiesRefs": null
+      },
+      "016184b8-5546-4180-8a6e-b03d6cea5034": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2+",
+        "name": "libgirepository-1.0-1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.50.0-1+b1",
+        "vulnerabilitiesRefs": null
+      },
+      "01dfdd9b-44dc-4039-b15f-72e35f338315": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libpython2.7-stdlib",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.7.13-2+deb9u3",
+        "vulnerabilitiesRefs": null
+      },
+      "0210c3de-130c-4146-b212-cfb2fd19e644": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libubsan0",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.3.0-18+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "03368898-d365-4c02-a29d-97b847663843": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2+ or AFL-2.1",
+        "name": "libdbus-glib-1-2",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "0.108-2",
+        "vulnerabilitiesRefs": null
+      },
+      "0398f434-b30e-4d8d-a848-a932cca3802d": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-3+",
+        "name": "libidn11",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.33-1+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "0510c741-1174-48b7-8389-e7e272a2946d": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "10ce8a2fbd029291",
+        "license": "BSD-3-Clause",
+        "name": "Jinja2",
+        "path": "/usr/local/lib/python2.7/dist-packages/Jinja2-2.11.2.dist-info/METADATA",
+        "riskAcceptRefs": null,
+        "suggestedFix": "3.1.5",
+        "type": "python",
+        "version": "2.11.2",
+        "vulnerabilitiesRefs": [
+          "091ce7d2-8db1-4b28-a62f-7eac100033bd",
+          "712bd802-8dd4-4bf5-89e6-32edc367e63f",
+          "f8c629f6-ccac-499d-9126-9f32c26e40c3",
+          "69853bc3-a6c9-4049-8eb9-938b522cbf62",
+          "c1d229bf-f2e0-4f94-b39b-54308afcda3a"
+        ]
+      },
+      "0534b2f2-c37c-4093-93e5-4cf0eb52e06b": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "python-all",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.7.13-2",
+        "vulnerabilitiesRefs": null
+      },
+      "062cd55b-3c20-4a04-9e15-7f1e0d797e40": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-2+",
+        "name": "libsmartcols1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.29.2-1+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "06dd5b89-eff9-49c2-aa06-f6514966a116": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "",
+        "name": "libgcrypt20",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.7.6-2+deb9u3",
+        "vulnerabilitiesRefs": null
+      },
+      "076cedc3-b8e0-4b8d-9a08-5d3ee501775a": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "LGPL-2.1",
+        "name": "libc-dev-bin",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.24-11+deb9u4",
+        "vulnerabilitiesRefs": null
+      },
+      "07929b43-e840-4233-8850-2402ea82ab99": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libcilkrts5",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.3.0-18+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "08c59433-e5b7-4477-a5af-c4577c1179c5": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2",
+        "name": "linux-libc-dev",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "4.9.228-1",
+        "vulnerabilitiesRefs": null
+      },
+      "092a9483-7352-4244-b42d-667cd1d06fae": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-3+",
+        "name": "make",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "4.1-9.1",
+        "vulnerabilitiesRefs": null
+      },
+      "0ba6c16a-9928-4bbe-8e0f-1a3fe9cb327a": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2+",
+        "name": "systemd-shim",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "10-3",
+        "vulnerabilitiesRefs": null
+      },
+      "0bdbee94-bc81-4e4e-8bb7-3887f6660b14": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL",
+        "name": "debianutils",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "4.8.1.1",
+        "vulnerabilitiesRefs": null
+      },
+      "0c8ac2f1-6638-4501-87c7-730628e8b967": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-2",
+        "name": "login",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1:4.4-4.1",
+        "vulnerabilitiesRefs": null
+      },
+      "0db1292d-532c-43e3-a813-f002863a1d57": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-3",
+        "name": "coreutils",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "8.26-3",
+        "vulnerabilitiesRefs": null
+      },
+      "0e26191c-d438-4f5a-8950-23c1378b166d": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libxcb1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.12-1",
+        "vulnerabilitiesRefs": null
+      },
+      "0ef951b8-718d-4a5e-be0b-4343d8805651": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "",
+        "name": "libglib2.0-0",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.50.3-2+deb9u2",
+        "vulnerabilitiesRefs": null
+      },
+      "138157d0-c8ad-4474-9f7f-eaff2d13c248": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-2",
+        "name": "iproute2",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "4.9.0-1+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "142e3c8b-e539-4d91-a4a7-6eb2759e8a43": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libx11-6",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2:1.6.4-3+deb9u2",
+        "vulnerabilitiesRefs": null
+      },
+      "14be0cb6-15f0-4e1a-be67-11ba887f800b": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "g++",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "4:6.3.0-4",
+        "vulnerabilitiesRefs": null
+      },
+      "15968684-38cf-4b6a-8b30-9e38e7e01a03": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "",
+        "name": "hostname",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "3.18+b1",
+        "vulnerabilitiesRefs": null
+      },
+      "15ca607e-2654-4b0b-ab5f-788c5e82ed07": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libgomp1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.3.0-18+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "18fefcbd-a860-47d3-a533-30333037d12c": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "PSF-2",
+        "name": "python-ipaddress",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.0.17-1",
+        "vulnerabilitiesRefs": null
+      },
+      "190dfba4-72e0-442b-aca5-b57c959d7714": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "LGPL",
+        "name": "libsemanage1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.6-2",
+        "vulnerabilitiesRefs": null
+      },
+      "1929fc76-a72b-4cfd-a84f-0dd88195be94": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "public-domain",
+        "name": "python-crypto",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.6.1-7",
+        "vulnerabilitiesRefs": null
+      },
+      "194629b2-bee1-4447-bc45-a6e28292713a": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-3+",
+        "name": "gnupg-agent",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.1.18-8~deb9u4",
+        "vulnerabilitiesRefs": null
+      },
+      "1a927202-9a3e-4656-8056-34dd17b0f664": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "perl",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "5.24.1-3+deb9u7",
+        "vulnerabilitiesRefs": null
+      },
+      "1b230919-c479-4b05-9a3a-5cb7134c3f0b": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libwrap0",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "7.6.q-26",
+        "vulnerabilitiesRefs": null
+      },
+      "1b5ccc2f-be8d-451a-b387-4d2c87820cf9": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "UNKNOWN",
+        "name": "setuptools",
+        "path": "/usr/lib/python2.7/dist-packages/setuptools-33.1.1.egg-info/PKG-INFO",
+        "riskAcceptRefs": null,
+        "suggestedFix": "70.0.0",
+        "type": "python",
+        "version": "33.1.1",
+        "vulnerabilitiesRefs": [
+          "30622fde-eec5-4bda-8513-fb3c67c439c9",
+          "2dfcfb41-de69-4bbd-a5d0-b063dd380b49",
+          "d3161d7e-50c3-4e21-82f4-e0cfb76182af"
+        ]
+      },
+      "1bf2cc86-f84e-4f26-ace4-4b7117f8f1af": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "name": "libgcc1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1:6.3.0-18+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "1ce6429c-12b4-4824-83f9-58050aa08a69": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libssl1.0.2",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.0.2u-1~deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "1dd38e7d-b7bb-4489-9cdd-6f718c8649b0": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-2",
+        "name": "e2fslibs",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.43.4-2+deb9u2",
+        "vulnerabilitiesRefs": null
+      },
+      "1e8464bc-beb4-4e05-9a07-272a9c102372": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "LGPL-2",
+        "name": "python-xdg",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "0.25-4",
+        "vulnerabilitiesRefs": null
+      },
+      "1ebd632a-262b-480e-9777-4538f4625104": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2+",
+        "name": "pinentry-curses",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.0.0-2",
+        "vulnerabilitiesRefs": null
+      },
+      "200df6a1-138b-4974-a1a1-ec7bedc044c9": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "name": "tzdata",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2020a-0+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "20107423-7c90-4c82-aaba-ef4868c9c17c": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2+",
+        "name": "gir1.2-glib-2.0",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.50.0-1+b1",
+        "vulnerabilitiesRefs": null
+      },
+      "20610e7e-5ada-4472-8d87-1fbf895eafdd": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "MIT",
+        "name": "python-dbus",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.2.4-1+b1",
+        "vulnerabilitiesRefs": null
+      },
+      "21d490b9-80fa-43c1-bcfd-fa391f70f79a": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPLv2+",
+        "name": "apt",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.4.10",
+        "vulnerabilitiesRefs": null
+      },
+      "23e5ea72-e723-40e7-8acb-d6a787377971": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "UNKNOWN",
+        "name": "keyrings.alt",
+        "path": "/usr/lib/python2.7/dist-packages/keyrings.alt-1.3.egg-info/PKG-INFO",
+        "riskAcceptRefs": null,
+        "type": "python",
+        "version": "1.3",
+        "vulnerabilitiesRefs": null
+      },
+      "23e8a622-e96a-4830-a13b-caf7bc36eb6e": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL",
+        "name": "libpam-modules",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.1.8-3.6",
+        "vulnerabilitiesRefs": null
+      },
+      "24850aa1-2b50-4e5d-8aec-fbeb328d3f4c": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libexpat1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.2.0-2+deb9u3",
+        "vulnerabilitiesRefs": null
+      },
+      "248ed818-4f21-4d7b-aac3-fc40be990edf": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "Expat",
+        "name": "python-keyrings.alt",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.3-1",
+        "vulnerabilitiesRefs": null
+      },
+      "24d3082e-29e0-4e60-a8ed-8917a7ff7660": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "LGPL-3",
+        "name": "libgmp10",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2:6.1.2+dfsg-1",
+        "vulnerabilitiesRefs": null
+      },
+      "26109933-b5f5-4307-b723-274faae3687e": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL",
+        "name": "debian-archive-keyring",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2017.5+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "27adbb8d-3843-40a7-bc19-1ea42822067d": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "BSD",
+        "name": "pyasn1",
+        "path": "/usr/lib/python2.7/dist-packages/pyasn1-0.1.9.egg-info/PKG-INFO",
+        "riskAcceptRefs": null,
+        "type": "python",
+        "version": "0.1.9",
+        "vulnerabilitiesRefs": null
+      },
+      "28d8d393-815f-4e32-9d02-6d6c2b0916b6": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "10ce8a2fbd029291",
+        "license": "BSD-3-Clause",
+        "name": "click",
+        "path": "/usr/local/lib/python2.7/dist-packages/click-7.1.2.dist-info/METADATA",
+        "riskAcceptRefs": null,
+        "type": "python",
+        "version": "7.1.2",
+        "vulnerabilitiesRefs": null
+      },
+      "28e6daa9-2f04-4a69-ae5e-2e804fbe250b": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "",
+        "name": "python-numpy",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1:1.12.1-3",
+        "vulnerabilitiesRefs": null
+      },
+      "2945f948-c3b1-4897-a071-770058c8f4d0": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2",
+        "name": "libcgmanager0",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "0.41-2",
+        "vulnerabilitiesRefs": null
+      },
+      "2b65e97e-3586-4052-bf4b-8c8b0c227dc7": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "ad-hoc",
+        "name": "mime-support",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "3.60",
+        "vulnerabilitiesRefs": null
+      },
+      "2d689cfa-0216-4223-8786-a83a94ec427a": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-2",
+        "name": "passwd",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1:4.4-4.1",
+        "vulnerabilitiesRefs": null
+      },
+      "2de58a72-3576-4960-b079-6f607ec8f07e": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-2+",
+        "name": "mount",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.29.2-1+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "2ebc548e-97fe-469c-a62c-be1406f378fb": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "BSD-3-clause",
+        "name": "python-idna",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.2-1",
+        "vulnerabilitiesRefs": null
+      },
+      "2eed16b9-2952-401d-b273-645df9665442": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "Artistic or GPL-1+",
+        "name": "libfile-fcntllock-perl",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "0.22-3+b2",
+        "vulnerabilitiesRefs": null
+      },
+      "2f90fcf3-2e27-4ea4-af5f-31bb15b72d30": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "BSD-4-clause",
+        "name": "libsasl2-modules",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.1.27~101-g0780600+dfsg-3+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "2fb2d5ee-c3d8-47fd-ab2b-d35c76ab3c27": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-1+ or Artistic",
+        "name": "perl-modules-5.24",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "5.24.1-3+deb9u7",
+        "vulnerabilitiesRefs": null
+      },
+      "31495b2b-176e-4328-b720-5f9e4e274ac7": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "name": "zlib1g",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1:1.2.8.dfsg-5",
+        "vulnerabilitiesRefs": null
+      },
+      "315c4e65-3b48-45cd-87b6-50df3c62eee8": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2+",
+        "name": "libapparmor1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.11.0-3+deb9u2",
+        "vulnerabilitiesRefs": null
+      },
+      "332e3edb-cbde-44e0-b128-ea4d0449bfa9": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "",
+        "name": "python-enum34",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.1.6-1",
+        "vulnerabilitiesRefs": null
+      },
+      "33b33b80-bb2c-4343-a104-69eba587b97f": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2+",
+        "name": "libcryptsetup4",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2:1.7.3-4",
+        "vulnerabilitiesRefs": null
+      },
+      "36cc3383-23cc-46c7-99eb-f538001f7db0": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "name": "libdb5.3",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "5.3.28-12+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "37c62474-8cf5-49f6-853b-8fb10e8223ea": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "xauth",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1:1.0.9-1+b2",
+        "vulnerabilitiesRefs": null
+      },
+      "37d145fd-a68e-49ed-8be2-0f0e0ad5a7d7": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-3",
+        "name": "libfakeroot",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.21-3.1",
+        "vulnerabilitiesRefs": null
+      },
+      "37d94316-4e85-47a5-84f1-69d6f743c354": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "LGPL",
+        "name": "libsepol1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.6-2",
+        "vulnerabilitiesRefs": null
+      },
+      "3811abc4-c993-43e7-a184-c5c37f21d2a4": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "MIT",
+        "name": "six",
+        "path": "/usr/lib/python2.7/dist-packages/six-1.10.0.egg-info/PKG-INFO",
+        "riskAcceptRefs": null,
+        "type": "python",
+        "version": "1.10.0",
+        "vulnerabilitiesRefs": null
+      },
+      "39500599-38a6-4d5a-9bd5-13a3f7d80958": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2",
+        "name": "libkrb5-3",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.15-1+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "3a5631d1-bef0-4256-a517-c216c0821599": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "BSD-4-clause",
+        "name": "libsasl2-2",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.1.27~101-g0780600+dfsg-3+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "3bbd5107-f9dc-4c6f-b0e9-e966e4039fa1": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-3+",
+        "name": "gpgv",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.1.18-8~deb9u4",
+        "vulnerabilitiesRefs": null
+      },
+      "3d1bb960-133c-49f1-814b-ab698bf2bf44": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "name": "ncurses-bin",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.0+20161126-1+deb9u2",
+        "vulnerabilitiesRefs": null
+      },
+      "402ce232-d4da-41bb-aa5b-070906a70ee2": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "name": "libdebconfclient0",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "0.227",
+        "vulnerabilitiesRefs": null
+      },
+      "40d6f524-f6c0-46bc-89af-2ec044ead460": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "",
+        "name": "xdg-user-dirs",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "0.15-2+b1",
+        "vulnerabilitiesRefs": null
+      },
+      "432dd532-6306-4558-8782-6d59f56c23c5": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-2",
+        "name": "libbz2-1.0",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.0.6-8.1",
+        "vulnerabilitiesRefs": null
+      },
+      "437b0884-5b8e-48b7-9126-7f8d8ee42324": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "LGPL-2+ or BSD-2-clause or MIT",
+        "name": "libustr-1.0-1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.0.4-6",
+        "vulnerabilitiesRefs": null
+      },
+      "43d9acc8-ce23-4ed0-bef8-dce621505ac7": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "",
+        "name": "libreadline7",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "7.0-3",
+        "vulnerabilitiesRefs": null
+      },
+      "4797532a-4afe-4672-b53e-aac25d0ad66a": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL",
+        "name": "libpam-modules-bin",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.1.8-3.6",
+        "vulnerabilitiesRefs": null
+      },
+      "480cedf4-ec4b-4525-bc1c-050b653d9470": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "BSD-3-clause",
+        "name": "init-system-helpers",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.48",
+        "vulnerabilitiesRefs": null
+      },
+      "484e5ed8-a8f0-408e-88f8-718ac9f7f71c": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-2.1+",
+        "name": "libgpg-error0",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.26-2",
+        "vulnerabilitiesRefs": null
+      },
+      "48a50514-e8de-401e-bd34-19bd5cf72563": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-2+",
+        "name": "bsdutils",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1:2.29.2-1+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "4bb9af22-85c3-475e-bc07-8f5ad319f2cf": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "BSD-2-Clause-alike",
+        "name": "libmagic1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1:5.30-1+deb9u3",
+        "vulnerabilitiesRefs": null
+      },
+      "4ce1ed3f-334c-490d-a3eb-86b5439fe2ab": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "Artistic or GPL-1+",
+        "name": "rename",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "0.20-4",
+        "vulnerabilitiesRefs": null
+      },
+      "4d0f287c-c60c-4203-8a5c-94255a762ad2": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "python-dev",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.7.13-2",
+        "vulnerabilitiesRefs": null
+      },
+      "4d38e00a-92f3-441c-98cb-d24840a4d2bf": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "name": "perl-base",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "5.24.1-3+deb9u7",
+        "vulnerabilitiesRefs": null
+      },
+      "4d9dbc1f-0138-471b-81e9-6b54931bccfd": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "openssh-server",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1:7.4p1-10+deb9u7",
+        "vulnerabilitiesRefs": null
+      },
+      "4efdf328-4a78-4c50-b7da-ce87aee727aa": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "BSD-2-clause",
+        "name": "debconf",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.5.61",
+        "vulnerabilitiesRefs": null
+      },
+      "5047b7d4-bf05-4ff8-8c2d-81b5c4bfdede": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libssl1.1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.1.0l-1~deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "5174b191-0613-4bdd-b935-d9f72d9047db": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-2",
+        "name": "mawk",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.3.3-17+b3",
+        "vulnerabilitiesRefs": null
+      },
+      "52133a5e-29a4-4a92-9741-7dd665d939dd": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "public-domain",
+        "name": "libsqlite3-0",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "3.16.2-5+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "5274e891-95f2-4245-999c-ed476d4b7344": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2",
+        "name": "cgmanager",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "0.41-2",
+        "vulnerabilitiesRefs": null
+      },
+      "55be8e05-218f-47f7-9128-4b136aac8e68": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2+",
+        "name": "sgml-base",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.29",
+        "vulnerabilitiesRefs": null
+      },
+      "56ec56f2-6a8d-407f-b1f3-e3223f6d16ef": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2",
+        "name": "ucf",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "3.0036",
+        "vulnerabilitiesRefs": null
+      },
+      "572b7a5f-b334-4ce7-a529-eae1a1d49cf3": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "PD",
+        "name": "xz-utils",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "5.2.2-1.2+b1",
+        "vulnerabilitiesRefs": null
+      },
+      "57de3ee8-91f6-42a0-87f8-f92d4e22b6f6": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "",
+        "name": "libelf1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "0.168-1",
+        "vulnerabilitiesRefs": null
+      },
+      "5898ae02-d3ae-42d6-aa7c-1916c907d7c1": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "LGPL-2.1+",
+        "name": "libnettle6",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "3.3-1+b2",
+        "vulnerabilitiesRefs": null
+      },
+      "5b1dd58e-c2d9-4ffb-9a4a-bc033097c816": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "LGPL-2.1",
+        "name": "libc-bin",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.24-11+deb9u4",
+        "vulnerabilitiesRefs": null
+      },
+      "5c7f689e-b04a-454e-b4c2-0d03ee117ffa": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL",
+        "name": "binutils",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.28-5",
+        "vulnerabilitiesRefs": null
+      },
+      "5ce58c73-d8f5-40de-bffe-0466d308f74c": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libhogweed4",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "3.3-1+b2",
+        "vulnerabilitiesRefs": null
+      },
+      "5e3a6b1c-a51d-494d-aa56-31321c535d07": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "Artistic or GPL-1+",
+        "name": "libalgorithm-diff-xs-perl",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "0.04-4+b2",
+        "vulnerabilitiesRefs": null
+      },
+      "60bfcb38-ae95-432e-befe-8d201fc13251": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libcc1-0",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.3.0-18+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "61df74a2-ea78-408e-9469-64c1b16b8499": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-2",
+        "name": "base-passwd",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "3.5.43",
+        "vulnerabilitiesRefs": null
+      },
+      "61e65ef2-e90a-4b23-bca6-a86de35eda8d": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL",
+        "name": "gcc-6-base",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.3.0-18+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "61e92eb6-a1a6-4618-97ff-ac37f7134c62": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "BSD License",
+        "name": "enum34",
+        "path": "/usr/lib/python2.7/dist-packages/enum34-1.1.6.egg-info/PKG-INFO",
+        "riskAcceptRefs": null,
+        "type": "python",
+        "version": "1.1.6",
+        "vulnerabilitiesRefs": null
+      },
+      "62049f54-452d-4e9e-b05b-1e220a96fed5": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libxdmcp6",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1:1.1.2-3",
+        "vulnerabilitiesRefs": null
+      },
+      "6221fa2b-be71-4bef-853d-e59b9a45566e": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libasan3",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.3.0-18+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "6231eb71-a9b3-4412-84db-f80307175380": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "BSD",
+        "name": "SecretStorage",
+        "path": "/usr/lib/python2.7/dist-packages/SecretStorage-2.3.1.egg-info",
+        "riskAcceptRefs": null,
+        "type": "python",
+        "version": "2.3.1",
+        "vulnerabilitiesRefs": null
+      },
+      "629daae1-4674-45f9-bd0f-ba5a92fd7254": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "python",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.7.13-2",
+        "vulnerabilitiesRefs": null
+      },
+      "64ceef90-6eef-4b7e-821c-a47365ccc490": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "Artistic or GPL-1+",
+        "name": "liblocale-gettext-perl",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.07-3+b1",
+        "vulnerabilitiesRefs": null
+      },
+      "67a9510e-ae3c-4c3a-b8c3-a1aaf4d5dc8f": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-2+",
+        "name": "util-linux",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.29.2-1+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "684f6e62-18bc-4f5a-b23f-d46b2e800d80": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libldap-common",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.4.44+dfsg-5+deb9u4",
+        "vulnerabilitiesRefs": null
+      },
+      "69a34051-a0b4-4429-9d22-f65a83da3e1c": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "BSD-3-clause or GPL-2",
+        "name": "libcap2",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1:2.25-1",
+        "vulnerabilitiesRefs": null
+      },
+      "6a4fdab9-025a-4c77-9337-fcefb63912c6": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "LGPL-2.0+",
+        "name": "libseccomp2",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.3.1-2.1+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "6b3611af-8ad0-4057-963e-55d8d5aa014e": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-3+",
+        "name": "dirmngr",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.1.18-8~deb9u4",
+        "vulnerabilitiesRefs": null
+      },
+      "6b982612-3b8d-45d5-85f1-7be41b1b3a59": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "name": "libpcre3",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2:8.39-3",
+        "vulnerabilitiesRefs": null
+      },
+      "6cc6b9ff-df72-4d79-bb5d-6aa21ef74ecf": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2",
+        "name": "libkmod2",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "23-2",
+        "vulnerabilitiesRefs": null
+      },
+      "6cdcb3cd-e06c-49a0-82ff-0593cc57b062": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2",
+        "name": "krb5-locales",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.15-1+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "6ecd9bb0-48b3-4b0b-b295-33321d1ad99d": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2",
+        "name": "libnih1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.0.3-8",
+        "vulnerabilitiesRefs": null
+      },
+      "6ee5c1c6-3d12-4eaa-93be-0fbb5c63c352": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "openssl",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.1.0l-1~deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "6ef11443-31ba-41dd-a534-5d6149bcea98": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-2",
+        "name": "libaudit1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1:2.6.7-2",
+        "vulnerabilitiesRefs": null
+      },
+      "711580c8-a5cc-47aa-a4e4-7eeb6abef1c5": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libpython2.7",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.7.13-2+deb9u3",
+        "vulnerabilitiesRefs": null
+      },
+      "71478741-eec1-4213-85bf-995119568a19": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libgfortran3",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.3.0-18+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "719d4d8f-d6ce-481c-a68e-74914a539847": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "BSD-4-clause",
+        "name": "libsasl2-modules-db",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.1.27~101-g0780600+dfsg-3+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "7472c5cd-0b3a-4d0a-8339-da604383cd47": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-2",
+        "name": "lsb-base",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "9.20161125",
+        "vulnerabilitiesRefs": null
+      },
+      "74c8d526-a78a-49fb-9c01-4162bf0760c5": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "",
+        "name": "python2.7",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.7.13-2+deb9u3",
+        "vulnerabilitiesRefs": null
+      },
+      "77b3f20a-8195-4540-ae48-a7b8612d3a7d": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "LGPL-2.1",
+        "name": "libattr1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1:2.4.47-2+b2",
+        "vulnerabilitiesRefs": null
+      },
+      "788b5c07-bd33-4e27-9d1c-ff97828b8d68": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libxml2",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.9.4+dfsg1-2.2+deb9u2",
+        "vulnerabilitiesRefs": null
+      },
+      "78a8fbb1-f5a0-4bd8-8d7b-f141b2ef9a00": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libpython-dev",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.7.13-2",
+        "vulnerabilitiesRefs": null
+      },
+      "7928c5b2-0138-4c32-a0fe-14fc2037f228": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "BSD-3-clause",
+        "name": "liblapack3",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "3.7.0-2",
+        "vulnerabilitiesRefs": null
+      },
+      "793c7cf2-31b6-4f3a-9504-c874c48676f2": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "",
+        "name": "shared-mime-info",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.8-1+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "796a81d3-884b-4320-ae50-ff37b5acd819": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2+",
+        "name": "ca-certificates",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "20200601~deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "7998ffa2-3945-44a5-8f05-d1d799e24ad7": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL",
+        "name": "diffutils",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1:3.5-3",
+        "vulnerabilitiesRefs": null
+      },
+      "79aeb023-3a15-45fa-9c33-d22eac1b5908": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2",
+        "name": "libgdbm3",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.8.3-14",
+        "vulnerabilitiesRefs": null
+      },
+      "7a1e2641-75b5-4e00-89a2-9de9b424f769": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "name": "libss2",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.43.4-2+deb9u2",
+        "vulnerabilitiesRefs": null
+      },
+      "7b84c7b8-cf30-44f8-b76f-9883bc4126d2": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-3",
+        "name": "libksba8",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.3.5-2",
+        "vulnerabilitiesRefs": null
+      },
+      "7dbd1b21-c18b-449b-8522-e3d1da4bd751": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "LGPL-2.1",
+        "name": "libacl1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.2.52-3+b1",
+        "vulnerabilitiesRefs": null
+      },
+      "7e3f9f45-e6df-4779-b34e-85a0a35452d8": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "PSF-2 and MIT",
+        "name": "python-keyring",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "10.1-1",
+        "vulnerabilitiesRefs": null
+      },
+      "84cbb5cd-af33-463f-b1d8-669ca89d22f1": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libx11-data",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2:1.6.4-3+deb9u2",
+        "vulnerabilitiesRefs": null
+      },
+      "862149e1-2085-4a5c-98bd-65b3195b6133": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "",
+        "name": "libgpm2",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.20.4-6.2+b1",
+        "vulnerabilitiesRefs": null
+      },
+      "87dd2ac3-54b9-4d52-86a2-2367c7268494": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-2",
+        "name": "libaudit-common",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1:2.6.7-2",
+        "vulnerabilitiesRefs": null
+      },
+      "88765c61-99c5-4bf1-964d-71aacdfe18df": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-2+",
+        "name": "libfdisk1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.29.2-1+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "88c44e09-c006-49e7-a90f-0612e52a0d05": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "name": "ncurses-base",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.0+20161126-1+deb9u2",
+        "vulnerabilitiesRefs": null
+      },
+      "8a62c42e-34ea-4c1b-bf65-92a61e413f50": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "PD",
+        "name": "liblzma5",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "5.2.2-1.2+b1",
+        "vulnerabilitiesRefs": null
+      },
+      "8ae88f47-4957-43fc-900d-2d236d740bfb": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "LGPL-2.1+",
+        "name": "libpam-systemd",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "232-25+deb9u12",
+        "vulnerabilitiesRefs": null
+      },
+      "8b5dd132-2e16-4745-9266-c671b14cdef3": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-2+",
+        "name": "libblkid1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.29.2-1+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "8bacf570-25a9-4ca3-a770-f74c278ff7fc": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libpython-all-dev",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.7.13-2",
+        "vulnerabilitiesRefs": null
+      },
+      "8c60f50b-2235-44e5-83f6-02cddc49e4ea": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "LGPL-2.1+",
+        "name": "libprocps6",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2:3.3.12-3+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "8c831602-753a-44e8-a01f-c29c8d898501": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2+ or LGPL-3+",
+        "name": "libnpth0",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.3-1",
+        "vulnerabilitiesRefs": null
+      },
+      "8f265174-5f27-49bf-9a52-d9c3f66c6845": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libedit2",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "3.1-20160903-3",
+        "vulnerabilitiesRefs": null
+      },
+      "8f867e2d-0e41-4e2c-93ac-11fd0c9e8ec2": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-2",
+        "name": "e2fsprogs",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.43.4-2+deb9u2",
+        "vulnerabilitiesRefs": null
+      },
+      "90201545-bf9e-4773-91f2-4d0e6027661d": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL",
+        "name": "patch",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.7.5-1+deb9u2",
+        "vulnerabilitiesRefs": null
+      },
+      "91f8a5f2-a5b5-410b-a7ee-fd9b22eeeaca": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "python2.7-dev",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.7.13-2+deb9u3",
+        "vulnerabilitiesRefs": null
+      },
+      "946fd899-fda5-4a8f-b0c9-06142d528942": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "LGPL-2.1",
+        "name": "libselinux1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.6-3+b3",
+        "vulnerabilitiesRefs": null
+      },
+      "9685bdf3-0853-4331-a3d6-f8d4d4a7fad2": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libicu57",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "57.1-6+deb9u4",
+        "vulnerabilitiesRefs": null
+      },
+      "981326d1-ff68-4c81-86e4-a41a9a750d7e": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL",
+        "name": "libpam-runtime",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.1.8-3.6",
+        "vulnerabilitiesRefs": null
+      },
+      "9b4962a7-e0cb-4713-9e62-3e7fb9ba71bb": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "",
+        "name": "libglib2.0-data",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.50.3-2+deb9u2",
+        "vulnerabilitiesRefs": null
+      },
+      "9c733502-60f6-4e5a-b35e-ff3d3ff16dca": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "Expat",
+        "name": "python-pip",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "9.0.1-2+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "9d9a0a1d-f356-4ba4-9311-f309ed141330": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libitm1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.3.0-18+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "9df0c54f-4034-4af2-abd0-873f4143a24e": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2+",
+        "name": "libdpkg-perl",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.18.25",
+        "vulnerabilitiesRefs": null
+      },
+      "9e405466-acfa-49ae-95d7-e5af09846d3f": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "name": "libtinfo5",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.0+20161126-1+deb9u2",
+        "vulnerabilitiesRefs": null
+      },
+      "9ed8c635-f56a-47d8-8f32-03ef4ff24173": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2",
+        "name": "bzip2",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.0.6-8.1",
+        "vulnerabilitiesRefs": null
+      },
+      "a1ccc6f7-d1f0-4299-a007-7615abe2733f": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "LGPL",
+        "name": "libtasn1-6",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "4.10-1.1+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "a1d2ff0e-ee57-477c-8b97-f46f4d7797bd": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "BSD-3-clause",
+        "name": "libblas-common",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "3.7.0-2",
+        "vulnerabilitiesRefs": null
+      },
+      "a1fced2f-0258-43c0-8c5d-2c9b8bf30d35": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-3",
+        "name": "bash",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "4.4-5",
+        "vulnerabilitiesRefs": null
+      },
+      "a21a0d77-77ea-4bc4-bf56-6962f820f430": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2+",
+        "name": "libkeyutils1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.5.9-9",
+        "vulnerabilitiesRefs": null
+      },
+      "a4254d2d-6d57-423b-9987-a1f99a534b55": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "10ce8a2fbd029291",
+        "license": "BSD-3-Clause",
+        "name": "MarkupSafe",
+        "path": "/usr/local/lib/python2.7/dist-packages/MarkupSafe-1.1.1.dist-info/METADATA",
+        "riskAcceptRefs": null,
+        "type": "python",
+        "version": "1.1.1",
+        "vulnerabilitiesRefs": null
+      },
+      "a4820c3d-fb2d-434f-8c2a-3ce239f06e09": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "10ce8a2fbd029291",
+        "license": "BSD",
+        "name": "itsdangerous",
+        "path": "/usr/local/lib/python2.7/dist-packages/itsdangerous-1.1.0.dist-info/METADATA",
+        "riskAcceptRefs": null,
+        "type": "python",
+        "version": "1.1.0",
+        "vulnerabilitiesRefs": null
+      },
+      "a5d0e5e1-8ccd-4dd9-8c6f-8a0e7f03531c": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "LGPL-2.1+",
+        "name": "procps",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2:3.3.12-3+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "a670efd3-ff4e-41d3-aa10-7edf323eab36": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-2",
+        "name": "sensible-utils",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "0.0.9+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "a678cbf6-ee33-45b6-b935-70ee1635cc3b": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "LGPL-2.1+",
+        "name": "libsystemd0",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "232-25+deb9u12",
+        "vulnerabilitiesRefs": null
+      },
+      "a894e3d1-ae75-4eb9-99ae-42be0c09b821": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2",
+        "name": "libk5crypto3",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.15-1+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "a8f2048a-1beb-4b1c-b155-3de74f95d0e9": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2+",
+        "name": "dpkg-dev",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.18.25",
+        "vulnerabilitiesRefs": null
+      },
+      "a99dbb4c-4789-4586-a121-540fbb2bed36": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libmpx2",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.3.0-18+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "aa3275bd-cdc3-4b8c-a0dc-966dea4c1c65": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2+",
+        "name": "manpages",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "4.10-2",
+        "vulnerabilitiesRefs": null
+      },
+      "aa4becfd-a031-41f0-a89e-9fe0f67d0df3": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "LGPL-2.1",
+        "name": "multiarch-support",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.24-11+deb9u4",
+        "vulnerabilitiesRefs": null
+      },
+      "ab27d962-74ac-4a1b-a25a-0ef82c6edd81": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-3+",
+        "name": "gnupg-l10n",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.1.18-8~deb9u4",
+        "vulnerabilitiesRefs": null
+      },
+      "abefafdd-4b9a-4a65-9c71-1321b29ddd05": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-3",
+        "name": "fakeroot",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.21-3.1",
+        "vulnerabilitiesRefs": null
+      },
+      "ac3d5a14-8382-4d26-bc16-d87898e1a4ad": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "BSD-3-clause",
+        "name": "libbsd0",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "0.8.3-1",
+        "vulnerabilitiesRefs": null
+      },
+      "adf085e2-1dda-40e9-bacb-e1ee4010676a": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "LGPL-2.1+",
+        "name": "python-gi",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "3.22.0-2",
+        "vulnerabilitiesRefs": null
+      },
+      "aea3da95-faaa-4500-97eb-f5819fff91ab": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "LGPL-2.1",
+        "name": "libdevmapper1.02.1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2:1.02.137-2",
+        "vulnerabilitiesRefs": null
+      },
+      "b153f5ac-eb03-4d90-a421-4929d19105ff": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "Artistic or GPL-1+",
+        "name": "libalgorithm-merge-perl",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "0.08-3",
+        "vulnerabilitiesRefs": null
+      },
+      "b2eb3ab2-339a-4040-b704-942192ed1a35": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "liblsan0",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.3.0-18+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "b451f03c-8eb9-4505-8630-958bad616d4e": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "",
+        "name": "libpython2.7-minimal",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.7.13-2+deb9u3",
+        "vulnerabilitiesRefs": null
+      },
+      "b4e47dff-f65b-4f65-bea1-c9c1512061cf": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libquadmath0",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.3.0-18+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "b55ae6d4-0a50-4f99-b2f0-3cc032dcee49": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "LGPL-2.1",
+        "name": "libc6-dev",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.24-11+deb9u4",
+        "vulnerabilitiesRefs": null
+      },
+      "b65fdef5-7aad-4a98-bda1-ac10baebd858": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "BSD-2-clause",
+        "name": "liblz4-1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "0.0~r131-2+b1",
+        "vulnerabilitiesRefs": null
+      },
+      "b92d5d4c-0a30-488d-8d91-d9edd32a35e1": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "OpenSSH",
+        "name": "openssh-client",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1:7.4p1-10+deb9u7",
+        "vulnerabilitiesRefs": null
+      },
+      "ba506727-bcc8-4ba0-91a6-f830cdb782ee": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "name": "libncursesw5",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.0+20161126-1+deb9u2",
+        "vulnerabilitiesRefs": null
+      },
+      "bae1b909-f49f-4098-b525-830f5424d4de": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "10ce8a2fbd029291",
+        "license": "BSD-3-Clause",
+        "name": "Werkzeug",
+        "path": "/usr/local/lib/python2.7/dist-packages/Werkzeug-1.0.1.dist-info/METADATA",
+        "riskAcceptRefs": null,
+        "suggestedFix": "2.1.1",
+        "type": "python",
+        "version": "1.0.1",
+        "vulnerabilitiesRefs": [
+          "d2ea074a-73f3-4018-ad22-61ebfb3cc145",
+          "4e384854-6044-46b4-969b-3fb6a7800c07",
+          "2f04335b-58ea-498f-b7e3-aaef84521711",
+          "01fed3f4-2d11-4944-9a2f-952aef0eac9d",
+          "8524777c-bda9-4c5a-9520-4b5388258203",
+          "3cae21ee-8963-4da3-b8cf-aa77470f373b",
+          "a2f60fa2-31ab-4dfe-8078-7dc2eae57f5f"
+        ]
+      },
+      "bb5235f3-d2a7-4269-9d2d-164e32e6cc0d": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-2+",
+        "name": "dpkg",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.18.25",
+        "vulnerabilitiesRefs": null
+      },
+      "bc74f09b-5599-4cd8-aa3c-9d50c9069ea0": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libgcc-6-dev",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.3.0-18+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "bc968592-004e-4d63-9c8e-f7181d40a76d": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "cpp-6",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.3.0-18+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "bec3ab90-9cb8-4265-87da-f7061dbba3ae": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPLv2+",
+        "name": "libapt-pkg5.0",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.4.10",
+        "vulnerabilitiesRefs": null
+      },
+      "bf844e81-defc-478b-9328-601bfaf7d36e": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "g++-6",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.3.0-18+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "bfec077f-013c-46bb-bf81-1d53a1fe1df0": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "MIT",
+        "name": "libisl15",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "0.18-1",
+        "vulnerabilitiesRefs": null
+      },
+      "bffd5bc7-5030-4d77-8d4c-e9f808d74caf": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libtsan0",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.3.0-18+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "c2c01fec-1a98-4626-b153-4f23a3c6b93c": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL",
+        "name": "base-files",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "9.9+deb9u13",
+        "vulnerabilitiesRefs": null
+      },
+      "c2d1decc-7c1e-4a45-9cdf-c9c6fd42e4fb": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "BSD-2-clause",
+        "name": "python-pyasn1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "0.1.9-2",
+        "vulnerabilitiesRefs": null
+      },
+      "c342030b-13c0-44ac-8811-6f009f0d94ee": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "The main library is licensed under GNU Lesser",
+        "name": "libgnutls30",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "3.5.8-5+deb9u5",
+        "vulnerabilitiesRefs": null
+      },
+      "c34ad810-9928-4ad6-af57-17eab78e7455": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "",
+        "name": "build-essential",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "12.3",
+        "vulnerabilitiesRefs": null
+      },
+      "c3545c81-7ccb-4d1c-a9d7-2cd2dca93bfa": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "Expat",
+        "name": "python-six",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.10.0-3",
+        "vulnerabilitiesRefs": null
+      },
+      "c3a85f79-7d47-468b-9c1b-42fafde2551b": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL",
+        "name": "dash",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "0.5.8-2.4",
+        "vulnerabilitiesRefs": null
+      },
+      "c3ad41b3-8678-46c5-8eb1-6c4aea6010f8": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2",
+        "name": "netbase",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "5.4",
+        "vulnerabilitiesRefs": null
+      },
+      "c403ce8e-bf2f-4fb7-9851-68e8fa3d0de4": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "",
+        "name": "python-setuptools",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "33.1.1-1",
+        "vulnerabilitiesRefs": null
+      },
+      "c429d947-ea3d-4898-a96e-a06ef0d4507b": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "LGPL-3",
+        "name": "libmpfr4",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "3.1.5-1",
+        "vulnerabilitiesRefs": null
+      },
+      "c47365e7-3e83-46cb-a22b-51b59502003b": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libxext6",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2:1.3.3-1+b2",
+        "vulnerabilitiesRefs": null
+      },
+      "c47ef57b-208b-4dcc-835e-a74a8f554a14": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libpython2.7-dev",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.7.13-2+deb9u3",
+        "vulnerabilitiesRefs": null
+      },
+      "c653e90f-562d-444d-9261-9f4cab27f3ce": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-2",
+        "name": "sysvinit-utils",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.88dsf-59.9",
+        "vulnerabilitiesRefs": null
+      },
+      "c9533e3b-3e4a-4e9c-b4ac-dbb7dd04c546": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-3",
+        "name": "tar",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.29b-1.1",
+        "vulnerabilitiesRefs": null
+      },
+      "ca68d28b-ab83-4366-82f3-a195c88d265f": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2",
+        "name": "libnih-dbus1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.0.3-8",
+        "vulnerabilitiesRefs": null
+      },
+      "ca79e89e-b2ca-4c8c-aa1e-3c94cc5657ea": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "LGPL-2.1",
+        "name": "libc6",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.24-11+deb9u4",
+        "vulnerabilitiesRefs": null
+      },
+      "cacadb4b-37e6-4d12-9094-17282162fc30": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "",
+        "name": "python2.7-minimal",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.7.13-2+deb9u3",
+        "vulnerabilitiesRefs": null
+      },
+      "cbc6ec59-c3bc-4b9b-95cb-89332045ed66": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "manpages-dev",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "4.10-2",
+        "vulnerabilitiesRefs": null
+      },
+      "cc7eedde-b546-4d8b-a34d-8c54f5979039": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "",
+        "name": "libmpc3",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.0.3-1+b2",
+        "vulnerabilitiesRefs": null
+      },
+      "ce258132-971a-4102-8711-ba060c76ceef": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "",
+        "name": "readline-common",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "7.0-3",
+        "vulnerabilitiesRefs": null
+      },
+      "cf22d905-00c7-4e64-ba89-91436264bbd1": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2",
+        "name": "libgssapi-krb5-2",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.15-1+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "cfbe2c99-b29e-427a-9b5d-412e9f463639": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-2",
+        "name": "adduser",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "3.115",
+        "vulnerabilitiesRefs": null
+      },
+      "d071db12-d79f-4910-853e-3e0054bb5412": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "name": "libcomerr2",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.43.4-2+deb9u2",
+        "vulnerabilitiesRefs": null
+      },
+      "d096552f-d2f1-4775-8fa0-f7c04054019f": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "gcc-6",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.3.0-18+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "d0fb9c8b-7d9f-41f0-a058-94d6b52df7df": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "LGPL-2.1",
+        "name": "libmnl0",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.0.4-2",
+        "vulnerabilitiesRefs": null
+      },
+      "d196802e-b236-4b92-9a01-4d587b151e8e": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libpython-stdlib",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.7.13-2",
+        "vulnerabilitiesRefs": null
+      },
+      "d24789eb-02ed-4297-9b0e-80a475242952": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "",
+        "name": "libffi6",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "3.2.1-6",
+        "vulnerabilitiesRefs": null
+      },
+      "d3e668fe-341c-4e74-90f5-6a849d0c057f": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libxau6",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1:1.0.8-1",
+        "vulnerabilitiesRefs": null
+      },
+      "d3fdc123-3dae-461b-8bf1-037a80e145ef": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2+",
+        "name": "xml-core",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "0.17",
+        "vulnerabilitiesRefs": null
+      },
+      "d4479ea7-cca5-49ca-99b9-296d6c1fa338": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-3",
+        "name": "findutils",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "4.6.0+git+20161106-2",
+        "vulnerabilitiesRefs": null
+      },
+      "d4f52f71-9ce3-4274-9c97-98e564ffc0c5": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "BSD-2-Clause-alike",
+        "name": "file",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1:5.30-1+deb9u3",
+        "vulnerabilitiesRefs": null
+      },
+      "d55372c3-a2fd-4bcc-a488-9dc152e72052": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-2+",
+        "name": "libmount1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.29.2-1+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "d5967210-b7d6-4301-abc8-2712d756b22f": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "LGPL-2.1+",
+        "name": "systemd",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "232-25+deb9u12",
+        "vulnerabilitiesRefs": null
+      },
+      "d63ab926-29db-4d48-b1de-5c213dedb457": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "name": "libstdc++6",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.3.0-18+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "d7af0876-5608-41fb-b2a6-57bcd52fa029": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "openssh-sftp-server",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1:7.4p1-10+deb9u7",
+        "vulnerabilitiesRefs": null
+      },
+      "d8bd9753-4275-43aa-acc9-6460b2a5d7af": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "LGPL-2.1+",
+        "name": "libudev1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "232-25+deb9u12",
+        "vulnerabilitiesRefs": null
+      },
+      "d9e309b3-bd23-4553-a5c3-4b33745ff209": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "",
+        "name": "python-pkg-resources",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "33.1.1-1",
+        "vulnerabilitiesRefs": null
+      },
+      "dabd585a-e483-42d3-9b7a-27f4339d4a38": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "Expat/MIT",
+        "name": "python-wheel",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "0.29.0-2",
+        "vulnerabilitiesRefs": null
+      },
+      "db0c6dbb-4c8f-45e2-bc4a-1e70ade67c62": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "LGPL",
+        "name": "libsemanage-common",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.6-2",
+        "vulnerabilitiesRefs": null
+      },
+      "db9b16e4-f3fb-4b1d-a8a1-703c88354129": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libatomic1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.3.0-18+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "dbff461d-6b17-4663-8e22-554c6fbf8f7d": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "LGPL-2.1",
+        "name": "dmsetup",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2:1.02.137-2",
+        "vulnerabilitiesRefs": null
+      },
+      "dd7b17e7-fe76-4036-ba9d-39dc4fca4f6c": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2+ or AFL-2.1",
+        "name": "libdbus-1-3",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.10.32-0+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "dddecc66-e0aa-4090-b149-59bb7c8948f6": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-3",
+        "name": "sed",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "4.4-1",
+        "vulnerabilitiesRefs": null
+      },
+      "df110528-e7b8-46b7-8544-39c177f40fb1": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "BSD-3-clause",
+        "name": "python-secretstorage",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.3.1-2",
+        "vulnerabilitiesRefs": null
+      },
+      "e28b92f7-bc37-458f-a4f9-f9a72cbd1b13": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libexpat1-dev",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.2.0-2+deb9u3",
+        "vulnerabilitiesRefs": null
+      },
+      "e2e78f85-8ed9-4843-9945-24d3878fc092": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "python-all-dev",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.7.13-2",
+        "vulnerabilitiesRefs": null
+      },
+      "e3ed8057-c572-4133-b947-1a561e6d2ee7": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-1+ or Artistic",
+        "name": "libperl5.24",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "5.24.1-3+deb9u7",
+        "vulnerabilitiesRefs": null
+      },
+      "e42255cc-fffb-4eee-bd3f-3acdf7cae898": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "",
+        "name": "libcap-ng0",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "0.7.7-3+b1",
+        "vulnerabilitiesRefs": null
+      },
+      "e933924a-b50f-46de-b7b1-d288642ecc56": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "BSD-3-clause",
+        "name": "libblas3",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "3.7.0-2",
+        "vulnerabilitiesRefs": null
+      },
+      "ea4bde9d-27bb-4093-a189-9f5efbbf97a7": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "tcpd",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "7.6.q-26",
+        "vulnerabilitiesRefs": null
+      },
+      "ea654a02-11ce-4371-a3a0-e4e7aa244c04": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2+ or AFL-2.1",
+        "name": "dbus",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.10.32-0+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "eaaf2d64-6e47-4a57-af75-d271de14da60": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libldap-2.4-2",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.4.44+dfsg-5+deb9u4",
+        "vulnerabilitiesRefs": null
+      },
+      "ed4b662d-1809-46f0-b1db-7cadbc20c1ef": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libxmuu1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2:1.1.2-2",
+        "vulnerabilitiesRefs": null
+      },
+      "edca356e-29a1-4b56-8afa-337861a253ac": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "Artistic or GPL-1+",
+        "name": "libalgorithm-diff-perl",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.19.03-1",
+        "vulnerabilitiesRefs": null
+      },
+      "eede312f-e722-4e72-abcb-8f41d8eeb4ae": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "10ce8a2fbd029291",
+        "license": "BSD-3-Clause",
+        "name": "Flask",
+        "path": "/usr/local/lib/python2.7/dist-packages/Flask-1.1.2.dist-info/METADATA",
+        "riskAcceptRefs": null,
+        "suggestedFix": "2.2.5",
+        "type": "python",
+        "version": "1.1.2",
+        "vulnerabilitiesRefs": [
+          "1eccf6ff-6b01-49f8-9596-ce8556beaebb"
+        ]
+      },
+      "efd205f5-7b8e-47de-8a6c-78e3872bbc36": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2+",
+        "name": "psmisc",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "22.21-2.1+b2",
+        "vulnerabilitiesRefs": null
+      },
+      "f0ffd957-29f3-4de3-8394-6e9a4e884137": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "Expat",
+        "name": "python-cffi-backend",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.9.1-2",
+        "vulnerabilitiesRefs": null
+      },
+      "f227eeca-2307-4481-b7de-26ae6aec9a7a": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-2+",
+        "name": "libuuid1",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.29.2-1+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "f23c6b56-ab73-42cb-81a2-2ec5f00224e5": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2",
+        "name": "libkrb5support0",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.15-1+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "f24c853f-d0a7-43f6-aef6-147cbedd152a": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "libstdc++-6-dev",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.3.0-18+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "f25ef01e-ac3e-4ae4-8758-7940aa9a19d9": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "Apache",
+        "name": "python-cryptography",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.7.1-3+deb9u2",
+        "vulnerabilitiesRefs": null
+      },
+      "f3632991-076d-4fea-9bfd-1f007b1424fd": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL-3+",
+        "name": "grep",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.27-2",
+        "vulnerabilitiesRefs": null
+      },
+      "f4674387-7f70-41f3-a567-150370025406": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-3+",
+        "name": "gnupg",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.1.18-8~deb9u4",
+        "vulnerabilitiesRefs": null
+      },
+      "f4c40fe8-2e5a-46b3-937b-22be88aef69a": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "ncurses-term",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "6.0+20161126-1+deb9u2",
+        "vulnerabilitiesRefs": null
+      },
+      "f56032ae-7426-460a-944b-54cd5e69fd42": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GNU LGPL",
+        "name": "PyGObject",
+        "path": "/usr/lib/python2.7/dist-packages/pygobject-3.22.0.egg-info",
+        "riskAcceptRefs": null,
+        "type": "python",
+        "version": "3.22.0",
+        "vulnerabilitiesRefs": null
+      },
+      "f56e9c6a-22db-4fab-98c7-0d4fbfb5521e": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "LGPL-2.1+",
+        "name": "libassuan0",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.4.3-2",
+        "vulnerabilitiesRefs": null
+      },
+      "f73ff5ed-a89b-423f-9999-85e487a960fd": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "BSD-2-Clause-alike",
+        "name": "libmagic-mgc",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1:5.30-1+deb9u3",
+        "vulnerabilitiesRefs": null
+      },
+      "f770bbf9-a7cf-4d54-802a-a8ef1d5da7d2": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "GPL-2",
+        "name": "libip4tc0",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.6.0+snapshot20161117-6",
+        "vulnerabilitiesRefs": null
+      },
+      "fb546958-4ff3-4fd5-91f3-9b66b2a2b374": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "gcc",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "4:6.3.0-4",
+        "vulnerabilitiesRefs": null
+      },
+      "fb745199-4e2c-4d76-9d5d-8fab30be9ac9": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL",
+        "name": "iputils-ping",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "3:20161105-1",
+        "vulnerabilitiesRefs": null
+      },
+      "fbfd7fbc-fb5f-44ae-98e5-9ef104fe837b": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL",
+        "name": "gzip",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.6-5+b1",
+        "vulnerabilitiesRefs": null
+      },
+      "fc0ec2a0-954a-4771-8cb4-e00970cd78dc": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "Expat",
+        "name": "python-pip-whl",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "9.0.1-2+deb9u1",
+        "vulnerabilitiesRefs": null
+      },
+      "fc7217f1-307c-47fe-97a2-2b1d62d33146": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "name": "python-minimal",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "2.7.13-2",
+        "vulnerabilitiesRefs": null
+      },
+      "fec8829e-7fd7-46e8-ac8c-aef199da7ede": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "969a6ecde46816e5",
+        "license": "GPL",
+        "name": "libpam0g",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "1.1.8-3.6",
+        "vulnerabilitiesRefs": null
+      },
+      "ff083a86-763c-4650-aef6-4d340d47527e": {
+        "isRemoved": false,
+        "isRunning": false,
+        "layerRef": "dc0dd833a677c244",
+        "license": "BSD-3-Clause",
+        "name": "libp11-kit0",
+        "path": "/var/lib/dpkg/status",
+        "riskAcceptRefs": null,
+        "type": "os",
+        "version": "0.23.3-2",
+        "vulnerabilitiesRefs": null
+      }
+    },
+    "policies": {
+      "evaluations": [
+        {
+          "bundles": [
+            {
+              "identifier": "critical-vulnerability-found",
+              "name": "Critical Vulnerability Found",
+              "rules": [
+                {
+                  "description": "Severity greater than or equal critical",
+                  "evaluationResult": "failed",
+                  "failureType": "pkgVulnFailure",
+                  "failures": [
+                    {
+                      "description": "",
+                      "packageRef": "1b5ccc2f-be8d-451a-b387-4d2c87820cf9",
+                      "vulnerabilityRef": "2dfcfb41-de69-4bbd-a5d0-b063dd380b49"
+                    },
+                    {
+                      "description": "",
+                      "packageRef": "bae1b909-f49f-4098-b525-830f5424d4de",
+                      "vulnerabilityRef": "3cae21ee-8963-4da3-b8cf-aa77470f373b"
+                    }
+                  ],
+                  "predicates": [
+                    {
+                      "extra": {
+                        "level": "critical"
+                      },
+                      "type": "vulnSeverity"
+                    }
+                  ],
+                  "ruleId": "17701",
+                  "ruleType": "vulnSeverityAndThreats"
+                }
+              ],
+              "type": "custom"
+            }
+          ],
+          "createdAt": "2023-07-21T05:01:51.544943Z",
+          "description": "",
+          "evaluation": "failed",
+          "identifier": "critical-vulnerability-found",
+          "name": "Critical Vulnerability Found",
+          "updatedAt": "2024-10-08T07:52:30.379503Z"
+        },
+        {
+          "bundles": [
+            {
+              "identifier": "forbid-secrets",
+              "name": "Forbid Secrets",
+              "rules": [
+                {
+                  "description": "Variable AZURE_CLIENT_SECRET exists",
+                  "evaluationResult": "passed",
+                  "failureType": "imageConfigFailure",
+                  "failures": [],
+                  "predicates": [
+                    {
+                      "extra": {
+                        "key": "AZURE_CLIENT_SECRET"
+                      },
+                      "type": "imageConfigEnvVariableExists"
+                    }
+                  ],
+                  "ruleId": "17444",
+                  "ruleType": "imageConfigEnvVariable"
+                },
+                {
+                  "description": "Forbid sensitive information and secrets in the image metadata",
+                  "evaluationResult": "passed",
+                  "failureType": "imageConfigFailure",
+                  "failures": [],
+                  "predicates": [
+                    {
+                      "extra": {},
+                      "type": "imageConfigSensitiveInformationAndSecrets"
+                    }
+                  ],
+                  "ruleId": "17445",
+                  "ruleType": "imageConfigSensitiveInformationAndSecrets"
+                }
+              ],
+              "type": "custom"
+            }
+          ],
+          "createdAt": "2023-07-21T05:02:05.36946Z",
+          "description": "",
+          "evaluation": "passed",
+          "identifier": "sensitive-information-or-secret-found",
+          "name": "Sensitive Information or Secret Found",
+          "updatedAt": "2025-07-18T07:59:29.687491Z"
+        }
+      ],
+      "globalEvaluation": "passed"
+    },
+    "producer": {
+      "producedAt": "2025-10-27T09:09:07.847678363+01:00"
+    },
+    "riskAccepts": {
+      "83669067-1dbc-44ec-8d22-281481c08d6d": {
+        "context": [],
+        "createdAt": "2025-10-27T08:08:14.924064Z",
+        "description": "c",
+        "entityType": "imageName",
+        "entityValue": "sysdiglabs/dummy-vuln-app:latest",
+        "expirationDate": "2025-11-03",
+        "id": "18724aa93926e500b46359fc9f8fddf4",
+        "reason": "RiskOwned",
+        "status": "active",
+        "updatedAt": "2025-10-27T08:08:14.924064Z"
+      }
+    },
+    "stage": "pipeline",
+    "vulnerabilities": {
+      "01fed3f4-2d11-4944-9a2f-952aef0eac9d": {
+        "cvssScore": {
+          "score": 3.7,
+          "vector": "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N",
+          "version": "3.0"
+        },
+        "disclosureDate": "2024-10-25",
+        "exploitable": false,
+        "fixVersion": "3.0.6",
+        "mainProvider": "vulndb",
+        "name": "CVE-2024-49766",
+        "packageRef": "bae1b909-f49f-4098-b525-830f5424d4de",
+        "providersMetadata": {
+          "first.org": {
+            "epssScore": {
+              "score": 0.00062,
+              "percentile": 0.19571,
+              "timestamp": "2025-10-26T00:00:00Z"
+            }
+          },
+          "github": {
+            "publicationDate": "2024-10-25T19:43:41Z"
+          },
+          "gitlab": {
+            "publicationDate": "2024-10-25T00:00:00Z"
+          },
+          "nvd": {
+            "publicationDate": "2024-10-25T20:15:04.41Z"
+          },
+          "rhel": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N",
+              "score": 3.7
+            },
+            "publicationDate": "2024-10-25T19:22:36.38Z",
+            "severity": "medium"
+          },
+          "ubuntu": {
+            "publicationDate": "2024-10-25T20:15:00Z",
+            "severity": "medium"
+          },
+          "vulndb": {
+            "cvssScore": {
+              "version": "3.0",
+              "vector": "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N",
+              "score": 3.7
+            },
+            "publicationDate": "2024-10-25T00:00:00Z",
+            "severity": "low"
+          }
+        },
+        "riskAcceptRefs": null,
+        "severity": "low",
+        "solutionDate": "2024-10-25"
+      },
+      "091ce7d2-8db1-4b28-a62f-7eac100033bd": {
+        "cvssScore": {
+          "score": 5.3,
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+          "version": "3.1"
+        },
+        "disclosureDate": "2021-03-19",
+        "exploitable": false,
+        "fixVersion": "2.11.3",
+        "mainProvider": "nvd",
+        "name": "CVE-2020-28493",
+        "packageRef": "0510c741-1174-48b7-8389-e7e272a2946d",
+        "providersMetadata": {
+          "alibaba": {
+            "severity": "medium"
+          },
+          "azurelinux": {
+            "severity": "medium"
+          },
+          "euleros": {
+            "publicationDate": "2021-09-24T09:17:38Z",
+            "severity": "medium"
+          },
+          "first.org": {
+            "epssScore": {
+              "score": 0.00207,
+              "percentile": 0.43132,
+              "timestamp": "2025-10-26T00:00:00Z"
+            }
+          },
+          "gentoo": {
+            "publicationDate": "2021-07-08T04:02:25Z",
+            "severity": "low"
+          },
+          "github": {
+            "publicationDate": "2021-03-19T21:28:05Z"
+          },
+          "gitlab": {
+            "publicationDate": "2021-03-19T00:00:00Z"
+          },
+          "nvd": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+              "score": 5.3,
+              "exploitability_score": 3.9,
+              "impact_score": 1.4
+            },
+            "publicationDate": "2021-02-01T20:15:12.517Z",
+            "severity": "medium"
+          },
+          "opensuse": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "score": 7.5
+            },
+            "severity": "high"
+          },
+          "oracle": {
+            "cvssScore": {
+              "version": "3.0",
+              "vector": "AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+              "score": 5.3
+            },
+            "severity": "medium"
+          },
+          "pypiadvisory": {
+            "publicationDate": "2021-02-01T20:15:00Z"
+          },
+          "rhel": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "score": 7.5
+            },
+            "publicationDate": "2021-02-01T00:00:00Z",
+            "severity": "medium"
+          },
+          "rocky": {
+            "publicationDate": "2021-11-09T00:00:00Z"
+          },
+          "suse": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "score": 7.5
+            },
+            "severity": "high"
+          },
+          "ubuntu": {
+            "publicationDate": "2021-02-01T20:15:00Z",
+            "severity": "low"
+          },
+          "vulndb": {
+            "cvssScore": {
+              "version": "3.0",
+              "vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+              "score": 5.3
+            },
+            "publicationDate": "2021-01-31T00:00:00Z",
+            "severity": "medium"
+          }
+        },
+        "riskAcceptRefs": null,
+        "severity": "medium",
+        "solutionDate": "2021-01-31"
+      },
+      "1eccf6ff-6b01-49f8-9596-ce8556beaebb": {
+        "cvssScore": {
+          "score": 7.5,
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+          "version": "3.1"
+        },
+        "disclosureDate": "2023-05-01",
+        "exploitable": false,
+        "fixVersion": "2.2.5",
+        "mainProvider": "nvd",
+        "name": "CVE-2023-30861",
+        "packageRef": "eede312f-e722-4e72-abcb-8f41d8eeb4ae",
+        "providersMetadata": {
+          "alibaba": {
+            "severity": "high"
+          },
+          "amazon": {
+            "publicationDate": "2023-05-25T17:41:00Z"
+          },
+          "first.org": {
+            "epssScore": {
+              "score": 0.00215,
+              "percentile": 0.44074,
+              "timestamp": "2025-10-26T00:00:00Z"
+            }
+          },
+          "github": {
+            "publicationDate": "2023-05-01T19:22:20Z"
+          },
+          "gitlab": {
+            "publicationDate": "2023-05-01T00:00:00Z"
+          },
+          "nvd": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+              "score": 7.5,
+              "exploitability_score": 3.9,
+              "impact_score": 3.6
+            },
+            "publicationDate": "2023-05-02T18:15:52.373Z",
+            "severity": "high"
+          },
+          "opensuse": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+              "score": 7.5
+            },
+            "severity": "high"
+          },
+          "oracle": {
+            "cvssScore": {
+              "version": "3.0",
+              "vector": "AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+              "score": 7.5
+            },
+            "severity": "high"
+          },
+          "pypiadvisory": {
+            "publicationDate": "2023-05-02T18:15:00Z"
+          },
+          "rhel": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+              "score": 7.5
+            },
+            "publicationDate": "2023-05-05T00:00:00Z",
+            "severity": "high"
+          },
+          "ubuntu": {
+            "publicationDate": "2023-05-02T18:15:00Z",
+            "severity": "medium"
+          },
+          "vulndb": {
+            "cvssScore": {
+              "version": "3.0",
+              "vector": "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N",
+              "score": 7.4
+            },
+            "publicationDate": "2023-05-01T00:00:00Z",
+            "severity": "high"
+          }
+        },
+        "riskAcceptRefs": null,
+        "severity": "high",
+        "solutionDate": "2023-05-02"
+      },
+      "2dfcfb41-de69-4bbd-a5d0-b063dd380b49": {
+        "cvssScore": {
+          "score": 9.8,
+          "vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+          "version": "3.0"
+        },
+        "disclosureDate": "2024-07-15",
+        "exploitable": false,
+        "fixVersion": "70.0.0",
+        "mainProvider": "vulndb",
+        "name": "CVE-2024-6345",
+        "packageRef": "1b5ccc2f-be8d-451a-b387-4d2c87820cf9",
+        "providersMetadata": {
+          "alibaba": {
+            "severity": "high"
+          },
+          "almalinux": {
+            "publicationDate": "2024-08-19T00:00:00Z",
+            "severity": "high"
+          },
+          "amazon": {
+            "publicationDate": "2024-08-01T04:06:00Z"
+          },
+          "azurelinux": {
+            "severity": "high"
+          },
+          "euleros": {
+            "publicationDate": "2025-05-06T16:12:57Z",
+            "severity": "high"
+          },
+          "first.org": {
+            "epssScore": {
+              "score": 0.04362,
+              "percentile": 0.88411,
+              "timestamp": "2025-10-26T00:00:00Z"
+            }
+          },
+          "github": {
+            "publicationDate": "2024-07-15T03:30:57Z"
+          },
+          "gitlab": {
+            "publicationDate": "2024-07-15T00:00:00Z"
+          },
+          "nvd": {
+            "publicationDate": "2024-07-15T01:15:01.73Z"
+          },
+          "opensuse": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:L/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H",
+              "score": 7
+            },
+            "severity": "high"
+          },
+          "oracle": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+              "score": 8.8
+            },
+            "severity": "high"
+          },
+          "rhel": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+              "score": 8.8
+            },
+            "publicationDate": "2024-07-15T00:00:00Z",
+            "severity": "high"
+          },
+          "rocky": {
+            "publicationDate": "2024-08-21T14:52:19Z"
+          },
+          "suse": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:L/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H",
+              "score": 7
+            },
+            "severity": "high"
+          },
+          "ubuntu": {
+            "publicationDate": "2024-07-15T01:15:00Z",
+            "severity": "medium"
+          },
+          "vulndb": {
+            "cvssScore": {
+              "version": "3.0",
+              "vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+              "score": 9.8
+            },
+            "publicationDate": "2024-07-14T00:00:00Z",
+            "severity": "critical"
+          }
+        },
+        "riskAcceptRefs": null,
+        "severity": "critical",
+        "solutionDate": "2024-05-21"
+      },
+      "2f04335b-58ea-498f-b7e3-aaef84521711": {
+        "cvssScore": {
+          "score": 7.5,
+          "vector": "CVSS:3.0/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H",
+          "version": "3.0"
+        },
+        "disclosureDate": "2024-05-06",
+        "exploitable": false,
+        "fixVersion": "3.0.3",
+        "mainProvider": "vulndb",
+        "name": "CVE-2024-34069",
+        "packageRef": "bae1b909-f49f-4098-b525-830f5424d4de",
+        "providersMetadata": {
+          "amazon": {
+            "publicationDate": "2024-07-18T01:24:00Z"
+          },
+          "azurelinux": {
+            "severity": "high"
+          },
+          "first.org": {
+            "epssScore": {
+              "score": 0.40316,
+              "percentile": 0.97165,
+              "timestamp": "2025-10-26T00:00:00Z"
+            }
+          },
+          "github": {
+            "publicationDate": "2024-05-06T14:21:27Z"
+          },
+          "gitlab": {
+            "publicationDate": "2024-05-06T00:00:00Z"
+          },
+          "nvd": {
+            "publicationDate": "2024-05-06T15:15:23.99Z"
+          },
+          "opensuse": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H",
+              "score": 7.5
+            },
+            "severity": "high"
+          },
+          "rhel": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H",
+              "score": 7.5
+            },
+            "publicationDate": "2024-05-06T00:00:00Z",
+            "severity": "high"
+          },
+          "ubuntu": {
+            "publicationDate": "2024-05-06T15:15:00Z",
+            "severity": "medium"
+          },
+          "vulndb": {
+            "cvssScore": {
+              "version": "3.0",
+              "vector": "CVSS:3.0/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H",
+              "score": 7.5
+            },
+            "publicationDate": "2024-05-06T00:00:00Z",
+            "severity": "high"
+          }
+        },
+        "riskAcceptRefs": null,
+        "severity": "high",
+        "solutionDate": "2024-05-05"
+      },
+      "30622fde-eec5-4bda-8513-fb3c67c439c9": {
+        "cvssScore": {
+          "score": 5.9,
+          "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+          "version": "3.1"
+        },
+        "disclosureDate": "2022-12-23",
+        "exploitable": false,
+        "fixVersion": "65.5.1",
+        "mainProvider": "nvd",
+        "name": "CVE-2022-40897",
+        "packageRef": "1b5ccc2f-be8d-451a-b387-4d2c87820cf9",
+        "providersMetadata": {
+          "alibaba": {
+            "severity": "medium"
+          },
+          "almalinux": {
+            "publicationDate": "2023-02-28T00:00:00Z",
+            "severity": "medium"
+          },
+          "amazon": {
+            "publicationDate": "2023-03-02T22:35:00Z"
+          },
+          "azurelinux": {
+            "severity": "medium"
+          },
+          "euleros": {
+            "publicationDate": "2023-03-08T19:29:46Z",
+            "severity": "medium"
+          },
+          "first.org": {
+            "epssScore": {
+              "score": 0.00339,
+              "percentile": 0.56058,
+              "timestamp": "2025-10-26T00:00:00Z"
+            }
+          },
+          "gentoo": {
+            "publicationDate": "2024-05-05T06:37:49.110409Z",
+            "severity": "medium"
+          },
+          "github": {
+            "publicationDate": "2022-12-23T00:30:23Z"
+          },
+          "gitlab": {
+            "publicationDate": "2022-12-23T00:00:00Z"
+          },
+          "nvd": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "score": 5.9,
+              "exploitability_score": 2.2,
+              "impact_score": 3.6
+            },
+            "publicationDate": "2022-12-23T00:15:13.987Z",
+            "severity": "medium"
+          },
+          "oracle": {
+            "cvssScore": {
+              "version": "3.0",
+              "vector": "AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "score": 5.9
+            },
+            "severity": "high"
+          },
+          "pypiadvisory": {
+            "publicationDate": "2022-12-23T00:15:00Z"
+          },
+          "rhel": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "score": 5.9
+            },
+            "publicationDate": "2022-12-22T00:00:00Z",
+            "severity": "medium"
+          },
+          "rocky": {
+            "publicationDate": "2023-02-22T01:08:44Z"
+          },
+          "ubuntu": {
+            "publicationDate": "2022-12-23T00:15:00Z",
+            "severity": "medium"
+          },
+          "vulndb": {
+            "cvssScore": {
+              "version": "3.0",
+              "vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "score": 7.5
+            },
+            "publicationDate": "2022-11-02T00:00:00Z",
+            "severity": "high"
+          }
+        },
+        "riskAcceptRefs": null,
+        "severity": "medium",
+        "solutionDate": "2022-11-04"
+      },
+      "3cae21ee-8963-4da3-b8cf-aa77470f373b": {
+        "cvssScore": {
+          "score": 9.8,
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+          "version": "3.1"
+        },
+        "disclosureDate": "2022-05-25",
+        "exploitable": false,
+        "fixVersion": "2.1.1",
+        "mainProvider": "nvd",
+        "name": "CVE-2022-29361",
+        "packageRef": "bae1b909-f49f-4098-b525-830f5424d4de",
+        "providersMetadata": {
+          "first.org": {
+            "epssScore": {
+              "score": 0.28732,
+              "percentile": 0.96296,
+              "timestamp": "2025-10-26T00:00:00Z"
+            }
+          },
+          "gitlab": {
+            "publicationDate": "2022-05-25T00:00:00Z"
+          },
+          "nvd": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+              "score": 9.8,
+              "exploitability_score": 3.9,
+              "impact_score": 5.9
+            },
+            "publicationDate": "2022-05-25T01:15:07.277Z",
+            "severity": "critical"
+          },
+          "opensuse": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+              "score": 9.8
+            },
+            "severity": "critical"
+          },
+          "pypiadvisory": {
+            "publicationDate": "2022-05-25T01:15:00Z"
+          },
+          "rhel": {
+            "publicationDate": "2022-05-25T00:00:00Z",
+            "severity": "negligible"
+          },
+          "vulndb": {
+            "cvssScore": {
+              "version": "3.0",
+              "vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+              "score": 5.3
+            },
+            "publicationDate": "2022-05-24T00:00:00Z",
+            "severity": "medium"
+          }
+        },
+        "riskAcceptRefs": null,
+        "severity": "critical",
+        "solutionDate": "2022-04-01"
+      },
+      "4e384854-6044-46b4-969b-3fb6a7800c07": {
+        "cvssScore": {
+          "score": 7.5,
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+          "version": "3.1"
+        },
+        "disclosureDate": "2023-02-15",
+        "exploitable": false,
+        "fixVersion": "2.2.3",
+        "mainProvider": "nvd",
+        "name": "CVE-2023-25577",
+        "packageRef": "bae1b909-f49f-4098-b525-830f5424d4de",
+        "providersMetadata": {
+          "alibaba": {
+            "severity": "high"
+          },
+          "amazon": {
+            "publicationDate": "2023-03-06T17:51:00Z"
+          },
+          "azurelinux": {
+            "severity": "high"
+          },
+          "euleros": {
+            "publicationDate": "2023-06-08T18:11:44Z",
+            "severity": "low"
+          },
+          "first.org": {
+            "epssScore": {
+              "score": 0.00332,
+              "percentile": 0.55531,
+              "timestamp": "2025-10-26T00:00:00Z"
+            }
+          },
+          "github": {
+            "publicationDate": "2023-02-15T15:36:26Z"
+          },
+          "gitlab": {
+            "publicationDate": "2023-02-15T00:00:00Z"
+          },
+          "nvd": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "score": 7.5,
+              "exploitability_score": 3.9,
+              "impact_score": 3.6
+            },
+            "publicationDate": "2023-02-14T20:15:17.543Z",
+            "severity": "high"
+          },
+          "opensuse": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "score": 7.5
+            },
+            "severity": "high"
+          },
+          "oracle": {
+            "cvssScore": {
+              "version": "3.0",
+              "vector": "AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "score": 7.5
+            },
+            "severity": "low"
+          },
+          "pypiadvisory": {
+            "publicationDate": "2023-02-14T20:15:00Z"
+          },
+          "rhel": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "score": 7.5
+            },
+            "publicationDate": "2023-02-14T00:00:00Z",
+            "severity": "high"
+          },
+          "ubuntu": {
+            "publicationDate": "2023-02-14T20:15:00Z",
+            "severity": "medium"
+          },
+          "vulndb": {
+            "cvssScore": {
+              "version": "3.0",
+              "vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "score": 7.5
+            },
+            "publicationDate": "2023-02-14T00:00:00Z",
+            "severity": "high"
+          }
+        },
+        "riskAcceptRefs": null,
+        "severity": "high",
+        "solutionDate": "2023-02-14"
+      },
+      "69853bc3-a6c9-4049-8eb9-938b522cbf62": {
+        "cvssScore": {
+          "score": 6.1,
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+          "version": "3.1"
+        },
+        "disclosureDate": "2024-01-11",
+        "exploitable": false,
+        "fixVersion": "3.1.3",
+        "mainProvider": "nvd",
+        "name": "CVE-2024-22195",
+        "packageRef": "0510c741-1174-48b7-8389-e7e272a2946d",
+        "providersMetadata": {
+          "alibaba": {
+            "severity": "high"
+          },
+          "almalinux": {
+            "publicationDate": "2024-04-30T00:00:00Z",
+            "severity": "medium"
+          },
+          "amazon": {
+            "publicationDate": "2024-02-01T17:56:00Z"
+          },
+          "azurelinux": {
+            "severity": "medium"
+          },
+          "euleros": {
+            "publicationDate": "2024-05-31T16:58:14Z",
+            "severity": "medium"
+          },
+          "first.org": {
+            "epssScore": {
+              "score": 0.00093,
+              "percentile": 0.26968,
+              "timestamp": "2025-10-26T00:00:00Z"
+            }
+          },
+          "github": {
+            "publicationDate": "2024-01-11T15:20:48Z"
+          },
+          "gitlab": {
+            "publicationDate": "2024-01-11T00:00:00Z"
+          },
+          "nvd": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+              "score": 6.1,
+              "exploitability_score": 2.8,
+              "impact_score": 2.7
+            },
+            "publicationDate": "2024-01-11T03:15:11.2Z",
+            "severity": "medium"
+          },
+          "opensuse": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N",
+              "score": 5.4
+            },
+            "severity": "medium"
+          },
+          "oracle": {
+            "cvssScore": {
+              "version": "3.0",
+              "vector": "AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N",
+              "score": 5.4
+            },
+            "severity": "medium"
+          },
+          "rhel": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N",
+              "score": 5.4
+            },
+            "publicationDate": "2024-01-11T00:00:00Z",
+            "severity": "medium"
+          },
+          "rocky": {
+            "publicationDate": "2024-06-14T13:59:30Z"
+          },
+          "suse": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N",
+              "score": 5.4
+            },
+            "severity": "medium"
+          },
+          "ubuntu": {
+            "publicationDate": "2024-01-11T03:15:00Z",
+            "severity": "medium"
+          },
+          "vulndb": {
+            "cvssScore": {
+              "version": "3.0",
+              "vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+              "score": 6.1
+            },
+            "publicationDate": "2024-01-11T00:00:00Z",
+            "severity": "medium"
+          }
+        },
+        "riskAcceptRefs": null,
+        "severity": "medium",
+        "solutionDate": "2024-01-10"
+      },
+      "712bd802-8dd4-4bf5-89e6-32edc367e63f": {
+        "cvssScore": {
+          "score": 6.1,
+          "vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+          "version": "3.0"
+        },
+        "disclosureDate": "2024-05-06",
+        "exploitable": false,
+        "fixVersion": "3.1.4",
+        "mainProvider": "vulndb",
+        "name": "CVE-2024-34064",
+        "packageRef": "0510c741-1174-48b7-8389-e7e272a2946d",
+        "providersMetadata": {
+          "alibaba": {
+            "severity": "medium"
+          },
+          "almalinux": {
+            "publicationDate": "2024-11-12T00:00:00Z",
+            "severity": "medium"
+          },
+          "amazon": {
+            "publicationDate": "2024-06-19T19:15:00Z"
+          },
+          "azurelinux": {
+            "severity": "medium"
+          },
+          "euleros": {
+            "publicationDate": "2024-08-19T16:08:47Z",
+            "severity": "medium"
+          },
+          "first.org": {
+            "epssScore": {
+              "score": 0.00576,
+              "percentile": 0.67857,
+              "timestamp": "2025-10-26T00:00:00Z"
+            }
+          },
+          "github": {
+            "publicationDate": "2024-05-06T14:20:59Z"
+          },
+          "gitlab": {
+            "publicationDate": "2024-05-06T00:00:00Z"
+          },
+          "nvd": {
+            "publicationDate": "2024-05-06T15:15:23.803Z"
+          },
+          "opensuse": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+              "score": 6.1
+            },
+            "severity": "medium"
+          },
+          "oracle": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N",
+              "score": 5.4
+            },
+            "severity": "medium"
+          },
+          "rhel": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N",
+              "score": 5.4
+            },
+            "publicationDate": "2024-05-06T00:00:00Z",
+            "severity": "medium"
+          },
+          "rocky": {
+            "publicationDate": "2024-06-14T14:00:40Z"
+          },
+          "suse": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+              "score": 6.1
+            },
+            "severity": "medium"
+          },
+          "ubuntu": {
+            "publicationDate": "2024-05-06T15:15:00Z",
+            "severity": "medium"
+          },
+          "vulndb": {
+            "cvssScore": {
+              "version": "3.0",
+              "vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+              "score": 6.1
+            },
+            "publicationDate": "2024-01-11T00:00:00Z",
+            "severity": "medium"
+          }
+        },
+        "riskAcceptRefs": null,
+        "severity": "medium",
+        "solutionDate": "2024-05-05"
+      },
+      "8524777c-bda9-4c5a-9520-4b5388258203": {
+        "cvssScore": {
+          "score": 7.5,
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+          "version": "3.1"
+        },
+        "disclosureDate": "2024-10-25",
+        "exploitable": false,
+        "fixVersion": "3.0.6",
+        "mainProvider": "nvd",
+        "name": "CVE-2024-49767",
+        "packageRef": "bae1b909-f49f-4098-b525-830f5424d4de",
+        "providersMetadata": {
+          "azurelinux": {
+            "severity": "medium"
+          },
+          "first.org": {
+            "epssScore": {
+              "score": 0.00865,
+              "percentile": 0.74365,
+              "timestamp": "2025-10-26T00:00:00Z"
+            }
+          },
+          "github": {
+            "publicationDate": "2024-10-25T19:44:43Z"
+          },
+          "gitlab": {
+            "publicationDate": "2024-10-25T00:00:00Z"
+          },
+          "nvd": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "score": 7.5,
+              "exploitability_score": 3.9,
+              "impact_score": 3.6
+            },
+            "publicationDate": "2024-10-25T20:15:04.53Z",
+            "severity": "high"
+          },
+          "opensuse": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+              "score": 5.3
+            },
+            "severity": "medium"
+          },
+          "ubuntu": {
+            "publicationDate": "2024-10-25T20:15:00Z",
+            "severity": "medium"
+          },
+          "vulndb": {
+            "cvssScore": {
+              "version": "3.0",
+              "vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "score": 7.5
+            },
+            "publicationDate": "2024-10-25T00:00:00Z",
+            "severity": "high"
+          }
+        },
+        "riskAcceptRefs": null,
+        "severity": "high",
+        "solutionDate": "2024-10-25"
+      },
+      "a2f60fa2-31ab-4dfe-8078-7dc2eae57f5f": {
+        "cvssScore": {
+          "score": 7.5,
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+          "version": "3.1"
+        },
+        "disclosureDate": "2023-10-25",
+        "exploitable": false,
+        "fixVersion": "2.3.8",
+        "mainProvider": "nvd",
+        "name": "CVE-2023-46136",
+        "packageRef": "bae1b909-f49f-4098-b525-830f5424d4de",
+        "providersMetadata": {
+          "azurelinux": {
+            "severity": "high"
+          },
+          "first.org": {
+            "epssScore": {
+              "score": 0.0041,
+              "percentile": 0.6058,
+              "timestamp": "2025-10-26T00:00:00Z"
+            }
+          },
+          "github": {
+            "publicationDate": "2023-10-25T14:22:59Z"
+          },
+          "gitlab": {
+            "publicationDate": "2023-10-25T00:00:00Z"
+          },
+          "nvd": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "score": 7.5,
+              "exploitability_score": 3.9,
+              "impact_score": 3.6
+            },
+            "publicationDate": "2023-10-25T18:17:36.753Z",
+            "severity": "high"
+          },
+          "opensuse": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "score": 7.5
+            },
+            "severity": "high"
+          },
+          "pypiadvisory": {
+            "publicationDate": "2023-10-25T18:17:00Z"
+          },
+          "rhel": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "score": 7.5
+            },
+            "publicationDate": "2023-10-25T00:00:00Z",
+            "severity": "medium"
+          },
+          "ubuntu": {
+            "publicationDate": "2023-10-25T18:17:00Z",
+            "severity": "medium"
+          },
+          "vulndb": {
+            "cvssScore": {
+              "version": "3.0",
+              "vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "score": 7.5
+            },
+            "publicationDate": "2023-10-24T00:00:00Z",
+            "severity": "high"
+          }
+        },
+        "riskAcceptRefs": null,
+        "severity": "high",
+        "solutionDate": "2023-11-08"
+      },
+      "c1d229bf-f2e0-4f94-b39b-54308afcda3a": {
+        "cvssScore": {
+          "score": 8.1,
+          "vector": "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+          "version": "3.0"
+        },
+        "disclosureDate": "2024-12-23",
+        "exploitable": false,
+        "fixVersion": "3.1.5",
+        "mainProvider": "vulndb",
+        "name": "CVE-2024-56326",
+        "packageRef": "0510c741-1174-48b7-8389-e7e272a2946d",
+        "providersMetadata": {
+          "alibaba": {
+            "severity": "high"
+          },
+          "almalinux": {
+            "publicationDate": "2025-01-23T00:00:00Z",
+            "severity": "high"
+          },
+          "amazon": {
+            "publicationDate": "2025-01-21T20:25:00Z"
+          },
+          "azurelinux": {
+            "severity": "medium"
+          },
+          "euleros": {
+            "publicationDate": "2025-07-24T10:49:47Z",
+            "severity": "high"
+          },
+          "first.org": {
+            "epssScore": {
+              "score": 0.00116,
+              "percentile": 0.31036,
+              "timestamp": "2025-10-26T00:00:00Z"
+            }
+          },
+          "github": {
+            "publicationDate": "2024-12-23T17:56:08Z"
+          },
+          "gitlab": {
+            "publicationDate": "2024-12-23T00:00:00Z"
+          },
+          "nvd": {
+            "publicationDate": "2024-12-23T16:15:07.59Z"
+          },
+          "opensuse": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+              "score": 8.1
+            },
+            "severity": "high"
+          },
+          "oracle": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:L/AC:H/PR:H/UI:R/S:U/C:H/I:H/A:H",
+              "score": 6.3
+            },
+            "severity": "high"
+          },
+          "rhel": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:L/AC:H/PR:H/UI:R/S:U/C:H/I:H/A:H",
+              "score": 6.3
+            },
+            "publicationDate": "2024-12-23T15:43:49.4Z",
+            "severity": "medium"
+          },
+          "rocky": {
+            "publicationDate": "2025-02-13T20:34:26Z"
+          },
+          "suse": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+              "score": 8.1
+            },
+            "severity": "high"
+          },
+          "ubuntu": {
+            "publicationDate": "2024-12-23T16:15:00Z",
+            "severity": "medium"
+          },
+          "vulndb": {
+            "cvssScore": {
+              "version": "3.0",
+              "vector": "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+              "score": 8.1
+            },
+            "publicationDate": "2024-12-19T00:00:00Z",
+            "severity": "high"
+          }
+        },
+        "riskAcceptRefs": null,
+        "severity": "high",
+        "solutionDate": "2024-12-21"
+      },
+      "d2ea074a-73f3-4018-ad22-61ebfb3cc145": {
+        "cvssScore": {
+          "score": 3.5,
+          "vector": "CVSS:3.1/AV:A/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N",
+          "version": "3.1"
+        },
+        "disclosureDate": "2023-02-15",
+        "exploitable": false,
+        "fixVersion": "2.2.3",
+        "mainProvider": "nvd",
+        "name": "CVE-2023-23934",
+        "packageRef": "bae1b909-f49f-4098-b525-830f5424d4de",
+        "providersMetadata": {
+          "alibaba": {
+            "severity": "high"
+          },
+          "amazon": {
+            "publicationDate": "2023-03-30T21:11:00Z"
+          },
+          "azurelinux": {
+            "severity": "low"
+          },
+          "euleros": {
+            "publicationDate": "2023-06-08T18:11:44Z",
+            "severity": "low"
+          },
+          "first.org": {
+            "epssScore": {
+              "score": 0.00242,
+              "percentile": 0.47379,
+              "timestamp": "2025-10-26T00:00:00Z"
+            }
+          },
+          "github": {
+            "publicationDate": "2023-02-15T15:37:03Z"
+          },
+          "gitlab": {
+            "publicationDate": "2023-02-15T00:00:00Z"
+          },
+          "nvd": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:A/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N",
+              "score": 3.5,
+              "exploitability_score": 2.1,
+              "impact_score": 1.4
+            },
+            "publicationDate": "2023-02-14T20:15:17.37Z",
+            "severity": "low"
+          },
+          "oracle": {
+            "cvssScore": {
+              "version": "3.0",
+              "vector": "AV:A/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N",
+              "score": 3.5
+            },
+            "severity": "low"
+          },
+          "pypiadvisory": {
+            "publicationDate": "2023-02-14T20:15:00Z"
+          },
+          "rhel": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:A/AC:H/PR:N/UI:R/S:U/C:N/I:L/A:N",
+              "score": 2.6
+            },
+            "publicationDate": "2023-02-14T00:00:00Z",
+            "severity": "low"
+          },
+          "ubuntu": {
+            "publicationDate": "2023-02-14T20:15:00Z",
+            "severity": "medium"
+          },
+          "vulndb": {
+            "cvssScore": {
+              "version": "3.0",
+              "vector": "CVSS:3.0/AV:N/AC:H/PR:N/UI:R/S:U/C:N/I:L/A:N",
+              "score": 3.1
+            },
+            "publicationDate": "2023-02-14T00:00:00Z",
+            "severity": "low"
+          }
+        },
+        "riskAcceptRefs": null,
+        "severity": "low",
+        "solutionDate": "2023-02-14"
+      },
+      "d3161d7e-50c3-4e21-82f4-e0cfb76182af": {
+        "cvssScore": {
+          "score": 8.8,
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+          "version": "3.1"
+        },
+        "disclosureDate": "2025-05-19",
+        "exploitable": false,
+        "fixVersion": "78.1.1",
+        "mainProvider": "nvd",
+        "name": "CVE-2025-47273",
+        "packageRef": "1b5ccc2f-be8d-451a-b387-4d2c87820cf9",
+        "providersMetadata": {
+          "alibaba": {
+            "severity": "medium"
+          },
+          "almalinux": {
+            "publicationDate": "2025-07-07T00:00:00Z",
+            "severity": "medium"
+          },
+          "amazon": {
+            "publicationDate": "2025-06-04T19:08:00Z"
+          },
+          "azurelinux": {
+            "severity": "high"
+          },
+          "first.org": {
+            "epssScore": {
+              "score": 0.0009,
+              "percentile": 0.26367,
+              "timestamp": "2025-10-26T00:00:00Z"
+            }
+          },
+          "github": {
+            "publicationDate": "2025-05-19T16:52:43Z"
+          },
+          "gitlab": {
+            "publicationDate": "2025-05-19T00:00:00Z"
+          },
+          "nvd": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+              "score": 8.8,
+              "exploitability_score": 2.8,
+              "impact_score": 5.9
+            },
+            "publicationDate": "2025-05-17T16:15:19.11Z",
+            "severity": "high"
+          },
+          "oracle": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:L",
+              "score": 7.1
+            },
+            "severity": "medium"
+          },
+          "pypiadvisory": {
+            "publicationDate": "2025-05-17T16:15:19Z"
+          },
+          "rhel": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:L",
+              "score": 7.1
+            },
+            "publicationDate": "2025-05-17T15:46:11.399Z",
+            "severity": "medium"
+          },
+          "rocky": {
+            "publicationDate": "2025-07-29T13:38:26Z"
+          },
+          "suse": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+              "score": 7.5
+            },
+            "severity": "high"
+          },
+          "ubuntu": {
+            "publicationDate": "2025-05-17T16:15:00Z",
+            "severity": "medium"
+          },
+          "vulndb": {
+            "cvssScore": {
+              "version": "3.0",
+              "vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+              "score": 9.8
+            },
+            "publicationDate": "2025-04-14T00:00:00Z",
+            "severity": "critical"
+          }
+        },
+        "riskAcceptRefs": null,
+        "severity": "high",
+        "solutionDate": "2025-04-19"
+      },
+      "f8c629f6-ccac-499d-9126-9f32c26e40c3": {
+        "cvssScore": {
+          "score": 8.8,
+          "vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H",
+          "version": "3.1"
+        },
+        "disclosureDate": "2025-03-05",
+        "exploitable": false,
+        "fixVersion": "3.1.6",
+        "mainProvider": "nvd",
+        "name": "CVE-2025-27516",
+        "packageRef": "0510c741-1174-48b7-8389-e7e272a2946d",
+        "providersMetadata": {
+          "alibaba": {
+            "severity": "high"
+          },
+          "almalinux": {
+            "publicationDate": "2025-03-31T00:00:00Z",
+            "severity": "high"
+          },
+          "amazon": {
+            "publicationDate": "2025-03-13T01:30:00Z"
+          },
+          "azurelinux": {
+            "severity": "medium"
+          },
+          "euleros": {
+            "publicationDate": "2025-07-10T18:16:11Z",
+            "severity": "high"
+          },
+          "first.org": {
+            "epssScore": {
+              "score": 0.00138,
+              "percentile": 0.34497,
+              "timestamp": "2025-10-26T00:00:00Z"
+            }
+          },
+          "github": {
+            "publicationDate": "2025-03-05T20:40:14Z"
+          },
+          "gitlab": {
+            "publicationDate": "2025-03-05T00:00:00Z"
+          },
+          "nvd": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H",
+              "score": 8.8,
+              "exploitability_score": 2,
+              "impact_score": 6
+            },
+            "publicationDate": "2025-03-05T21:15:20.073Z",
+            "severity": "high"
+          },
+          "oracle": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:L/AC:L/PR:L/UI:R/S:U/C:H/I:H/A:H",
+              "score": 7.3
+            },
+            "severity": "high"
+          },
+          "rhel": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:L/AC:L/PR:L/UI:R/S:U/C:H/I:H/A:H",
+              "score": 7.3
+            },
+            "publicationDate": "2025-03-05T20:40:06.568Z",
+            "severity": "high"
+          },
+          "rocky": {
+            "publicationDate": "2025-07-29T13:38:41Z"
+          },
+          "suse": {
+            "cvssScore": {
+              "version": "3.1",
+              "vector": "AV:L/AC:L/PR:H/UI:R/S:U/C:H/I:H/A:H",
+              "score": 6.5
+            },
+            "severity": "medium"
+          },
+          "ubuntu": {
+            "publicationDate": "2025-03-05T21:15:00Z",
+            "severity": "medium"
+          },
+          "vulndb": {
+            "cvssScore": {
+              "version": "3.0",
+              "vector": "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+              "score": 8.1
+            },
+            "publicationDate": "2025-03-05T00:00:00Z",
+            "severity": "high"
+          }
+        },
+        "riskAcceptRefs": null,
+        "severity": "high",
+        "solutionDate": "2025-03-05"
+      }
+    }
+  }
+}
