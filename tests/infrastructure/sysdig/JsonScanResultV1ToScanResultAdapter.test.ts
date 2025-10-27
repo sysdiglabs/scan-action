@@ -50,4 +50,17 @@ describe('JsonScanResultV1ToScanResultAdapter', () => {
       .find((p) => p.getVulnerabilities().some((v) => v.cve === cve));
     expect(affectingPackage).toBeDefined();
   });
+
+  it('should return a passed evaluation for a globally accepted risk', () => {
+    const filePath = path.join(__dirname, '../../fixtures/vm/dummy-vuln-app_latest_accepted_risk_in_image.json');
+    const fileContent = fs.readFileSync(filePath, 'utf-8');
+    const reportWithAcceptedRisk = JSON.parse(fileContent) as JsonScanResultV1;
+
+    const adapter = new JsonScanResultV1ToScanResultAdapter();
+    const scanResult = adapter.toScanResult(reportWithAcceptedRisk);
+
+    expect(scanResult.getEvaluationResult().isPassed()).toBe(true);
+    const policyWithFailure = scanResult.getPolicies().find(p => p.getEvaluationResult().isFailed());
+    expect(policyWithFailure).toBeDefined();
+  });
 });

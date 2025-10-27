@@ -858,7 +858,6 @@ exports.PolicyBundleRuleImageConfig = PolicyBundleRuleImageConfig;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ScanResult = exports.Metadata = void 0;
 const AcceptedRisk_1 = __nccwpck_require__(7272);
-const EvaluationResult_1 = __nccwpck_require__(4405);
 const Layer_1 = __nccwpck_require__(6293);
 const Package_1 = __nccwpck_require__(6913);
 const Policy_1 = __nccwpck_require__(4023);
@@ -879,7 +878,7 @@ class Metadata {
 }
 exports.Metadata = Metadata;
 class ScanResult {
-    constructor(scanType, pullString, imageId, digest, baseOs, sizeInBytes, architecture, labels, createdAt) {
+    constructor(scanType, pullString, imageId, digest, baseOs, sizeInBytes, architecture, labels, createdAt, evaluationResult) {
         this.scanType = scanType;
         this.layers = [];
         this.packages = new Set();
@@ -888,6 +887,7 @@ class ScanResult {
         this.policyBundles = new Map();
         this.acceptedRisks = new Map();
         this.metadata = new Metadata(pullString, imageId, digest, baseOs, sizeInBytes, architecture, labels, createdAt);
+        this.evaluationResult = evaluationResult;
     }
     addLayer(digest, index, size, command) {
         const layer = new Layer_1.Layer(digest, index, size, command);
@@ -970,12 +970,7 @@ class ScanResult {
         return Array.from(this.acceptedRisks.values());
     }
     getEvaluationResult() {
-        for (const policy of this.getPolicies()) {
-            if (policy.getEvaluationResult().isFailed()) {
-                return EvaluationResult_1.EvaluationResult.Failed;
-            }
-        }
-        return EvaluationResult_1.EvaluationResult.Passed;
+        return this.evaluationResult;
     }
 }
 exports.ScanResult = ScanResult;
@@ -2091,7 +2086,7 @@ const scanresult_1 = __nccwpck_require__(9056);
 // Helper interfaces to provide better typing than `any` for vulnerabilities and risks
 class JsonScanResultV1ToScanResultAdapter {
     toScanResult(report) {
-        const scanResult = this.createScanResult(report.result.metadata);
+        const scanResult = this.createScanResult(report);
         const reportResult = report.result;
         this.addLayers(reportResult, scanResult);
         this.addAcceptedRisks(reportResult, scanResult);
@@ -2100,10 +2095,11 @@ class JsonScanResultV1ToScanResultAdapter {
         this.addPolicies(reportResult, scanResult);
         return scanResult;
     }
-    createScanResult(metadata) {
+    createScanResult(report) {
         var _a;
+        const metadata = report.result.metadata;
         return new scanresult_1.ScanResult(scanresult_1.ScanType.Docker, // Assuming Docker scan type as in the Rust code
-        metadata.pullString, metadata.imageId, metadata.digest, new scanresult_1.OperatingSystem(scanresult_1.Family.fromString(metadata.os), metadata.baseOs), BigInt(metadata.size), scanresult_1.Architecture.fromString(metadata.architecture), (_a = metadata.labels) !== null && _a !== void 0 ? _a : {}, new Date(metadata.createdAt));
+        metadata.pullString, metadata.imageId, metadata.digest, new scanresult_1.OperatingSystem(scanresult_1.Family.fromString(metadata.os), metadata.baseOs), BigInt(metadata.size), scanresult_1.Architecture.fromString(metadata.architecture), (_a = metadata.labels) !== null && _a !== void 0 ? _a : {}, new Date(metadata.createdAt), scanresult_1.EvaluationResult.fromString(report.result.policies.globalEvaluation));
     }
     addLayers(reportResult, scanResult) {
         var _a, _b;
@@ -30086,7 +30082,7 @@ module.exports = parseParams
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"6.2.0","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint . --ignore-pattern \'build/*\'","build":"tsc","prepare":"npm run build && ncc build build/index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^6.0.1"},"devDependencies":{"@types/jest":"^29.5.12","@types/tmp":"^0.2.6","@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^29.7.0","tmp":"^0.2.1","ts-jest":"^29.2.3","typescript":"^5.5.4"}}');
+module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"6.2.1","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint . --ignore-pattern \'build/*\'","build":"tsc","prepare":"npm run build && ncc build build/index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^6.0.1"},"devDependencies":{"@types/jest":"^29.5.12","@types/tmp":"^0.2.6","@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^29.7.0","tmp":"^0.2.1","ts-jest":"^29.2.3","typescript":"^5.5.4"}}');
 
 /***/ })
 

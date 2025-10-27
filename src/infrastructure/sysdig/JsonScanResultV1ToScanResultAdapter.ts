@@ -17,7 +17,7 @@ import {
 // Helper interfaces to provide better typing than `any` for vulnerabilities and risks
 export class JsonScanResultV1ToScanResultAdapter {
   public toScanResult(report: JsonScanResultV1): ScanResult {
-    const scanResult = this.createScanResult(report.result.metadata);
+    const scanResult = this.createScanResult(report);
     const reportResult = report.result;
 
     this.addLayers(reportResult, scanResult);
@@ -29,7 +29,8 @@ export class JsonScanResultV1ToScanResultAdapter {
     return scanResult;
   }
 
-  private createScanResult(metadata: ReportMetadata): ScanResult {
+  private createScanResult(report: JsonScanResultV1): ScanResult {
+    const metadata = report.result.metadata;
     return new ScanResult(
       ScanType.Docker, // Assuming Docker scan type as in the Rust code
       metadata.pullString,
@@ -39,7 +40,8 @@ export class JsonScanResultV1ToScanResultAdapter {
       BigInt(metadata.size),
       Architecture.fromString(metadata.architecture),
       metadata.labels ?? {},
-      new Date(metadata.createdAt)
+      new Date(metadata.createdAt),
+      EvaluationResult.fromString(report.result.policies.globalEvaluation)
     );
   }
 
