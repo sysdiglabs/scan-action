@@ -99,10 +99,10 @@ export class JsonScanResultV1ToScanResultAdapter {
   private addPackages(reportResult: ReportResult, scanResult: ScanResult): void {
     for (const key in reportResult.packages) {
       const pkgData = reportResult.packages[key];
-      const layerRef = reportResult.layers[pkgData.layerRef];
-      if (!layerRef) continue;
+      const JsonLayer = reportResult.layers[pkgData.layerRef];
+      if (!JsonLayer) continue;
 
-      const layer = scanResult.findLayerByDigest(layerRef.digest ?? '');
+      const layer = scanResult.findLayerByDigest(JsonLayer.digest ?? '');
       if (!layer) continue;
 
       const pkg = scanResult.addPackage(

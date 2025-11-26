@@ -12,7 +12,7 @@ export function scannerURLForVersion(version: string): string {
   return `${cliScannerURLBase}/${version}/${cliScannerOS}/${cliScannerArch}/${cliScannerName}`;
 }
 
-function getRunArch() {
+export function getRunArch() {
   let arch = "unknown";
   if (os.arch() == "x64") {
     arch = "amd64";
@@ -22,7 +22,7 @@ function getRunArch() {
   return arch;
 }
 
-function getRunOS() {
+export function getRunOS() {
   let os_name = "unknown";
   if (os.platform() == "linux") {
     os_name = "linux";

@@ -1631,10 +1631,14 @@ class SarifReportPresenter {
         let rules = [];
         let results = [];
         (0, filtering_1.filterPackages)(data.getPackages(), filters).forEach((pkg) => {
+            const pkgVulnerabilities = pkg.getVulnerabilities();
+            if (pkgVulnerabilities.length === 0) {
+                return;
+            }
             let fullDescription = "";
             let severityLevel = "";
             let maxCvssFound = 0;
-            pkg.getVulnerabilities().forEach(vuln => {
+            pkgVulnerabilities.forEach(vuln => {
                 fullDescription += `${this.getSARIFVulnFullDescription(pkg, vuln)} \
 \
 \
@@ -1644,8 +1648,8 @@ class SarifReportPresenter {
                 }
             });
             let rule = {
-                id: pkg.name,
-                name: pkg.name,
+                id: `${pkg.name}-${pkg.version}-${pkg.path}`.replace(/[^a-zA-Z0-9.-]/g, '_'),
+                name: `Vulnerable Package: ${pkg.name}@${pkg.version}`,
                 shortDescription: {
                     text: `Vulnerable package: ${pkg.name}`
                 },
@@ -1666,7 +1670,7 @@ class SarifReportPresenter {
             };
             rules.push(rule);
             let result = {
-                ruleId: pkg.name,
+                ruleId: `${pkg.name}-${pkg.version}-${pkg.path}`.replace(/[^a-zA-Z0-9.-]/g, '_'),
                 level: this.check_level(severityLevel),
                 message: {
                     text: this.getSARIFReportMessageByPackage(pkg)
@@ -1703,7 +1707,7 @@ class SarifReportPresenter {
                     ruleIds.push(vuln.cve);
                     let rule = {
                         id: vuln.cve,
-                        name: pkg.packageType.toString(),
+                        name: vuln.cve,
                         shortDescription: {
                             text: this.getSARIFVulnShortDescription(pkg, vuln)
                         },
@@ -1728,7 +1732,7 @@ class SarifReportPresenter {
                     ruleId: vuln.cve,
                     level: this.check_level(vuln.severity.toString()),
                     message: {
-                        text: this.getSARIFReportMessage(data, vuln, pkg)
+                        text: this.getSARIFReportMessage(vuln, pkg)
                     },
                     locations: [
                         {
@@ -1807,8 +1811,7 @@ class SarifReportPresenter {
         };
     }
     getSARIFReportMessageByPackage(pkg) {
-        let message = "Full scan result:";
-        message += `Package: ${pkg.name}
+        let message = `Package: ${pkg.name}
 `;
         message += `Package type: ${pkg.packageType.toString()}
     Installed Version: ${pkg.version}
@@ -1827,10 +1830,8 @@ class SarifReportPresenter {
         });
         return message;
     }
-    getSARIFReportMessage(data, vuln, pkg) {
-        let message = `Full image scan results for ${data.metadata.pullString} scan result:
-`;
-        message += `Package: ${pkg.name}
+    getSARIFReportMessage(vuln, pkg) {
+        let message = `Package: ${pkg.name}
 `;
         message += `Package type: ${pkg.packageType.toString()}
     Installed Version: ${pkg.version}
@@ -2134,10 +2135,10 @@ class JsonScanResultV1ToScanResultAdapter {
         var _a, _b;
         for (const key in reportResult.packages) {
             const pkgData = reportResult.packages[key];
-            const layerRef = reportResult.layers[pkgData.layerRef];
-            if (!layerRef)
+            const JsonLayer = reportResult.layers[pkgData.layerRef];
+            if (!JsonLayer)
                 continue;
-            const layer = scanResult.findLayerByDigest((_a = layerRef.digest) !== null && _a !== void 0 ? _a : '');
+            const layer = scanResult.findLayerByDigest((_a = JsonLayer.digest) !== null && _a !== void 0 ? _a : '');
             if (!layer)
                 continue;
             const pkg = scanResult.addPackage(key, scanresult_1.PackageType.fromString(pkgData.type), pkgData.name, pkgData.version, pkgData.path, layer);
@@ -2387,6 +2388,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.cliScannerURL = exports.cliScannerResult = exports.cliScannerName = void 0;
 exports.scannerURLForVersion = scannerURLForVersion;
+exports.getRunArch = getRunArch;
+exports.getRunOS = getRunOS;
 const os_1 = __importDefault(__nccwpck_require__(2037));
 const cliScannerVersion = "1.22.6";
 const cliScannerOS = getRunOS();
@@ -30082,7 +30085,7 @@ module.exports = parseParams
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"6.2.1","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint . --ignore-pattern \'build/*\'","build":"tsc","prepare":"npm run build && ncc build build/index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^6.0.1"},"devDependencies":{"@types/jest":"^29.5.12","@types/tmp":"^0.2.6","@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^29.7.0","tmp":"^0.2.1","ts-jest":"^29.2.3","typescript":"^5.5.4"}}');
+module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"6.3.0","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint . --ignore-pattern \'build/*\'","build":"tsc","prepare":"npm run build && ncc build build/index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^6.0.1"},"devDependencies":{"@types/jest":"^29.5.12","@types/tmp":"^0.2.6","@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^29.7.0","tmp":"^0.2.1","ts-jest":"^29.2.3","typescript":"^5.5.4"}}');
 
 /***/ })
 
