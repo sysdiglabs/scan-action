@@ -122,10 +122,16 @@ export class SarifReportPresenter implements IReportPresenter {
 
 
     filterPackages(data.getPackages(), filters).forEach((pkg: Package) => {
+      const pkgVulnerabilities = pkg.getVulnerabilities();
+      if (pkgVulnerabilities.length === 0) {
+        return;
+      }
+
       let fullDescription = "";
       let severityLevel = "";
       let maxCvssFound = 0;
-      pkg.getVulnerabilities().forEach(vuln => {
+
+      pkgVulnerabilities.forEach(vuln => {
         fullDescription += `${this.getSARIFVulnFullDescription(pkg, vuln)} \
 \
 \
@@ -138,8 +144,8 @@ export class SarifReportPresenter implements IReportPresenter {
       });
 
       let rule: SARIFRule = {
-        id: pkg.name,
-        name: pkg.name,
+        id: `${pkg.name}-${pkg.version}-${pkg.path}`.replace(/[^a-zA-Z0-9.-]/g, '_'),
+        name: `Vulnerable Package: ${pkg.name}@${pkg.version}`,
         shortDescription: {
           text: `Vulnerable package: ${pkg.name}`
         },
@@ -161,7 +167,7 @@ export class SarifReportPresenter implements IReportPresenter {
       rules.push(rule);
 
       let result: SARIFResult = {
-        ruleId: pkg.name,
+        ruleId: `${pkg.name}-${pkg.version}-${pkg.path}`.replace(/[^a-zA-Z0-9.-]/g, '_'),
         level: this.check_level(severityLevel),
         message: {
           text: this.getSARIFReportMessageByPackage(pkg)
@@ -200,13 +206,13 @@ export class SarifReportPresenter implements IReportPresenter {
       pkg.getVulnerabilities().forEach(vuln => {
         if (!(vuln.cve in ruleIds)) {
           ruleIds.push(vuln.cve)
-          let rule = {
-            id: vuln.cve,
-            name: pkg.packageType.toString(),
-            shortDescription: {
-              text: this.getSARIFVulnShortDescription(pkg, vuln)
-            },
-            fullDescription: {
+                let rule = {
+                  id: vuln.cve,
+                  name: vuln.cve,
+                  shortDescription: {
+                    text: this.getSARIFVulnShortDescription(pkg, vuln)
+                  },
+                  fullDescription: {
               text: this.getSARIFVulnFullDescription(pkg, vuln)
             },
             helpUri: `https://nvd.nist.gov/vuln/detail/${vuln.cve}`,
@@ -228,7 +234,7 @@ export class SarifReportPresenter implements IReportPresenter {
           ruleId: vuln.cve,
           level: this.check_level(vuln.severity.toString()),
           message: {
-            text: this.getSARIFReportMessage(data, vuln, pkg)
+            text: this.getSARIFReportMessage(vuln, pkg)
           },
           locations: [
             {
@@ -314,9 +320,7 @@ export class SarifReportPresenter implements IReportPresenter {
     }
   }
   private getSARIFReportMessageByPackage(pkg: Package) {
-    let message = "Full scan result:";
-
-    message += `Package: ${pkg.name}
+    let message = `Package: ${pkg.name}
 `;
 
     message += `Package type: ${pkg.packageType.toString()}
@@ -343,11 +347,8 @@ export class SarifReportPresenter implements IReportPresenter {
     return message;
   }
 
-  private getSARIFReportMessage(data: ScanResult, vuln: Vulnerability, pkg: Package) {
-    let message = `Full image scan results for ${data.metadata.pullString} scan result:
-`;
-
-      message += `Package: ${pkg.name}
+  private getSARIFReportMessage(vuln: Vulnerability, pkg: Package) {
+    let message = `Package: ${pkg.name}
 `;
 
     message += `Package type: ${pkg.packageType.toString()}

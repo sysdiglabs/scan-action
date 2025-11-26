@@ -1,13 +1,16 @@
 import { SysdigCliScannerDownloader, withSha256Sum } from '../../../src/infrastructure/sysdig/SysdigCliScannerDownloader';
-import { cliScannerName } from '../../../src/infrastructure/sysdig/SysdigCliScannerConstants';
+import { cliScannerName, getRunOS, getRunArch } from '../../../src/infrastructure/sysdig/SysdigCliScannerConstants';
 import * as fs from 'fs';
 import * as path from 'path';
 
 describe('SysdigCliScannerDownloader - Integration Test', () => {
-  const scannerVersion = '1.22.6';
+  const scannerVersion = '1.24.1';
   // This is the hardcoded, known-good SHA256 checksum for version 1.22.6 of the scanner.
   // Using a hardcoded value makes the test more stable and deterministic.
-  const correctSha256sum = '68ec2fc48c6ad61eba60a2469c5548153700fedab40ac79e34b7baa5f2e86e42';
+  const correctSha256sum: Record<string, string> = {
+    "linux/amd64": 'aaca2b5d029cef6e0647da304fa25b969b2711d0e23e884ae2848f15044f6bed',
+    "darwin/arm64": '726fb81d735ddc30e18cc0ca702326141537d64fa9fb03cb50290f4c74c70361'
+  }
   const downloadedFilePath = path.resolve(process.cwd(), cliScannerName);
 
   // Cleanup the downloaded scanner binary after each test
@@ -19,7 +22,9 @@ describe('SysdigCliScannerDownloader - Integration Test', () => {
 
   it('should succeed when a correct, user-provided checksum is used', async () => {
     jest.setTimeout(30000);
-    const downloader = new SysdigCliScannerDownloader(withSha256Sum(correctSha256sum));
+    const archOsString = getRunOS() + '/' + getRunArch();
+
+    const downloader = new SysdigCliScannerDownloader(withSha256Sum(correctSha256sum[archOsString]));
     const scannerPath = await downloader.download(scannerVersion);
 
     expect(scannerPath).toBe(`./${cliScannerName}`);
@@ -32,9 +37,10 @@ describe('SysdigCliScannerDownloader - Integration Test', () => {
     jest.setTimeout(30000);
     const incorrectChecksum = 'a'.repeat(64);
     const downloader = new SysdigCliScannerDownloader(withSha256Sum(incorrectChecksum));
+    const archOsString = getRunOS() + '/' + getRunArch();
 
     await expect(downloader.download(scannerVersion)).rejects.toThrow(
-      `Checksum verification failed. Expected ${incorrectChecksum} but got ${correctSha256sum}`
+      `Checksum verification failed. Expected ${incorrectChecksum} but got ${correctSha256sum[archOsString]}`
     );
   }, 30000);
 
