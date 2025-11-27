@@ -1937,22 +1937,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SummaryReportPresenter = void 0;
-const core = __importStar(__nccwpck_require__(2186));
 const sorting_1 = __nccwpck_require__(2925);
 const scanresult_1 = __nccwpck_require__(9056);
+const core = __importStar(__nccwpck_require__(2186));
 const EVALUATION_RESULT_AS_EMOJI = {
     "failed": "❌",
     "passed": "✅"
 };
 class SummaryReportPresenter {
+    constructor(summary = core.summary) {
+        this.summary = summary;
+    }
     generateReport(data, _groupByPackage, filters) {
         return __awaiter(this, void 0, void 0, function* () {
-            core.summary.emptyBuffer().clear();
-            core.summary.addHeading(`Scan Results for ${data.metadata.pullString}`);
+            this.summary.addHeading(`Scan Results for ${data.metadata.pullString}`);
             this.addVulnTableToSummary(data, filters);
             this.addVulnsByLayerTableToSummary(data, (filters === null || filters === void 0 ? void 0 : filters.minSeverity) || scanresult_1.Severity.Unknown);
             this.addReportToSummary(data);
-            yield core.summary.write({ overwrite: true });
         });
     }
     addVulnTableToSummary(data, filters) {
@@ -1966,11 +1967,11 @@ class SummaryReportPresenter {
         const totalRow = [{ data: "⚠️ Total Vulnerabilities", header: true }].concat(colsToDisplay.map(c => ({ data: countBySeverity(c.sev).toString(), header: false })));
         const countFixableBySeverity = (sev) => vulns.filter(v => v.severity === sev && v.isFixable()).length;
         const fixableRow = [{ data: "🔧 Fixable Vulnerabilities", header: true }].concat(colsToDisplay.map(c => ({ data: countFixableBySeverity(c.sev).toString(), header: false })));
-        core.summary.addHeading("Vulnerabilities summary", 2);
-        core.summary.addTable([headerRow, totalRow, fixableRow]);
+        this.summary.addHeading("Vulnerabilities summary", 2);
+        this.summary.addTable([headerRow, totalRow, fixableRow]);
     }
     addVulnsByLayerTableToSummary(data, minSeverity) {
-        core.summary.addHeading(`Package vulnerabilities per layer`, 2);
+        this.summary.addHeading(`Package vulnerabilities per layer`, 2);
         const orderedLayers = data.getLayers().sort((a, b) => a.index - b.index);
         orderedLayers.forEach(layer => {
             const vulnerablePackages = layer
@@ -1992,9 +1993,9 @@ class SummaryReportPresenter {
                     { data: ((_a = pkg.suggestedFixVersion()) === null || _a === void 0 ? void 0 : _a.toString()) || "None" },
                 ].concat(colsToDisplay.map(c => ({ data: countBySeverity(c.sev).toString() }))).concat({ data: vulns.filter(v => v.exploitable).length.toString() });
             });
-            core.summary.addCodeBlock(`LAYER ${layer.index} - ${layer.command.replace(/\$/g, "&#36;").replace(/\&/g, '&amp;')}`);
+            this.summary.addCodeBlock(`LAYER ${layer.index} - ${layer.command.replace(/\$/g, "&#36;").replace(/\&/g, '&amp;')}`);
             if (packageRows.length > 0) {
-                core.summary.addTable([
+                this.summary.addTable([
                     [
                         { data: 'Package', header: true },
                         { data: 'Type', header: true },
@@ -2013,8 +2014,8 @@ class SummaryReportPresenter {
         if (policies.length == 0) {
             return;
         }
-        core.summary.addHeading("Policy evaluation summary", 2);
-        core.summary.addRaw(`Evaluation result: ${data.getEvaluationResult().toString()} ${EVALUATION_RESULT_AS_EMOJI[data.getEvaluationResult().toString()]}`);
+        this.summary.addHeading("Policy evaluation summary", 2);
+        this.summary.addRaw(`Evaluation result: ${data.getEvaluationResult().toString()} ${EVALUATION_RESULT_AS_EMOJI[data.getEvaluationResult().toString()]}`);
         let table = [[
                 { data: 'Policy', header: true },
                 { data: 'Evaluation', header: true },
@@ -2025,15 +2026,15 @@ class SummaryReportPresenter {
                 { data: `${EVALUATION_RESULT_AS_EMOJI[policy.getEvaluationResult().toString()]}` },
             ]);
         });
-        core.summary.addTable(table);
-        core.summary.addHeading("Policy failures", 2);
+        this.summary.addTable(table);
+        this.summary.addHeading("Policy failures", 2);
         policies.forEach(policy => {
             if (policy.getEvaluationResult().isFailed()) {
-                core.summary.addHeading(`Policy: ${policy.name}`, 3);
+                this.summary.addHeading(`Policy: ${policy.name}`, 3);
                 policy.getBundles().forEach(bundle => {
-                    core.summary.addHeading(`Rule Bundle: ${bundle.name}`, 4);
+                    this.summary.addHeading(`Rule Bundle: ${bundle.name}`, 4);
                     bundle.getRules().forEach(rule => {
-                        core.summary.addHeading(`Rule: ${rule.description}`, 5);
+                        this.summary.addHeading(`Rule: ${rule.description}`, 5);
                         if (rule.evaluationResult.isFailed()) {
                             if ((0, scanresult_1.isPkgRule)(rule)) {
                                 this.getRulePkgMessage(rule);
@@ -2067,11 +2068,11 @@ class SummaryReportPresenter {
                 { data: `${failure.vuln.exploitable}` },
             ]);
         });
-        core.summary.addTable(table);
+        this.summary.addTable(table);
     }
     getRuleImageMessage(rule) {
         const reasons = rule.getFailures().map(failure => failure.reason());
-        core.summary.addList(reasons);
+        this.summary.addList(reasons);
     }
 }
 exports.SummaryReportPresenter = SummaryReportPresenter;

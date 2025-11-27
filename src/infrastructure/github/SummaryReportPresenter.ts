@@ -1,8 +1,9 @@
-import * as core from "@actions/core";
 import { IReportPresenter } from "../../application/ports/IReportPresenter";
 import { FilterOptions } from "../../domain/services/filtering";
 import { sortPackagesByVulnSeverity } from "../../domain/services/sorting";
 import { isImageRule, isPkgRule, PolicyBundleRuleImageConfig, PolicyBundleRulePkgVuln, ScanResult, Severity } from "../../domain/scanresult";
+import { ISummary } from "./ISummary";
+import * as core from "@actions/core";
 
 const EVALUATION_RESULT_AS_EMOJI: any = {
   "failed": "❌",
@@ -18,16 +19,14 @@ export class SummaryReportPresenter implements IReportPresenter {
     { sev: Severity.Negligible, label: "⚪ Negligible" },
   ];
 
-  async generateReport(data: ScanResult, _groupByPackage: boolean, filters?: FilterOptions) {
+  constructor(private readonly summary: ISummary = core.summary) {}
 
-    core.summary.emptyBuffer().clear();
-    core.summary.addHeading(`Scan Results for ${data.metadata.pullString}`);
+  async generateReport(data: ScanResult, _groupByPackage: boolean, filters?: FilterOptions) {
+    this.summary.addHeading(`Scan Results for ${data.metadata.pullString}`);
 
     this.addVulnTableToSummary(data, filters);
     this.addVulnsByLayerTableToSummary(data, filters?.minSeverity || Severity.Unknown);
     this.addReportToSummary(data);
-
-    await core.summary.write({ overwrite: true });
   }
 
 
@@ -55,14 +54,14 @@ export class SummaryReportPresenter implements IReportPresenter {
       colsToDisplay.map(c => ({ data: countFixableBySeverity(c.sev).toString(), header: false }))
     );
 
-    core.summary.addHeading("Vulnerabilities summary", 2);
-    core.summary.addTable([headerRow, totalRow, fixableRow]);
+    this.summary.addHeading("Vulnerabilities summary", 2);
+    this.summary.addTable([headerRow, totalRow, fixableRow]);
   }
 
 
 
   private addVulnsByLayerTableToSummary(data: ScanResult, minSeverity: Severity) {
-    core.summary.addHeading(`Package vulnerabilities per layer`, 2);
+    this.summary.addHeading(`Package vulnerabilities per layer`, 2);
     const orderedLayers = data.getLayers().sort((a, b) => a.index - b.index);
 
     orderedLayers.forEach(layer => {
@@ -98,10 +97,10 @@ export class SummaryReportPresenter implements IReportPresenter {
         );
       });
 
-      core.summary.addCodeBlock(`LAYER ${layer.index} - ${layer.command.replace(/\$/g, "&#36;").replace(/\&/g, '&amp;')}`);
+      this.summary.addCodeBlock(`LAYER ${layer.index} - ${layer.command.replace(/\$/g, "&#36;").replace(/\&/g, '&amp;')}`);
 
       if (packageRows.length > 0) {
-        core.summary.addTable([
+        this.summary.addTable([
           [
             { data: 'Package', header: true },
             { data: 'Type', header: true },
@@ -122,8 +121,8 @@ export class SummaryReportPresenter implements IReportPresenter {
       return
     }
 
-    core.summary.addHeading("Policy evaluation summary", 2)
-    core.summary.addRaw(`Evaluation result: ${data.getEvaluationResult().toString()} ${EVALUATION_RESULT_AS_EMOJI[data.getEvaluationResult().toString()]}`);
+    this.summary.addHeading("Policy evaluation summary", 2)
+    this.summary.addRaw(`Evaluation result: ${data.getEvaluationResult().toString()} ${EVALUATION_RESULT_AS_EMOJI[data.getEvaluationResult().toString()]}`);
 
     let table: { data: string, header?: boolean }[][] = [[
       { data: 'Policy', header: true },
@@ -137,17 +136,17 @@ export class SummaryReportPresenter implements IReportPresenter {
       ]);
     });
 
-    core.summary.addTable(table);
+    this.summary.addTable(table);
 
-    core.summary.addHeading("Policy failures", 2)
+    this.summary.addHeading("Policy failures", 2)
 
     policies.forEach(policy => {
       if (policy.getEvaluationResult().isFailed()) {
-        core.summary.addHeading(`Policy: ${policy.name}`, 3)
+        this.summary.addHeading(`Policy: ${policy.name}`, 3)
         policy.getBundles().forEach(bundle => {
-          core.summary.addHeading(`Rule Bundle: ${bundle.name}`, 4)
+          this.summary.addHeading(`Rule Bundle: ${bundle.name}`, 4)
           bundle.getRules().forEach(rule => {
-            core.summary.addHeading(`Rule: ${rule.description}`, 5)
+            this.summary.addHeading(`Rule: ${rule.description}`, 5)
             if (rule.evaluationResult.isFailed()) {
               if (isPkgRule(rule)) {
                 this.getRulePkgMessage(rule)
@@ -184,11 +183,11 @@ export class SummaryReportPresenter implements IReportPresenter {
       ]);
     });
 
-    core.summary.addTable(table);
+    this.summary.addTable(table);
   }
 
   private getRuleImageMessage(rule: PolicyBundleRuleImageConfig) {
     const reasons = rule.getFailures().map(failure => failure.reason())
-    core.summary.addList(reasons);
+    this.summary.addList(reasons);
   }
 }
