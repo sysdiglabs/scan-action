@@ -3,7 +3,6 @@ import { FilterOptions } from "../../domain/services/filtering";
 import { sortPackagesByVulnSeverity } from "../../domain/services/sorting";
 import { isImageRule, isPkgRule, PolicyBundleRuleImageConfig, PolicyBundleRulePkgVuln, ScanResult, Severity } from "../../domain/scanresult";
 import { ISummary } from "./ISummary";
-import * as core from "@actions/core";
 
 const EVALUATION_RESULT_AS_EMOJI: any = {
   "failed": "❌",
