@@ -19,7 +19,7 @@ export class SummaryReportPresenter implements IReportPresenter {
     { sev: Severity.Negligible, label: "⚪ Negligible" },
   ];
 
-  constructor(private readonly summary: ISummary = core.summary) {}
+  constructor(private readonly summary: ISummary) {}
 
   async generateReport(data: ScanResult, _groupByPackage: boolean, filters?: FilterOptions) {
     this.summary.addHeading(`Scan Results for ${data.metadata.pullString}`);

@@ -30,11 +30,14 @@ async function run(): Promise<void> {
     ];
 
     if (!config.skipSummary) {
-      presenters.push(new SummaryReportPresenter());
+      presenters.push(new SummaryReportPresenter(core.summary));
     }
 
     const useCase = new RunScanUseCase(scanner, presenters, inputProvider);
+
+    core.summary.emptyBuffer().clear();
     await useCase.execute();
+    await core.summary.write({ overwrite: true });
 
 } catch (error) {
     if (error instanceof Error) {

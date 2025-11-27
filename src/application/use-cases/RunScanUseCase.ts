@@ -6,7 +6,6 @@ import { IReportPresenter } from '../ports/IReportPresenter';
 import { FilterOptions } from '../../domain/services/filtering';
 import { Severity } from '../../domain/scanresult';
 import { ScanConfig } from '../ports/ScanConfig';
-import { ScanExecutionError } from '../errors/ScanExecutionError';
 import { ChecksumVerificationError } from '../errors/ChecksumVerificationError';
 
 export class RunScanUseCase {
