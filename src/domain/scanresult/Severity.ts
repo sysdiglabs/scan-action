@@ -29,6 +29,10 @@ export class Severity {
     return Severity.values.find(s => s.value === value) || Severity.Unknown;
   }
 
+  public static getValues(): Severity[] {
+    return Severity.values;
+  }
+
   public asNumber(): number {
     return this.value;
   }

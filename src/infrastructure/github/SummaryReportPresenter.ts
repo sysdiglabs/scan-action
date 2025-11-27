@@ -75,23 +75,14 @@ export class SummaryReportPresenter implements IReportPresenter {
 
       const vulnerablePackagesSortedBySeverity = vulnerablePackages
         .sort((a, b) => {
-          const sortedSeveritiesInA = a
-            .getVulnerabilities()
-            .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity))
-            .map(v => v.severity.asNumber())
-            .sort((va, vb) => va - vb);
-          const sortedSeveritiesInB = b
-            .getVulnerabilities()
-            .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity))
-            .map(v => v.severity.asNumber())
-            .sort((va, vb) => va - vb);
-
-          const minLength = Math.min(sortedSeveritiesInA.length, sortedSeveritiesInB.length);
-          for (let i = 0; i < minLength; i++) {
-            if (sortedSeveritiesInA[i] !== sortedSeveritiesInB[i]) return sortedSeveritiesInA[i] - sortedSeveritiesInB[i];
+          for (const severity of Severity.getValues()) {
+            const aCount = a.getVulnerabilities().filter(v => v.severity == severity).length;
+            const bCount = b.getVulnerabilities().filter(v => v.severity == severity).length;
+            if (aCount !== bCount) {
+              return bCount - aCount;
+            }
           }
-
-          return sortedSeveritiesInA.length - sortedSeveritiesInB.length;
+          return 0;
         });
 
 

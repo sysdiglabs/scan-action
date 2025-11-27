@@ -1023,6 +1023,9 @@ class Severity {
     static fromValue(value) {
         return Severity.values.find(s => s.value === value) || Severity.Unknown;
     }
+    static getValues() {
+        return Severity.values;
+    }
     asNumber() {
         return this.value;
     }
@@ -1953,22 +1956,14 @@ class SummaryReportPresenter {
                 .length > 0);
             const vulnerablePackagesSortedBySeverity = vulnerablePackages
                 .sort((a, b) => {
-                const sortedSeveritiesInA = a
-                    .getVulnerabilities()
-                    .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity))
-                    .map(v => v.severity.asNumber())
-                    .sort((va, vb) => va - vb);
-                const sortedSeveritiesInB = b
-                    .getVulnerabilities()
-                    .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity))
-                    .map(v => v.severity.asNumber())
-                    .sort((va, vb) => va - vb);
-                const minLength = Math.min(sortedSeveritiesInA.length, sortedSeveritiesInB.length);
-                for (let i = 0; i < minLength; i++) {
-                    if (sortedSeveritiesInA[i] !== sortedSeveritiesInB[i])
-                        return sortedSeveritiesInA[i] - sortedSeveritiesInB[i];
+                for (const severity of scanresult_1.Severity.getValues()) {
+                    const aCount = a.getVulnerabilities().filter(v => v.severity == severity).length;
+                    const bCount = b.getVulnerabilities().filter(v => v.severity == severity).length;
+                    if (aCount !== bCount) {
+                        return bCount - aCount;
+                    }
                 }
-                return sortedSeveritiesInA.length - sortedSeveritiesInB.length;
+                return 0;
             });
             let colsToDisplay = SummaryReportPresenter.severities.filter(s => s.sev.isMoreSevereThanOrEqualTo(minSeverity));
             const packageRows = vulnerablePackagesSortedBySeverity.map(pkg => {
@@ -30085,7 +30080,7 @@ module.exports = parseParams
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"6.3.0","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint . --ignore-pattern \'build/*\'","build":"tsc","prepare":"npm run build && ncc build build/index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^6.0.1"},"devDependencies":{"@types/jest":"^29.5.12","@types/tmp":"^0.2.6","@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^29.7.0","tmp":"^0.2.1","ts-jest":"^29.2.3","typescript":"^5.5.4"}}');
+module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"6.3.1","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint . --ignore-pattern \'build/*\'","build":"tsc","prepare":"npm run build && ncc build build/index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^6.0.1"},"devDependencies":{"@types/jest":"^29.5.12","@types/tmp":"^0.2.6","@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^29.7.0","tmp":"^0.2.1","ts-jest":"^29.2.3","typescript":"^5.5.4"}}');
 
 /***/ })
 
