@@ -1340,6 +1340,30 @@ function filterPackages(pkgs, filters) {
 
 /***/ }),
 
+/***/ 2925:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.sortPackagesByVulnSeverity = sortPackagesByVulnSeverity;
+const scanresult_1 = __nccwpck_require__(9056);
+function sortPackagesByVulnSeverity(packages) {
+    return packages.sort((a, b) => {
+        for (const severity of scanresult_1.Severity.getValues()) {
+            const aCount = a.getVulnerabilities().filter(v => v.severity.isEqualTo(severity)).length;
+            const bCount = b.getVulnerabilities().filter(v => v.severity.isEqualTo(severity)).length;
+            if (aCount !== bCount) {
+                return bCount - aCount;
+            }
+        }
+        return 0;
+    });
+}
+
+
+/***/ }),
+
 /***/ 6254:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -1914,6 +1938,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SummaryReportPresenter = void 0;
 const core = __importStar(__nccwpck_require__(2186));
+const sorting_1 = __nccwpck_require__(2925);
 const scanresult_1 = __nccwpck_require__(9056);
 const EVALUATION_RESULT_AS_EMOJI = {
     "failed": "❌",
@@ -1954,17 +1979,7 @@ class SummaryReportPresenter {
                 .getVulnerabilities()
                 .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity))
                 .length > 0);
-            const vulnerablePackagesSortedBySeverity = vulnerablePackages
-                .sort((a, b) => {
-                for (const severity of scanresult_1.Severity.getValues()) {
-                    const aCount = a.getVulnerabilities().filter(v => v.severity == severity).length;
-                    const bCount = b.getVulnerabilities().filter(v => v.severity == severity).length;
-                    if (aCount !== bCount) {
-                        return bCount - aCount;
-                    }
-                }
-                return 0;
-            });
+            const vulnerablePackagesSortedBySeverity = (0, sorting_1.sortPackagesByVulnSeverity)(vulnerablePackages);
             let colsToDisplay = SummaryReportPresenter.severities.filter(s => s.sev.isMoreSevereThanOrEqualTo(minSeverity));
             const packageRows = vulnerablePackagesSortedBySeverity.map(pkg => {
                 var _a;

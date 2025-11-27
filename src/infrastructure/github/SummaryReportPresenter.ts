@@ -1,6 +1,7 @@
 import * as core from "@actions/core";
 import { IReportPresenter } from "../../application/ports/IReportPresenter";
 import { FilterOptions } from "../../domain/services/filtering";
+import { sortPackagesByVulnSeverity } from "../../domain/services/sorting";
 import { isImageRule, isPkgRule, PolicyBundleRuleImageConfig, PolicyBundleRulePkgVuln, ScanResult, Severity } from "../../domain/scanresult";
 
 const EVALUATION_RESULT_AS_EMOJI: any = {
@@ -73,17 +74,7 @@ export class SummaryReportPresenter implements IReportPresenter {
           .length > 0
         );
 
-      const vulnerablePackagesSortedBySeverity = vulnerablePackages
-        .sort((a, b) => {
-          for (const severity of Severity.getValues()) {
-            const aCount = a.getVulnerabilities().filter(v => v.severity == severity).length;
-            const bCount = b.getVulnerabilities().filter(v => v.severity == severity).length;
-            if (aCount !== bCount) {
-              return bCount - aCount;
-            }
-          }
-          return 0;
-        });
+      const vulnerablePackagesSortedBySeverity = sortPackagesByVulnSeverity(vulnerablePackages);
 
 
       let colsToDisplay = SummaryReportPresenter.severities.filter(s => s.sev.isMoreSevereThanOrEqualTo(minSeverity));
