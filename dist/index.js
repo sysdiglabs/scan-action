@@ -71,10 +71,12 @@ function run() {
                 new SarifReportPresenter_1.SarifReportPresenter(),
             ];
             if (!config.skipSummary) {
-                presenters.push(new SummaryReportPresenter_1.SummaryReportPresenter());
+                presenters.push(new SummaryReportPresenter_1.SummaryReportPresenter(core.summary));
             }
             const useCase = new RunScanUseCase_1.RunScanUseCase(scanner, presenters, inputProvider);
+            core.summary.emptyBuffer().clear();
             yield useCase.execute();
+            yield core.summary.write({ overwrite: true });
         }
         catch (error) {
             if (error instanceof Error) {
@@ -1023,6 +1025,9 @@ class Severity {
     static fromValue(value) {
         return Severity.values.find(s => s.value === value) || Severity.Unknown;
     }
+    static getValues() {
+        return Severity.values;
+    }
     asNumber() {
         return this.value;
     }
@@ -1332,6 +1337,30 @@ function filterPackages(pkgs, filters) {
         }
     }
     return filterOptions.reduce((acc, filter) => filter(acc), pkgs);
+}
+
+
+/***/ }),
+
+/***/ 2925:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.sortPackagesByVulnSeverity = sortPackagesByVulnSeverity;
+const scanresult_1 = __nccwpck_require__(9056);
+function sortPackagesByVulnSeverity(packages) {
+    return packages.sort((a, b) => {
+        for (const severity of scanresult_1.Severity.getValues()) {
+            const aCount = a.getVulnerabilities().filter(v => v.severity.isEqualTo(severity)).length;
+            const bCount = b.getVulnerabilities().filter(v => v.severity.isEqualTo(severity)).length;
+            if (aCount !== bCount) {
+                return bCount - aCount;
+            }
+        }
+        return 0;
+    });
 }
 
 
@@ -1866,39 +1895,6 @@ exports.SarifReportPresenter = SarifReportPresenter;
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -1910,21 +1906,22 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SummaryReportPresenter = void 0;
-const core = __importStar(__nccwpck_require__(2186));
+const sorting_1 = __nccwpck_require__(2925);
 const scanresult_1 = __nccwpck_require__(9056);
 const EVALUATION_RESULT_AS_EMOJI = {
     "failed": "❌",
     "passed": "✅"
 };
 class SummaryReportPresenter {
+    constructor(summary) {
+        this.summary = summary;
+    }
     generateReport(data, _groupByPackage, filters) {
         return __awaiter(this, void 0, void 0, function* () {
-            core.summary.emptyBuffer().clear();
-            core.summary.addHeading(`Scan Results for ${data.metadata.pullString}`);
+            this.summary.addHeading(`Scan Results for ${data.metadata.pullString}`);
             this.addVulnTableToSummary(data, filters);
             this.addVulnsByLayerTableToSummary(data, (filters === null || filters === void 0 ? void 0 : filters.minSeverity) || scanresult_1.Severity.Unknown);
             this.addReportToSummary(data);
-            yield core.summary.write({ overwrite: true });
         });
     }
     addVulnTableToSummary(data, filters) {
@@ -1938,11 +1935,11 @@ class SummaryReportPresenter {
         const totalRow = [{ data: "⚠️ Total Vulnerabilities", header: true }].concat(colsToDisplay.map(c => ({ data: countBySeverity(c.sev).toString(), header: false })));
         const countFixableBySeverity = (sev) => vulns.filter(v => v.severity === sev && v.isFixable()).length;
         const fixableRow = [{ data: "🔧 Fixable Vulnerabilities", header: true }].concat(colsToDisplay.map(c => ({ data: countFixableBySeverity(c.sev).toString(), header: false })));
-        core.summary.addHeading("Vulnerabilities summary", 2);
-        core.summary.addTable([headerRow, totalRow, fixableRow]);
+        this.summary.addHeading("Vulnerabilities summary", 2);
+        this.summary.addTable([headerRow, totalRow, fixableRow]);
     }
     addVulnsByLayerTableToSummary(data, minSeverity) {
-        core.summary.addHeading(`Package vulnerabilities per layer`, 2);
+        this.summary.addHeading(`Package vulnerabilities per layer`, 2);
         const orderedLayers = data.getLayers().sort((a, b) => a.index - b.index);
         orderedLayers.forEach(layer => {
             const vulnerablePackages = layer
@@ -1951,25 +1948,7 @@ class SummaryReportPresenter {
                 .getVulnerabilities()
                 .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity))
                 .length > 0);
-            const vulnerablePackagesSortedBySeverity = vulnerablePackages
-                .sort((a, b) => {
-                const sortedSeveritiesInA = a
-                    .getVulnerabilities()
-                    .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity))
-                    .map(v => v.severity.asNumber())
-                    .sort((va, vb) => va - vb);
-                const sortedSeveritiesInB = b
-                    .getVulnerabilities()
-                    .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity))
-                    .map(v => v.severity.asNumber())
-                    .sort((va, vb) => va - vb);
-                const minLength = Math.min(sortedSeveritiesInA.length, sortedSeveritiesInB.length);
-                for (let i = 0; i < minLength; i++) {
-                    if (sortedSeveritiesInA[i] !== sortedSeveritiesInB[i])
-                        return sortedSeveritiesInA[i] - sortedSeveritiesInB[i];
-                }
-                return sortedSeveritiesInA.length - sortedSeveritiesInB.length;
-            });
+            const vulnerablePackagesSortedBySeverity = (0, sorting_1.sortPackagesByVulnSeverity)(vulnerablePackages);
             let colsToDisplay = SummaryReportPresenter.severities.filter(s => s.sev.isMoreSevereThanOrEqualTo(minSeverity));
             const packageRows = vulnerablePackagesSortedBySeverity.map(pkg => {
                 var _a;
@@ -1982,9 +1961,9 @@ class SummaryReportPresenter {
                     { data: ((_a = pkg.suggestedFixVersion()) === null || _a === void 0 ? void 0 : _a.toString()) || "None" },
                 ].concat(colsToDisplay.map(c => ({ data: countBySeverity(c.sev).toString() }))).concat({ data: vulns.filter(v => v.exploitable).length.toString() });
             });
-            core.summary.addCodeBlock(`LAYER ${layer.index} - ${layer.command.replace(/\$/g, "&#36;").replace(/\&/g, '&amp;')}`);
+            this.summary.addCodeBlock(`LAYER ${layer.index} - ${layer.command.replace(/\$/g, "&#36;").replace(/\&/g, '&amp;')}`);
             if (packageRows.length > 0) {
-                core.summary.addTable([
+                this.summary.addTable([
                     [
                         { data: 'Package', header: true },
                         { data: 'Type', header: true },
@@ -2003,8 +1982,8 @@ class SummaryReportPresenter {
         if (policies.length == 0) {
             return;
         }
-        core.summary.addHeading("Policy evaluation summary", 2);
-        core.summary.addRaw(`Evaluation result: ${data.getEvaluationResult().toString()} ${EVALUATION_RESULT_AS_EMOJI[data.getEvaluationResult().toString()]}`);
+        this.summary.addHeading("Policy evaluation summary", 2);
+        this.summary.addRaw(`Evaluation result: ${data.getEvaluationResult().toString()} ${EVALUATION_RESULT_AS_EMOJI[data.getEvaluationResult().toString()]}`);
         let table = [[
                 { data: 'Policy', header: true },
                 { data: 'Evaluation', header: true },
@@ -2015,15 +1994,15 @@ class SummaryReportPresenter {
                 { data: `${EVALUATION_RESULT_AS_EMOJI[policy.getEvaluationResult().toString()]}` },
             ]);
         });
-        core.summary.addTable(table);
-        core.summary.addHeading("Policy failures", 2);
+        this.summary.addTable(table);
+        this.summary.addHeading("Policy failures", 2);
         policies.forEach(policy => {
             if (policy.getEvaluationResult().isFailed()) {
-                core.summary.addHeading(`Policy: ${policy.name}`, 3);
+                this.summary.addHeading(`Policy: ${policy.name}`, 3);
                 policy.getBundles().forEach(bundle => {
-                    core.summary.addHeading(`Rule Bundle: ${bundle.name}`, 4);
+                    this.summary.addHeading(`Rule Bundle: ${bundle.name}`, 4);
                     bundle.getRules().forEach(rule => {
-                        core.summary.addHeading(`Rule: ${rule.description}`, 5);
+                        this.summary.addHeading(`Rule: ${rule.description}`, 5);
                         if (rule.evaluationResult.isFailed()) {
                             if ((0, scanresult_1.isPkgRule)(rule)) {
                                 this.getRulePkgMessage(rule);
@@ -2057,11 +2036,11 @@ class SummaryReportPresenter {
                 { data: `${failure.vuln.exploitable}` },
             ]);
         });
-        core.summary.addTable(table);
+        this.summary.addTable(table);
     }
     getRuleImageMessage(rule) {
         const reasons = rule.getFailures().map(failure => failure.reason());
-        core.summary.addList(reasons);
+        this.summary.addList(reasons);
     }
 }
 exports.SummaryReportPresenter = SummaryReportPresenter;
@@ -30085,7 +30064,7 @@ module.exports = parseParams
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"6.3.0","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint . --ignore-pattern \'build/*\'","build":"tsc","prepare":"npm run build && ncc build build/index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^6.0.1"},"devDependencies":{"@types/jest":"^29.5.12","@types/tmp":"^0.2.6","@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^29.7.0","tmp":"^0.2.1","ts-jest":"^29.2.3","typescript":"^5.5.4"}}');
+module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"6.3.1","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint . --ignore-pattern \'build/*\'","build":"tsc","prepare":"npm run build && ncc build build/index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^6.0.1"},"devDependencies":{"@types/jest":"^29.5.12","@types/tmp":"^0.2.6","@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^29.7.0","tmp":"^0.2.1","ts-jest":"^29.2.3","typescript":"^5.5.4"}}');
 
 /***/ })
 
