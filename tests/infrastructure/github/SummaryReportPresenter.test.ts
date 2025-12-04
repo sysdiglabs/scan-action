@@ -495,6 +495,170 @@ describe("SummaryReportPresenter", () => {
                 return result;
             }
         });
+
+        describe("Active Filters", () => {
+            let presenter: SummaryReportPresenter;
+
+            beforeEach(() => {
+                core.summary.emptyBuffer().clear();
+                presenter = new SummaryReportPresenter(core.summary);
+            });
+
+                    it("should display severityAtLeast filter if set", async () => {
+                        const scanResult = new ScanResult(
+                            ScanType.Docker,
+                            "my-image:latest",
+                            "sha256:12345",
+                            "sha256:digest",
+                            new OperatingSystem(Family.Unknown, "Linux"),
+                            BigInt(1000),
+                            Architecture.Amd64,
+                            {},
+                            new Date(),
+                            EvaluationResult.Passed
+                        );
+
+                        await presenter.generateReport(scanResult, false, {
+                            minSeverity: Severity.High
+                        });
+
+                        const html = core.summary.stringify();
+                        expect(html).toContain("<h3>Active Filters</h3>");
+                        expect(html).toContain("<li>Severity level: High</li>");
+                        expect(html).not.toContain("Package types included");
+                        expect(html).not.toContain("Package types excluded");
+                        expect(html).not.toContain("Exclude vulnerabilities with accepted risks");
+                    });
+
+                    it("should display packageTypes filter if set", async () => {
+                        const scanResult = new ScanResult(
+                            ScanType.Docker,
+                            "my-image:latest",
+                            "sha256:12345",
+                            "sha256:digest",
+                            new OperatingSystem(Family.Unknown, "Linux"),
+                            BigInt(1000),
+                            Architecture.Amd64,
+                            {},
+                            new Date(),
+                            EvaluationResult.Passed
+                        );
+
+                        await presenter.generateReport(scanResult, false, {
+                            packageTypes: ["os"]
+                        });
+
+                        const html = core.summary.stringify();
+                        expect(html).toContain("<h3>Active Filters</h3>");
+                        expect(html).toContain("<li>Package types included: os</li>");
+                        expect(html).not.toContain("Severity level");
+                        expect(html).not.toContain("Package types excluded");
+                        expect(html).not.toContain("Exclude vulnerabilities with accepted risks");
+                    });
+
+                    it("should display notPackageTypes filter if set", async () => {
+                        const scanResult = new ScanResult(
+                            ScanType.Docker,
+                            "my-image:latest",
+                            "sha256:12345",
+                            "sha256:digest",
+                            new OperatingSystem(Family.Unknown, "Linux"),
+                            BigInt(1000),
+                            Architecture.Amd64,
+                            {},
+                            new Date(),
+                            EvaluationResult.Passed
+                        );
+
+                        await presenter.generateReport(scanResult, false, {
+                            notPackageTypes: ["java"]
+                        });
+
+                        const html = core.summary.stringify();
+                        expect(html).toContain("<h3>Active Filters</h3>");
+                        expect(html).toContain("<li>Package types excluded: java</li>");
+                        expect(html).not.toContain("Severity level");
+                        expect(html).not.toContain("Package types included");
+                        expect(html).not.toContain("Exclude vulnerabilities with accepted risks");
+                    });
+
+                    it("should display excludeAccepted filter if set to true", async () => {
+                        const scanResult = new ScanResult(
+                            ScanType.Docker,
+                            "my-image:latest",
+                            "sha256:12345",
+                            "sha256:digest",
+                            new OperatingSystem(Family.Unknown, "Linux"),
+                            BigInt(1000),
+                            Architecture.Amd64,
+                            {},
+                            new Date(),
+                            EvaluationResult.Passed
+                        );
+
+                        await presenter.generateReport(scanResult, false, {
+                            excludeAccepted: true
+                        });
+
+                        const html = core.summary.stringify();
+                        expect(html).toContain("<h3>Active Filters</h3>");
+                        expect(html).toContain("<li>Exclude vulnerabilities with accepted risks: true</li>");
+                        expect(html).not.toContain("Severity level");
+                        expect(html).not.toContain("Package types included");
+                        expect(html).not.toContain("Package types excluded");
+                    });
+
+                    it("should display multiple filters if multiple are set", async () => {
+                        const scanResult = new ScanResult(
+                            ScanType.Docker,
+                            "my-image:latest",
+                            "sha256:12345",
+                            "sha256:digest",
+                            new OperatingSystem(Family.Unknown, "Linux"),
+                            BigInt(1000),
+                            Architecture.Amd64,
+                            {},
+                            new Date(),
+                            EvaluationResult.Passed
+                        );
+
+                        await presenter.generateReport(scanResult, false, {
+                            minSeverity: Severity.Critical,
+                            packageTypes: ["os", "npm"],
+                            excludeAccepted: false,
+                        });
+
+                        const html = core.summary.stringify();
+                        expect(html).toContain("<h3>Active Filters</h3>");
+                        expect(html).toContain("<li>Severity level: Critical</li>");
+                        expect(html).toContain("<li>Package types included: os,npm</li>");
+                        expect(html).not.toContain("Package types excluded");
+                        expect(html).toContain("<li>Exclude vulnerabilities with accepted risks: false</li>");
+                    });
+                        it("should not display Active Filters heading if no raw filters are set", async () => {
+                const scanResult = new ScanResult(
+                    ScanType.Docker,
+                    "my-image:latest",
+                    "sha256:12345",
+                    "sha256:digest",
+                    new OperatingSystem(Family.Unknown, "Linux"),
+                    BigInt(1000),
+                    Architecture.Amd64,
+                    {},
+                    new Date(),
+                    EvaluationResult.Passed
+                );
+
+                await presenter.generateReport(scanResult, false, {});
+
+                const html = core.summary.stringify();
+                expect(html).not.toContain("<h3>Active Filters</h3>");
+                expect(html).not.toContain("Severity level");
+                expect(html).not.toContain("Package types included");
+                expect(html).not.toContain("Package types excluded");
+                expect(html).not.toContain("Exclude vulnerabilities with accepted risks");
+            });
+        });
     });
 
     it("should count the same vulnerability multiple times if it appears in multiple packages", async () => {

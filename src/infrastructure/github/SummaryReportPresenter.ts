@@ -22,10 +22,39 @@ export class SummaryReportPresenter implements IReportPresenter {
 
   async generateReport(data: ScanResult, _groupByPackage: boolean, filters?: FilterOptions) {
     this.summary.addHeading(`Scan Results for ${data.metadata.pullString}`);
+    this.addFilterInfoToSummary(filters);
 
     this.addVulnTableToSummary(data, filters);
     this.addVulnsByLayerTableToSummary(data, filters);
     this.addPolicyReportToSummary(data);
+  }
+
+
+  private addFilterInfoToSummary(filters?: FilterOptions) {
+    if (!filters) return;
+
+    let filterMessages: string[] = [];
+
+    if (filters.minSeverity) {
+      filterMessages.push(`Severity level: ${filters.minSeverity.toString()}`);
+    }
+
+    if (filters.packageTypes && filters.packageTypes.length > 0) {
+      filterMessages.push(`Package types included: ${filters.packageTypes.join(',')}`);
+    }
+
+    if (filters.notPackageTypes && filters.notPackageTypes.length > 0) {
+      filterMessages.push(`Package types excluded: ${filters.notPackageTypes.join(',')}`);
+    }
+
+    if (filters.excludeAccepted !== undefined) {
+      filterMessages.push(`Exclude vulnerabilities with accepted risks: ${filters.excludeAccepted}`);
+    }
+
+    if (filterMessages.length > 0) {
+      this.summary.addHeading("Active Filters", 3);
+      this.summary.addList(filterMessages);
+    }
   }
 
 

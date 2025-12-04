@@ -1920,10 +1920,32 @@ class SummaryReportPresenter {
     generateReport(data, _groupByPackage, filters) {
         return __awaiter(this, void 0, void 0, function* () {
             this.summary.addHeading(`Scan Results for ${data.metadata.pullString}`);
+            this.addFilterInfoToSummary(filters);
             this.addVulnTableToSummary(data, filters);
             this.addVulnsByLayerTableToSummary(data, filters);
             this.addPolicyReportToSummary(data);
         });
+    }
+    addFilterInfoToSummary(filters) {
+        if (!filters)
+            return;
+        let filterMessages = [];
+        if (filters.minSeverity) {
+            filterMessages.push(`Severity level: ${filters.minSeverity.toString()}`);
+        }
+        if (filters.packageTypes && filters.packageTypes.length > 0) {
+            filterMessages.push(`Package types included: ${filters.packageTypes.join(',')}`);
+        }
+        if (filters.notPackageTypes && filters.notPackageTypes.length > 0) {
+            filterMessages.push(`Package types excluded: ${filters.notPackageTypes.join(',')}`);
+        }
+        if (filters.excludeAccepted !== undefined) {
+            filterMessages.push(`Exclude vulnerabilities with accepted risks: ${filters.excludeAccepted}`);
+        }
+        if (filterMessages.length > 0) {
+            this.summary.addHeading("Active Filters", 3);
+            this.summary.addList(filterMessages);
+        }
     }
     addVulnTableToSummary(data, filters) {
         var _a;
