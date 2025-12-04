@@ -143,4 +143,68 @@ describe('JsonScanResultV1ToScanResultAdapter', () => {
     // Package should NOT have the risk
     expect(pkg!.getAcceptedRisks()).toHaveLength(0);
   });
+
+  it('should associate accepted risk to package when risk is on package', () => {
+    const riskId = "risk-pkg";
+    const pkgName = "accepted-pkg";
+    const layerDigest = "sha256:layer1";
+
+    const minimalReport: any = {
+      result: {
+        metadata: {
+          pullString: "image:tag",
+          imageId: "sha256:image",
+          digest: "sha256:digest",
+          os: "linux",
+          baseOs: "debian",
+          size: 100,
+          architecture: "amd64",
+          createdAt: new Date().toISOString()
+        },
+        policies: {
+          evaluations: [],
+          globalEvaluation: "passed"
+        },
+        layers: {
+          [layerDigest]: {
+            digest: layerDigest,
+            index: 0,
+            command: "RUN something"
+          }
+        },
+        riskAccepts: {
+          [riskId]: {
+            id: riskId,
+            reason: "RiskOwned",
+            description: "Accepting risk on package",
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            status: "Active"
+          }
+        },
+        vulnerabilities: {},
+        packages: {
+          "pkg-uuid": {
+            name: pkgName,
+            type: "os",
+            version: "1.0.0",
+            path: "/bin/pkg",
+            layerRef: layerDigest,
+            vulnerabilitiesRefs: [],
+            riskAcceptRefs: [riskId] // Risk attached to package directly
+          }
+        }
+      }
+    };
+
+    const adapter = new JsonScanResultV1ToScanResultAdapter();
+    const result = adapter.toScanResult(minimalReport as JsonScanResultV1);
+
+    const pkg = result.getPackages().find(p => p.name === pkgName);
+    expect(pkg).toBeDefined();
+
+    // Package SHOULD have the risk
+    expect(pkg!.getAcceptedRisks()).toHaveLength(1);
+    expect(pkg!.getAcceptedRisks()[0].id).toBe(riskId);
+  });
 });

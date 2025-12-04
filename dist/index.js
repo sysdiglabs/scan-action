@@ -2126,7 +2126,7 @@ class JsonScanResultV1ToScanResultAdapter {
         }
     }
     addPackages(reportResult, scanResult) {
-        var _a;
+        var _a, _b;
         for (const key in reportResult.packages) {
             const pkgData = reportResult.packages[key];
             const JsonLayer = reportResult.layers[pkgData.layerRef];
@@ -2136,6 +2136,18 @@ class JsonScanResultV1ToScanResultAdapter {
             if (!layer)
                 continue;
             const pkg = scanResult.addPackage(key, scanresult_1.PackageType.fromString(pkgData.type), pkgData.name, pkgData.version, pkgData.path, layer);
+            // Add package-level accepted risks
+            if (pkgData.riskAcceptRefs) {
+                for (const riskRef of pkgData.riskAcceptRefs) {
+                    const riskData = (_b = reportResult.riskAccepts) === null || _b === void 0 ? void 0 : _b[riskRef];
+                    if (riskData) {
+                        const risk = scanResult.findAcceptedRiskById(riskData.id);
+                        if (risk) {
+                            pkg.addAcceptedRisk(risk);
+                        }
+                    }
+                }
+            }
             if (pkgData.vulnerabilitiesRefs) {
                 for (const vulnRef of pkgData.vulnerabilitiesRefs) {
                     const jsonVuln = reportResult.vulnerabilities[vulnRef];

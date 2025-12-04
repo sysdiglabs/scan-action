@@ -379,6 +379,69 @@ describe("SummaryReportPresenter", () => {
                 }
             });
 
+            it("should filter out package entirely if it has an accepted risk, even if vulnerabilities do not have explicit risk", async () => {
+                const result = new ScanResult(
+                    ScanType.Docker,
+                    "my-image:latest",
+                    "sha256:12345",
+                    "sha256:digest",
+                    new OperatingSystem(Family.Unknown, "Linux"),
+                    BigInt(1000),
+                    Architecture.Amd64,
+                    {},
+                    new Date(),
+                    EvaluationResult.Passed
+                );
+
+                const layer = result.addLayer("sha256:layer1", 0, BigInt(100), "RUN something");
+
+                const pkg = result.addPackage(
+                    "pkg-risk-only",
+                    PackageType.Os,
+                    "pkg-with-risk",
+                    "1.0.0",
+                    "/usr/bin/pkg",
+                    layer
+                );
+
+                const risk = result.addAcceptedRisk(
+                    "risk-pkg",
+                    AcceptedRiskReason.RiskOwned,
+                    "Accepting package risk",
+                    null,
+                    true,
+                    new Date(),
+                    new Date()
+                );
+
+                // Risk is added to package, but NOT to vulnerability
+                pkg.addAcceptedRisk(risk);
+
+                const vuln = result.addVulnerability(
+                    "CVE-CRITICAL",
+                    Severity.Critical,
+                    9.8,
+                    new Date(),
+                    null,
+                    true,
+                    "1.0.1"
+                );
+                pkg.addVulnerability(vuln);
+
+                await presenter.generateReport(result, false, { excludeAccepted: true });
+
+                const html = core.summary.stringify();
+
+                // Package should NOT be present
+                expect(html).not.toContain("pkg-with-risk");
+
+                // Counts should be 0
+                const totalRowMatch = html.match(/⚠️ Total Vulnerabilities<\/th><td>(\d+)<\/td>/);
+                if (totalRowMatch) {
+                   expect(totalRowMatch[1]).toBe("0");
+                }
+            });
+
             function createScanResultWithAcceptedRisk(): ScanResult {
                 const result = new ScanResult(
                     ScanType.Docker,

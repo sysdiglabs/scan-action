@@ -114,6 +114,19 @@ export class JsonScanResultV1ToScanResultAdapter {
         layer
       );
 
+      // Add package-level accepted risks
+      if ((pkgData as any).riskAcceptRefs) {
+        for (const riskRef of (pkgData as any).riskAcceptRefs) {
+          const riskData = reportResult.riskAccepts?.[riskRef];
+          if (riskData) {
+            const risk = scanResult.findAcceptedRiskById(riskData.id);
+            if (risk) {
+              pkg.addAcceptedRisk(risk);
+            }
+          }
+        }
+      }
+
       if (pkgData.vulnerabilitiesRefs) {
         for (const vulnRef of pkgData.vulnerabilitiesRefs) {
           const jsonVuln = reportResult.vulnerabilities[vulnRef] as JsonVulnerability;
