@@ -45,7 +45,8 @@ export class SummaryReportPresenter implements IReportPresenter {
 
     const minSeverity = filters?.minSeverity ?? Severity.Unknown;
     const vulns = allVulnerabilities
-      .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity));
+      .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity))
+      .filter(v => !filters?.excludeAccepted || v.getAcceptedRisks().length === 0);
 
     let colsToDisplay = SummaryReportPresenter.severities.filter(s => s.sev.isMoreSevereThanOrEqualTo(minSeverity));
 
@@ -83,6 +84,7 @@ export class SummaryReportPresenter implements IReportPresenter {
         .filter(p => p
           .getVulnerabilities()
           .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity))
+          .filter(v => !filters?.excludeAccepted || v.getAcceptedRisks().length === 0)
           .length > 0
         );
 
@@ -93,7 +95,8 @@ export class SummaryReportPresenter implements IReportPresenter {
 
 
       const packageRows = vulnerablePackagesSortedBySeverity.map(pkg => {
-        const vulns = pkg.getVulnerabilities();
+        const vulns = pkg.getVulnerabilities()
+          .filter(v => !filters?.excludeAccepted || v.getAcceptedRisks().length === 0);
         const countBySeverity = (sev: Severity) => vulns.filter(v => v.severity === sev).length;
 
 

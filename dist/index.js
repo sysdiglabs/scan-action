@@ -1937,7 +1937,8 @@ class SummaryReportPresenter {
         });
         const minSeverity = (_a = filters === null || filters === void 0 ? void 0 : filters.minSeverity) !== null && _a !== void 0 ? _a : scanresult_1.Severity.Unknown;
         const vulns = allVulnerabilities
-            .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity));
+            .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity))
+            .filter(v => !(filters === null || filters === void 0 ? void 0 : filters.excludeAccepted) || v.getAcceptedRisks().length === 0);
         let colsToDisplay = SummaryReportPresenter.severities.filter(s => s.sev.isMoreSevereThanOrEqualTo(minSeverity));
         const headerRow = [{ data: "", header: true }].concat(colsToDisplay.map(c => ({ data: c.label, header: true })));
         const countBySeverity = (sev) => vulns.filter(v => v.severity === sev).length;
@@ -1959,12 +1960,14 @@ class SummaryReportPresenter {
                 .filter(p => p
                 .getVulnerabilities()
                 .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity))
+                .filter(v => !(filters === null || filters === void 0 ? void 0 : filters.excludeAccepted) || v.getAcceptedRisks().length === 0)
                 .length > 0);
             const vulnerablePackagesSortedBySeverity = (0, sorting_1.sortPackagesByVulnSeverity)(vulnerablePackages);
             let colsToDisplay = SummaryReportPresenter.severities.filter(s => s.sev.isMoreSevereThanOrEqualTo(minSeverity));
             const packageRows = vulnerablePackagesSortedBySeverity.map(pkg => {
                 var _a;
-                const vulns = pkg.getVulnerabilities();
+                const vulns = pkg.getVulnerabilities()
+                    .filter(v => !(filters === null || filters === void 0 ? void 0 : filters.excludeAccepted) || v.getAcceptedRisks().length === 0);
                 const countBySeverity = (sev) => vulns.filter(v => v.severity === sev).length;
                 return [
                     { data: pkg.name },
@@ -2123,7 +2126,7 @@ class JsonScanResultV1ToScanResultAdapter {
         }
     }
     addPackages(reportResult, scanResult) {
-        var _a, _b;
+        var _a;
         for (const key in reportResult.packages) {
             const pkgData = reportResult.packages[key];
             const JsonLayer = reportResult.layers[pkgData.layerRef];
@@ -2140,18 +2143,6 @@ class JsonScanResultV1ToScanResultAdapter {
                         const vulnerability = scanResult.findVulnerabilityByCve(jsonVuln.name);
                         if (vulnerability) {
                             pkg.addVulnerability(vulnerability);
-                            // Replicate indirect risk association from Rust code
-                            if (jsonVuln === null || jsonVuln === void 0 ? void 0 : jsonVuln.riskAcceptRefs) {
-                                for (const riskRef of jsonVuln.riskAcceptRefs) {
-                                    const riskData = (_b = reportResult.riskAccepts) === null || _b === void 0 ? void 0 : _b[riskRef];
-                                    if (riskData) {
-                                        const risk = scanResult.findAcceptedRiskById(riskData.id);
-                                        if (risk) {
-                                            pkg.addAcceptedRisk(risk);
-                                        }
-                                    }
-                                }
-                            }
                         }
                     }
                 }

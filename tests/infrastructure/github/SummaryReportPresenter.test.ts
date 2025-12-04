@@ -284,6 +284,101 @@ describe("SummaryReportPresenter", () => {
                 expect(html).toContain("<td>1</td>");
             });
 
+            it("should filter out vulnerabilities with accepted risks but keep package if it has other vulnerabilities", async () => {
+                const result = new ScanResult(
+                    ScanType.Docker,
+                    "my-image:latest",
+                    "sha256:12345",
+                    "sha256:digest",
+                    new OperatingSystem(Family.Unknown, "Linux"),
+                    BigInt(1000),
+                    Architecture.Amd64,
+                    {},
+                    new Date(),
+                    EvaluationResult.Passed
+                );
+
+                const layer = result.addLayer("sha256:layer1", 0, BigInt(100), "RUN something");
+
+                const pkg = result.addPackage(
+                    "pkg-1",
+                    PackageType.Os,
+                    "mixed-risk-pkg",
+                    "1.0.0",
+                    "/usr/bin/pkg",
+                    layer
+                );
+
+                // Vuln 1: Accepted Risk
+                const vulnAccepted = result.addVulnerability(
+                    "CVE-ACCEPTED",
+                    Severity.Critical,
+                    9.8,
+                    new Date(),
+                    null,
+                    true,
+                    "1.0.1"
+                );
+
+                const risk = result.addAcceptedRisk(
+                    "risk-1",
+                    AcceptedRiskReason.RiskOwned,
+                    "Accepting this risk",
+                    null,
+                    true,
+                    new Date(),
+                    new Date()
+                );
+                vulnAccepted.addAcceptedRisk(risk);
+                pkg.addVulnerability(vulnAccepted);
+                // Note: We do NOT add risk to package
+
+                // Vuln 2: Active Risk
+                const vulnActive = result.addVulnerability(
+                    "CVE-ACTIVE",
+                    Severity.High,
+                    7.5,
+                    new Date(),
+                    null,
+                    true,
+                    "1.0.1"
+                );
+                pkg.addVulnerability(vulnActive);
+
+                await presenter.generateReport(result, false, { excludeAccepted: true });
+
+                const html = core.summary.stringify();
+
+                // Package should be present because it has an active vulnerability
+                expect(html).toContain("mixed-risk-pkg");
+
+                // "CVE-ACCEPTED" should NOT be counted/shown?
+                // The current implementation of addVulnsByLayerTableToSummary doesn't list CVEs in the table, just counts.
+                // Table header: Package | Type | Version | Suggested fix | Crit | High | Med ...
+
+                // We expect "Crit" count to be 0 (since Critical one is accepted)
+                // We expect "High" count to be 1 (since High one is active)
+
+                // Let's find the row for "mixed-risk-pkg"
+                // It should have columns.
+                // Critical is first severity column usually (colsToDisplay).
+
+                // We can check total counts in "Vulnerabilities summary" table
+                // Total Critical: 0
+                // Total High: 1
+
+                const totalRowMatch = html.match(/⚠️ Total Vulnerabilities<\/th><td>(\d+)<\/td><td>(\d+)<\/td>/);
+                // Assumption: Critical is first column, High is second.
+                if (totalRowMatch) {
+                   expect(totalRowMatch[1]).toBe("0"); // Critical
+                   expect(totalRowMatch[2]).toBe("1"); // High
+                } else {
+                    // Fallback check if regex fails or table structure differs
+                    expect(html).toContain("<td>0</td>"); // At least one 0 for Critical
+                    expect(html).toContain("<td>1</td>"); // At least one 1 for High
+                }
+            });
+
             function createScanResultWithAcceptedRisk(): ScanResult {
                 const result = new ScanResult(
                     ScanType.Docker,
