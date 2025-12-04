@@ -36,15 +36,15 @@ export class SummaryReportPresenter implements IReportPresenter {
     const packages = data.getPackages();
     const filteredPackages = filterPackages(packages, filters);
 
-    const vulnerabilitiesMap = new Map<string, Vulnerability>();
+    const allVulnerabilities: Vulnerability[] = [];
     filteredPackages.forEach(p => {
       p.getVulnerabilities().forEach(v => {
-        vulnerabilitiesMap.set(v.cve, v);
+        allVulnerabilities.push(v);
       });
     });
 
     const minSeverity = filters?.minSeverity ?? Severity.Unknown;
-    const vulns = Array.from(vulnerabilitiesMap.values())
+    const vulns = allVulnerabilities
       .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity));
 
     let colsToDisplay = SummaryReportPresenter.severities.filter(s => s.sev.isMoreSevereThanOrEqualTo(minSeverity));

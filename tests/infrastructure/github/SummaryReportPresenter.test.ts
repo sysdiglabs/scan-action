@@ -338,4 +338,84 @@ describe("SummaryReportPresenter", () => {
             }
         });
     });
+
+    it("should count the same vulnerability multiple times if it appears in multiple packages", async () => {
+        core.summary.emptyBuffer().clear();
+
+        // 1. Create ScanResult
+        const result = new ScanResult(
+            ScanType.Docker,
+            "my-image:latest",
+            "sha256:12345",
+            "sha256:digest",
+            new OperatingSystem(Family.Unknown, "Linux"),
+            BigInt(1000),
+            Architecture.Amd64,
+            {},
+            new Date(),
+            EvaluationResult.Passed
+        );
+
+        const layer = result.addLayer("sha256:layer1", 0, BigInt(100), "RUN something");
+
+        // 2. Add Package 1
+        const pkg1 = result.addPackage(
+            "pkg-1",
+            PackageType.Os,
+            "vulnerable-pkg-1",
+            "1.0.0",
+            "/usr/bin/pkg1",
+            layer
+        );
+
+        // 3. Add Package 2
+        const pkg2 = result.addPackage(
+            "pkg-2",
+            PackageType.Os,
+            "vulnerable-pkg-2",
+            "1.0.0",
+            "/usr/bin/pkg2",
+            layer
+        );
+
+        // 4. Create ONE vulnerability (same CVE)
+        const cveId = "CVE-2023-12345";
+
+        const vuln1 = result.addVulnerability(
+            cveId,
+            Severity.Critical,
+            9.8,
+            new Date(),
+            null,
+            true,
+            "1.0.1"
+        );
+        pkg1.addVulnerability(vuln1);
+
+        const vuln2 = result.addVulnerability(
+            cveId,
+            Severity.Critical,
+            9.8,
+            new Date(),
+            null,
+            true,
+            "1.0.1"
+        );
+        pkg2.addVulnerability(vuln2);
+
+        // 5. Generate Report
+        const presenter = new SummaryReportPresenter(core.summary);
+        await presenter.generateReport(result, false, { minSeverity: Severity.Low });
+
+        const html = core.summary.stringify();
+
+        // 6. Assertions
+        const totalRowMatch = html.match(/⚠️ Total Vulnerabilities<\/th><td>(\d+)<\/td>/);
+        expect(totalRowMatch).not.toBeNull();
+
+        if (totalRowMatch) {
+            const criticalCount = parseInt(totalRowMatch[1]);
+            expect(criticalCount).toBe(2);
+        }
+    });
 });

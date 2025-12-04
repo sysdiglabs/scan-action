@@ -1929,14 +1929,14 @@ class SummaryReportPresenter {
         var _a;
         const packages = data.getPackages();
         const filteredPackages = (0, filtering_1.filterPackages)(packages, filters);
-        const vulnerabilitiesMap = new Map();
+        const allVulnerabilities = [];
         filteredPackages.forEach(p => {
             p.getVulnerabilities().forEach(v => {
-                vulnerabilitiesMap.set(v.cve, v);
+                allVulnerabilities.push(v);
             });
         });
         const minSeverity = (_a = filters === null || filters === void 0 ? void 0 : filters.minSeverity) !== null && _a !== void 0 ? _a : scanresult_1.Severity.Unknown;
-        const vulns = Array.from(vulnerabilitiesMap.values())
+        const vulns = allVulnerabilities
             .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity));
         let colsToDisplay = SummaryReportPresenter.severities.filter(s => s.sev.isMoreSevereThanOrEqualTo(minSeverity));
         const headerRow = [{ data: "", header: true }].concat(colsToDisplay.map(c => ({ data: c.label, header: true })));
