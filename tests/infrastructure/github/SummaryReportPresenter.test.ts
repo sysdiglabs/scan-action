@@ -602,7 +602,7 @@ describe("SummaryReportPresenter", () => {
 
                         const html = core.summary.stringify();
                         expect(html).toContain("<h3>Active Filters</h3>");
-                        expect(html).toContain("<li>Exclude vulnerabilities with accepted risks: true</li>");
+                        expect(html).toContain("<li>Exclude vulnerabilities with accepted risks</li>");
                         expect(html).not.toContain("Severity level");
                         expect(html).not.toContain("Package types included");
                         expect(html).not.toContain("Package types excluded");
@@ -633,7 +633,7 @@ describe("SummaryReportPresenter", () => {
                         expect(html).toContain("<li>Severity level: Critical</li>");
                         expect(html).toContain("<li>Package types included: os,npm</li>");
                         expect(html).not.toContain("Package types excluded");
-                        expect(html).toContain("<li>Exclude vulnerabilities with accepted risks: false</li>");
+                        expect(html).not.toContain("<li>Exclude vulnerabilities with accepted risks</li>");
                     });
                         it("should not display Active Filters heading if no raw filters are set", async () => {
                 const scanResult = new ScanResult(

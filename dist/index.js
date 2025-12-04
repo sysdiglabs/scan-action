@@ -1939,8 +1939,8 @@ class SummaryReportPresenter {
         if (filters.notPackageTypes && filters.notPackageTypes.length > 0) {
             filterMessages.push(`Package types excluded: ${filters.notPackageTypes.join(',')}`);
         }
-        if (filters.excludeAccepted !== undefined) {
-            filterMessages.push(`Exclude vulnerabilities with accepted risks: ${filters.excludeAccepted}`);
+        if (filters.excludeAccepted !== undefined && filters.excludeAccepted != false) {
+            filterMessages.push(`Exclude vulnerabilities with accepted risks`);
         }
         if (filterMessages.length > 0) {
             this.summary.addHeading("Active Filters", 3);
