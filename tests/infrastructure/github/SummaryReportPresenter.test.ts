@@ -2,7 +2,7 @@ import { SummaryReportPresenter } from "../../../src/infrastructure/github/Summa
 import { JsonScanResultV1ToScanResultAdapter } from "../../../src/infrastructure/sysdig/JsonScanResultV1ToScanResultAdapter";
 import * as fs from "fs";
 import * as core from "@actions/core";
-import { Severity } from "../../../src/domain/scanresult/Severity";
+import { Severity, ScanResult, ScanType, OperatingSystem, Family, Architecture, EvaluationResult, PackageType, AcceptedRiskReason } from "../../../src/domain/scanresult";
 
 describe("SummaryReportPresenter", () => {
     afterEach(() => {
@@ -202,6 +202,97 @@ describe("SummaryReportPresenter", () => {
 
                 // Expected highs for OS only < 41
                 expect(highCount).toBeLessThan(41);
+            }
+        });
+
+        describe("Accepted Risks", () => {
+            let presenter: SummaryReportPresenter;
+
+            beforeEach(() => {
+                core.summary.emptyBuffer().clear();
+                presenter = new SummaryReportPresenter(core.summary);
+            });
+
+            it("should filter out packages with accepted risks when excludeAccepted is true", async () => {
+                const scanResult = createScanResultWithAcceptedRisk();
+
+                await presenter.generateReport(scanResult, false, { excludeAccepted: true });
+
+                const html = core.summary.stringify();
+
+                // The package "vulnerable-pkg" has an accepted risk, so it should be filtered out
+                expect(html).not.toContain("vulnerable-pkg");
+
+                // Counts should be 0
+                expect(html).toContain("<td>0</td>"); // For total vulnerabilities
+            });
+
+            it("should NOT filter out packages with accepted risks when excludeAccepted is false", async () => {
+                const scanResult = createScanResultWithAcceptedRisk();
+
+                await presenter.generateReport(scanResult, false, { excludeAccepted: false });
+
+                const html = core.summary.stringify();
+
+                // The package should be present
+                expect(html).toContain("vulnerable-pkg");
+
+                // Counts should be > 0 (1 critical)
+                // Table row for Critical
+                expect(html).toContain("<td>1</td>");
+            });
+
+            function createScanResultWithAcceptedRisk(): ScanResult {
+                const result = new ScanResult(
+                    ScanType.Docker,
+                    "my-image:latest",
+                    "sha256:12345",
+                    "sha256:digest",
+                    new OperatingSystem(Family.Unknown, "Linux"),
+                    BigInt(1000),
+                    Architecture.Amd64,
+                    {},
+                    new Date(),
+                    EvaluationResult.Passed
+                );
+
+                const layer = result.addLayer("sha256:layer1", 0, BigInt(100), "RUN something");
+
+                const pkg = result.addPackage(
+                    "pkg-1",
+                    PackageType.Os,
+                    "vulnerable-pkg",
+                    "1.0.0",
+                    "/usr/bin/pkg",
+                    layer
+                );
+
+                const vuln = result.addVulnerability(
+                    "CVE-2023-9999",
+                    Severity.Critical,
+                    9.8,
+                    new Date(),
+                    null,
+                    true,
+                    "1.0.1"
+                );
+
+                const risk = result.addAcceptedRisk(
+                    "risk-1",
+                    AcceptedRiskReason.RiskOwned,
+                    "Accepting this risk",
+                    null,
+                    true,
+                    new Date(),
+                    new Date()
+                );
+
+                // Link them
+                pkg.addVulnerability(vuln);
+                vuln.addAcceptedRisk(risk);
+                pkg.addAcceptedRisk(risk); // Assuming this is done by the adapter, we do it manually here
+
+                return result;
             }
         });
     });
