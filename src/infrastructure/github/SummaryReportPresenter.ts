@@ -1,7 +1,7 @@
 import { IReportPresenter } from "../../application/ports/IReportPresenter";
-import { FilterOptions } from "../../domain/services/filtering";
+import { FilterOptions, filterPackages } from "../../domain/services/filtering";
 import { sortPackagesByVulnSeverity } from "../../domain/services/sorting";
-import { isImageRule, isPkgRule, PolicyBundleRuleImageConfig, PolicyBundleRulePkgVuln, ScanResult, Severity } from "../../domain/scanresult";
+import { isImageRule, isPkgRule, PolicyBundleRuleImageConfig, PolicyBundleRulePkgVuln, ScanResult, Severity, Vulnerability } from "../../domain/scanresult";
 import { ISummary } from "./ISummary";
 
 const EVALUATION_RESULT_AS_EMOJI: any = {
@@ -24,8 +24,8 @@ export class SummaryReportPresenter implements IReportPresenter {
     this.summary.addHeading(`Scan Results for ${data.metadata.pullString}`);
 
     this.addVulnTableToSummary(data, filters);
-    this.addVulnsByLayerTableToSummary(data, filters?.minSeverity || Severity.Unknown);
-    this.addReportToSummary(data);
+    this.addVulnsByLayerTableToSummary(data, filters);
+    this.addPolicyReportToSummary(data);
   }
 
 
@@ -33,8 +33,18 @@ export class SummaryReportPresenter implements IReportPresenter {
     data: ScanResult,
     filters?: FilterOptions
   ) {
+    const packages = data.getPackages();
+    const filteredPackages = filterPackages(packages, filters);
+
+    const vulnerabilitiesMap = new Map<string, Vulnerability>();
+    filteredPackages.forEach(p => {
+      p.getVulnerabilities().forEach(v => {
+        vulnerabilitiesMap.set(v.cve, v);
+      });
+    });
+
     const minSeverity = filters?.minSeverity ?? Severity.Unknown;
-    const vulns = data.getVulnerabilities()
+    const vulns = Array.from(vulnerabilitiesMap.values())
       .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity));
 
     let colsToDisplay = SummaryReportPresenter.severities.filter(s => s.sev.isMoreSevereThanOrEqualTo(minSeverity));
@@ -59,13 +69,17 @@ export class SummaryReportPresenter implements IReportPresenter {
 
 
 
-  private addVulnsByLayerTableToSummary(data: ScanResult, minSeverity: Severity) {
+  private addVulnsByLayerTableToSummary(data: ScanResult, filters?: FilterOptions) {
+    const minSeverity = filters?.minSeverity ?? Severity.Unknown;
+
     this.summary.addHeading(`Package vulnerabilities per layer`, 2);
     const orderedLayers = data.getLayers().sort((a, b) => a.index - b.index);
 
     orderedLayers.forEach(layer => {
-      const vulnerablePackages = layer
-        .getPackages()
+      const layerPackages = layer.getPackages();
+      const filteredLayerPackages = filterPackages(layerPackages, filters);
+
+      const vulnerablePackages = filteredLayerPackages
         .filter(p => p
           .getVulnerabilities()
           .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity))
@@ -114,7 +128,7 @@ export class SummaryReportPresenter implements IReportPresenter {
     });
   }
 
-  private addReportToSummary(data: ScanResult) {
+  private addPolicyReportToSummary(data: ScanResult) {
     let policies = data.getPolicies();
     if (policies.length == 0) {
       return
