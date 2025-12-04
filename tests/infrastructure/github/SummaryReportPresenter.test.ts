@@ -205,6 +205,48 @@ describe("SummaryReportPresenter", () => {
             }
         });
 
+        it("should filter packages by minSeverity", async () => {
+            const fileContent = fs.readFileSync("tests/fixtures/vm/report-test-v1.json", "utf-8");
+            const json = JSON.parse(fileContent);
+            const scanResult = new JsonScanResultV1ToScanResultAdapter().toScanResult(json);
+
+            core.summary.emptyBuffer().clear();
+
+            const presenter: SummaryReportPresenter = new SummaryReportPresenter(core.summary);
+            // Filter to only Critical severity.
+            // In report-test-v1.json, many packages have High or Medium but no Critical.
+            // For example, "libssl3" has High but no Critical (from previous test output: 0 Critical, 5 High).
+            // "musl" has 1 Critical.
+            await presenter.generateReport(scanResult, false, {
+                minSeverity: Severity.Critical
+            });
+
+            const generatedHtml = core.summary.stringify();
+
+            const layerDetailsStartIndex = generatedHtml.indexOf("<h2>Package vulnerabilities per layer</h2>");
+            const policySummaryStartIndex = generatedHtml.indexOf("<h2>Policy evaluation summary</h2>");
+            const layerDetails = generatedHtml.substring(layerDetailsStartIndex, policySummaryStartIndex);
+
+            // Check that a package with ONLY High severity (no Critical) is NOT present in the layer details
+            // "libssl3" fits this description based on previous test logs
+            expect(layerDetails).not.toContain("libssl3");
+
+            // Check that a package with Critical severity IS present
+            // "musl" has 1 Critical
+            expect(layerDetails).toContain("musl");
+
+            // Verify counts in summary table
+            // Only Critical column should be shown (and potentially Total/Fixable)
+            // But specifically, we shouldn't see counts for High/Medium/Low if they are filtered out from the columns to display logic
+            // The logic is: colsToDisplay = severities.filter(s => s.sev.isMoreSevereThanOrEqualTo(minSeverity));
+
+            // If minSeverity is Critical, colsToDisplay only contains Critical.
+            // So we expect "🟣 Critical" header
+            expect(generatedHtml).toContain("🟣 Critical");
+            // And we expect "🔴 High" header to be ABSENT from the table
+            expect(generatedHtml).not.toContain("🔴 High");
+        });
+
         describe("Accepted Risks", () => {
             let presenter: SummaryReportPresenter;
 
