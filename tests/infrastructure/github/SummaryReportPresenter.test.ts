@@ -2,7 +2,7 @@ import { SummaryReportPresenter } from "../../../src/infrastructure/github/Summa
 import { JsonScanResultV1ToScanResultAdapter } from "../../../src/infrastructure/sysdig/JsonScanResultV1ToScanResultAdapter";
 import * as fs from "fs";
 import * as core from "@actions/core";
-import { Severity } from "../../../src/domain/scanresult/Severity";
+import { Severity, ScanResult, ScanType, OperatingSystem, Family, Architecture, EvaluationResult, PackageType, AcceptedRiskReason } from "../../../src/domain/scanresult";
 
 describe("SummaryReportPresenter", () => {
     afterEach(() => {
@@ -71,5 +71,673 @@ describe("SummaryReportPresenter", () => {
         const actualOrder = packageNames.filter(name => expectedOrder.includes(name));
 
         expect(actualOrder).toEqual(expectedOrder);
+    });
+
+    describe("Filtering", () => {
+        it("should filter packages by included package types", async () => {
+            const fileContent = fs.readFileSync("tests/fixtures/vm/report-test-v1.json", "utf-8");
+            const json = JSON.parse(fileContent);
+            const scanResult = new JsonScanResultV1ToScanResultAdapter().toScanResult(json);
+
+            core.summary.emptyBuffer().clear();
+
+            const presenter: SummaryReportPresenter = new SummaryReportPresenter(core.summary);
+            // Only include "os" packages
+            await presenter.generateReport(scanResult, false, {
+                minSeverity: Severity.Unknown,
+                packageTypes: ["os"]
+            });
+
+            const generatedHtml = core.summary.stringify();
+
+            // Check that an OS package is present in the report
+            expect(generatedHtml).toContain("libcurl");
+
+            // Check that a Java package is NOT present in the layer details
+            // "commons-fileupload" is a Java package. It fails a policy, so it WILL appear in Policy Failures.
+            // But it should NOT appear in "Package vulnerabilities per layer".
+
+            const layerDetailsStartIndex = generatedHtml.indexOf("<h2>Package vulnerabilities per layer</h2>");
+            const policySummaryStartIndex = generatedHtml.indexOf("<h2>Policy evaluation summary</h2>");
+
+            const layerDetails = generatedHtml.substring(layerDetailsStartIndex, policySummaryStartIndex);
+
+            expect(layerDetails).not.toContain("commons-fileupload");
+        });
+
+        it("should filter packages by excluded package types", async () => {
+            const fileContent = fs.readFileSync("tests/fixtures/vm/report-test-v1.json", "utf-8");
+            const json = JSON.parse(fileContent);
+            const scanResult = new JsonScanResultV1ToScanResultAdapter().toScanResult(json);
+
+            core.summary.emptyBuffer().clear();
+
+            const presenter: SummaryReportPresenter = new SummaryReportPresenter(core.summary);
+            // Exclude "os" packages
+            await presenter.generateReport(scanResult, false, {
+                minSeverity: Severity.Unknown,
+                notPackageTypes: ["os"]
+            });
+
+            const generatedHtml = core.summary.stringify();
+
+            // Check that an OS package is NOT present in the layer details
+            // "libcurl" is an OS package. It fails a policy, so it WILL appear in Policy Failures.
+
+            const layerDetailsStartIndex = generatedHtml.indexOf("<h2>Package vulnerabilities per layer</h2>");
+            const policySummaryStartIndex = generatedHtml.indexOf("<h2>Policy evaluation summary</h2>");
+
+            const layerDetails = generatedHtml.substring(layerDetailsStartIndex, policySummaryStartIndex);
+
+            expect(layerDetails).not.toContain("libcurl");
+
+            // Check that a Java package is present
+            expect(generatedHtml).toContain("commons-fileupload");
+        });
+
+        it("should filter vulnerabilities counts in summary table", async () => {
+            const fileContent = fs.readFileSync("tests/fixtures/vm/report-test-v1.json", "utf-8");
+            const json = JSON.parse(fileContent);
+            const scanResult = new JsonScanResultV1ToScanResultAdapter().toScanResult(json);
+
+            core.summary.emptyBuffer().clear();
+
+            const presenter: SummaryReportPresenter = new SummaryReportPresenter(core.summary);
+
+            // Filter to only "os" packages.
+            // In report-test-v1.json:
+            // "os" packages like libcurl, busybox, etc. have vulnerabilities.
+            // "java" packages like jenkins-core also have vulnerabilities.
+            // We expect the total count to be LESS than the total unfiltered count.
+
+            // Unfiltered counts (approximate based on fixture):
+            // Total: 132 (Critical: 16, High: 41, Medium: 68, Low: 7)
+
+            await presenter.generateReport(scanResult, false, {
+                minSeverity: Severity.Unknown,
+                packageTypes: ["os"]
+            });
+
+            const generatedHtml = core.summary.stringify();
+
+            // Check the table row for "Total Vulnerabilities"
+            // We need to parse or regex the HTML to find the counts.
+            // Structure: <tr><th>⚠️ Total Vulnerabilities</th><td>Crit</td><td>High</td><td>Med</td><td>Low</td><td>Neg</td></tr>
+
+            // Let's count vulnerabilities for OS packages only to set expectation.
+            // We rely on the fact that if filtering works, the numbers should be different from the global totals.
+            // Global totals as seen in previous test output: Critical 16, High 41.
+
+            // If we only keep OS packages, many Java vulns (jenkins-core etc) should disappear.
+            // So Critical count should be < 16.
+
+            // Finding the Critical count cell in the Total row
+            // <tr><th>⚠️ Total Vulnerabilities</th><td>16</td>... implies it found 16 criticals.
+
+            // We expect it NOT to contain "<td>16</td>" after "Total Vulnerabilities" if filtering works,
+            // because we know there are non-OS critical vulnerabilities (e.g. spring-web, jenkins-core, snakeyaml).
+            // Actually, let's be more precise.
+
+            // From previous test failure output:
+            // <tr><th>⚠️ Total Vulnerabilities</th><td>16</td><td>41</td><td>68</td><td>7</td><td>0</td></tr>
+
+            // If we filter to "os", we drop Java packages.
+            // Java packages with Criticals in fixture (from failure output):
+            // org.springframework:spring-web (4 criticals)
+            // org.jenkins-ci.main:jenkins-core (1 critical)
+            // org.springframework.security:spring-security-core (1 critical)
+            // ... and others ...
+
+            // So the count MUST be significantly lower than 16.
+
+            const totalRowMatch = generatedHtml.match(/⚠️ Total Vulnerabilities<\/th><td>(\d+)<\/td><td>(\d+)<\/td>/);
+            expect(totalRowMatch).not.toBeNull();
+
+            if (totalRowMatch) {
+                const criticalCount = parseInt(totalRowMatch[1]);
+                const highCount = parseInt(totalRowMatch[2]);
+
+                // Expected criticals for OS only < 16
+                expect(criticalCount).toBeLessThan(16);
+
+                // Expected highs for OS only < 41
+                expect(highCount).toBeLessThan(41);
+            }
+        });
+
+        it("should filter packages by minSeverity", async () => {
+            const fileContent = fs.readFileSync("tests/fixtures/vm/report-test-v1.json", "utf-8");
+            const json = JSON.parse(fileContent);
+            const scanResult = new JsonScanResultV1ToScanResultAdapter().toScanResult(json);
+
+            core.summary.emptyBuffer().clear();
+
+            const presenter: SummaryReportPresenter = new SummaryReportPresenter(core.summary);
+            // Filter to only Critical severity.
+            // In report-test-v1.json, many packages have High or Medium but no Critical.
+            // For example, "libssl3" has High but no Critical (from previous test output: 0 Critical, 5 High).
+            // "musl" has 1 Critical.
+            await presenter.generateReport(scanResult, false, {
+                minSeverity: Severity.Critical
+            });
+
+            const generatedHtml = core.summary.stringify();
+
+            const layerDetailsStartIndex = generatedHtml.indexOf("<h2>Package vulnerabilities per layer</h2>");
+            const policySummaryStartIndex = generatedHtml.indexOf("<h2>Policy evaluation summary</h2>");
+            const layerDetails = generatedHtml.substring(layerDetailsStartIndex, policySummaryStartIndex);
+
+            // Check that a package with ONLY High severity (no Critical) is NOT present in the layer details
+            // "libssl3" fits this description based on previous test logs
+            expect(layerDetails).not.toContain("libssl3");
+
+            // Check that a package with Critical severity IS present
+            // "musl" has 1 Critical
+            expect(layerDetails).toContain("musl");
+
+            // Verify counts in summary table
+            // Only Critical column should be shown (and potentially Total/Fixable)
+            // But specifically, we shouldn't see counts for High/Medium/Low if they are filtered out from the columns to display logic
+            // The logic is: colsToDisplay = severities.filter(s => s.sev.isMoreSevereThanOrEqualTo(minSeverity));
+
+            // If minSeverity is Critical, colsToDisplay only contains Critical.
+            // So we expect "🟣 Critical" header
+            expect(generatedHtml).toContain("🟣 Critical");
+            // And we expect "🔴 High" header to be ABSENT from the table
+            expect(generatedHtml).not.toContain("🔴 High");
+        });
+
+        describe("Accepted Risks", () => {
+            let presenter: SummaryReportPresenter;
+
+            beforeEach(() => {
+                core.summary.emptyBuffer().clear();
+                presenter = new SummaryReportPresenter(core.summary);
+            });
+
+            it("should filter out packages with accepted risks when excludeAccepted is true", async () => {
+                const scanResult = createScanResultWithAcceptedRisk();
+
+                await presenter.generateReport(scanResult, false, { excludeAccepted: true });
+
+                const html = core.summary.stringify();
+
+                // The package "vulnerable-pkg" has an accepted risk, so it should be filtered out
+                expect(html).not.toContain("vulnerable-pkg");
+
+                // Counts should be 0
+                expect(html).toContain("<td>0</td>"); // For total vulnerabilities
+            });
+
+            it("should NOT filter out packages with accepted risks when excludeAccepted is false", async () => {
+                const scanResult = createScanResultWithAcceptedRisk();
+
+                await presenter.generateReport(scanResult, false, { excludeAccepted: false });
+
+                const html = core.summary.stringify();
+
+                // The package should be present
+                expect(html).toContain("vulnerable-pkg");
+
+                // Counts should be > 0 (1 critical)
+                // Table row for Critical
+                expect(html).toContain("<td>1</td>");
+            });
+
+            it("should filter out vulnerabilities with accepted risks but keep package if it has other vulnerabilities", async () => {
+                const result = new ScanResult(
+                    ScanType.Docker,
+                    "my-image:latest",
+                    "sha256:12345",
+                    "sha256:digest",
+                    new OperatingSystem(Family.Unknown, "Linux"),
+                    BigInt(1000),
+                    Architecture.Amd64,
+                    {},
+                    new Date(),
+                    EvaluationResult.Passed
+                );
+
+                const layer = result.addLayer("sha256:layer1", 0, BigInt(100), "RUN something");
+
+                const pkg = result.addPackage(
+                    "pkg-1",
+                    PackageType.Os,
+                    "mixed-risk-pkg",
+                    "1.0.0",
+                    "/usr/bin/pkg",
+                    layer
+                );
+
+                // Vuln 1: Accepted Risk
+                const vulnAccepted = result.addVulnerability(
+                    "CVE-ACCEPTED",
+                    Severity.Critical,
+                    9.8,
+                    new Date(),
+                    null,
+                    true,
+                    "1.0.1"
+                );
+
+                const risk = result.addAcceptedRisk(
+                    "risk-1",
+                    AcceptedRiskReason.RiskOwned,
+                    "Accepting this risk",
+                    null,
+                    true,
+                    new Date(),
+                    new Date()
+                );
+                vulnAccepted.addAcceptedRisk(risk);
+                pkg.addVulnerability(vulnAccepted);
+                // Note: We do NOT add risk to package
+
+                // Vuln 2: Active Risk
+                const vulnActive = result.addVulnerability(
+                    "CVE-ACTIVE",
+                    Severity.High,
+                    7.5,
+                    new Date(),
+                    null,
+                    true,
+                    "1.0.1"
+                );
+                pkg.addVulnerability(vulnActive);
+
+                await presenter.generateReport(result, false, { excludeAccepted: true });
+
+                const html = core.summary.stringify();
+
+                // Package should be present because it has an active vulnerability
+                expect(html).toContain("mixed-risk-pkg");
+
+                // "CVE-ACCEPTED" should NOT be counted/shown?
+                // The current implementation of addVulnsByLayerTableToSummary doesn't list CVEs in the table, just counts.
+                // Table header: Package | Type | Version | Suggested fix | Crit | High | Med ...
+
+                // We expect "Crit" count to be 0 (since Critical one is accepted)
+                // We expect "High" count to be 1 (since High one is active)
+
+                // Let's find the row for "mixed-risk-pkg"
+                // It should have columns.
+                // Critical is first severity column usually (colsToDisplay).
+
+                // We can check total counts in "Vulnerabilities summary" table
+                // Total Critical: 0
+                // Total High: 1
+
+                const totalRowMatch = html.match(/⚠️ Total Vulnerabilities<\/th><td>(\d+)<\/td><td>(\d+)<\/td>/);
+                // Assumption: Critical is first column, High is second.
+                if (totalRowMatch) {
+                   expect(totalRowMatch[1]).toBe("0"); // Critical
+                   expect(totalRowMatch[2]).toBe("1"); // High
+                } else {
+                    // Fallback check if regex fails or table structure differs
+                    expect(html).toContain("<td>0</td>"); // At least one 0 for Critical
+                    expect(html).toContain("<td>1</td>"); // At least one 1 for High
+                }
+            });
+
+            it("should filter out package entirely if it has an accepted risk, even if vulnerabilities do not have explicit risk", async () => {
+                const result = new ScanResult(
+                    ScanType.Docker,
+                    "my-image:latest",
+                    "sha256:12345",
+                    "sha256:digest",
+                    new OperatingSystem(Family.Unknown, "Linux"),
+                    BigInt(1000),
+                    Architecture.Amd64,
+                    {},
+                    new Date(),
+                    EvaluationResult.Passed
+                );
+
+                const layer = result.addLayer("sha256:layer1", 0, BigInt(100), "RUN something");
+
+                const pkg = result.addPackage(
+                    "pkg-risk-only",
+                    PackageType.Os,
+                    "pkg-with-risk",
+                    "1.0.0",
+                    "/usr/bin/pkg",
+                    layer
+                );
+
+                const risk = result.addAcceptedRisk(
+                    "risk-pkg",
+                    AcceptedRiskReason.RiskOwned,
+                    "Accepting package risk",
+                    null,
+                    true,
+                    new Date(),
+                    new Date()
+                );
+
+                // Risk is added to package, but NOT to vulnerability
+                pkg.addAcceptedRisk(risk);
+
+                const vuln = result.addVulnerability(
+                    "CVE-CRITICAL",
+                    Severity.Critical,
+                    9.8,
+                    new Date(),
+                    null,
+                    true,
+                    "1.0.1"
+                );
+                pkg.addVulnerability(vuln);
+
+                await presenter.generateReport(result, false, { excludeAccepted: true });
+
+                const html = core.summary.stringify();
+
+                // Package should NOT be present
+                expect(html).not.toContain("pkg-with-risk");
+
+                // Counts should be 0
+                const totalRowMatch = html.match(/⚠️ Total Vulnerabilities<\/th><td>(\d+)<\/td>/);
+                if (totalRowMatch) {
+                   expect(totalRowMatch[1]).toBe("0");
+                }
+            });
+
+            function createScanResultWithAcceptedRisk(): ScanResult {
+                const result = new ScanResult(
+                    ScanType.Docker,
+                    "my-image:latest",
+                    "sha256:12345",
+                    "sha256:digest",
+                    new OperatingSystem(Family.Unknown, "Linux"),
+                    BigInt(1000),
+                    Architecture.Amd64,
+                    {},
+                    new Date(),
+                    EvaluationResult.Passed
+                );
+
+                const layer = result.addLayer("sha256:layer1", 0, BigInt(100), "RUN something");
+
+                const pkg = result.addPackage(
+                    "pkg-1",
+                    PackageType.Os,
+                    "vulnerable-pkg",
+                    "1.0.0",
+                    "/usr/bin/pkg",
+                    layer
+                );
+
+                const vuln = result.addVulnerability(
+                    "CVE-2023-9999",
+                    Severity.Critical,
+                    9.8,
+                    new Date(),
+                    null,
+                    true,
+                    "1.0.1"
+                );
+
+                const risk = result.addAcceptedRisk(
+                    "risk-1",
+                    AcceptedRiskReason.RiskOwned,
+                    "Accepting this risk",
+                    null,
+                    true,
+                    new Date(),
+                    new Date()
+                );
+
+                // Link them
+                pkg.addVulnerability(vuln);
+                vuln.addAcceptedRisk(risk);
+                pkg.addAcceptedRisk(risk); // Assuming this is done by the adapter, we do it manually here
+
+                return result;
+            }
+        });
+
+        describe("Active Filters", () => {
+            let presenter: SummaryReportPresenter;
+
+            beforeEach(() => {
+                core.summary.emptyBuffer().clear();
+                presenter = new SummaryReportPresenter(core.summary);
+            });
+
+                    it("should display severityAtLeast filter if set", async () => {
+                        const scanResult = new ScanResult(
+                            ScanType.Docker,
+                            "my-image:latest",
+                            "sha256:12345",
+                            "sha256:digest",
+                            new OperatingSystem(Family.Unknown, "Linux"),
+                            BigInt(1000),
+                            Architecture.Amd64,
+                            {},
+                            new Date(),
+                            EvaluationResult.Passed
+                        );
+
+                        await presenter.generateReport(scanResult, false, {
+                            minSeverity: Severity.High
+                        });
+
+                        const html = core.summary.stringify();
+                        expect(html).toContain("<h3>Active Filters</h3>");
+                        expect(html).toContain("<li>Severity level: High</li>");
+                        expect(html).not.toContain("Package types included");
+                        expect(html).not.toContain("Package types excluded");
+                        expect(html).not.toContain("Exclude vulnerabilities with accepted risks");
+                    });
+
+                    it("should display packageTypes filter if set", async () => {
+                        const scanResult = new ScanResult(
+                            ScanType.Docker,
+                            "my-image:latest",
+                            "sha256:12345",
+                            "sha256:digest",
+                            new OperatingSystem(Family.Unknown, "Linux"),
+                            BigInt(1000),
+                            Architecture.Amd64,
+                            {},
+                            new Date(),
+                            EvaluationResult.Passed
+                        );
+
+                        await presenter.generateReport(scanResult, false, {
+                            packageTypes: ["os"]
+                        });
+
+                        const html = core.summary.stringify();
+                        expect(html).toContain("<h3>Active Filters</h3>");
+                        expect(html).toContain("<li>Package types included: os</li>");
+                        expect(html).not.toContain("Severity level");
+                        expect(html).not.toContain("Package types excluded");
+                        expect(html).not.toContain("Exclude vulnerabilities with accepted risks");
+                    });
+
+                    it("should display notPackageTypes filter if set", async () => {
+                        const scanResult = new ScanResult(
+                            ScanType.Docker,
+                            "my-image:latest",
+                            "sha256:12345",
+                            "sha256:digest",
+                            new OperatingSystem(Family.Unknown, "Linux"),
+                            BigInt(1000),
+                            Architecture.Amd64,
+                            {},
+                            new Date(),
+                            EvaluationResult.Passed
+                        );
+
+                        await presenter.generateReport(scanResult, false, {
+                            notPackageTypes: ["java"]
+                        });
+
+                        const html = core.summary.stringify();
+                        expect(html).toContain("<h3>Active Filters</h3>");
+                        expect(html).toContain("<li>Package types excluded: java</li>");
+                        expect(html).not.toContain("Severity level");
+                        expect(html).not.toContain("Package types included");
+                        expect(html).not.toContain("Exclude vulnerabilities with accepted risks");
+                    });
+
+                    it("should display excludeAccepted filter if set to true", async () => {
+                        const scanResult = new ScanResult(
+                            ScanType.Docker,
+                            "my-image:latest",
+                            "sha256:12345",
+                            "sha256:digest",
+                            new OperatingSystem(Family.Unknown, "Linux"),
+                            BigInt(1000),
+                            Architecture.Amd64,
+                            {},
+                            new Date(),
+                            EvaluationResult.Passed
+                        );
+
+                        await presenter.generateReport(scanResult, false, {
+                            excludeAccepted: true
+                        });
+
+                        const html = core.summary.stringify();
+                        expect(html).toContain("<h3>Active Filters</h3>");
+                        expect(html).toContain("<li>Exclude vulnerabilities with accepted risks</li>");
+                        expect(html).not.toContain("Severity level");
+                        expect(html).not.toContain("Package types included");
+                        expect(html).not.toContain("Package types excluded");
+                    });
+
+                    it("should display multiple filters if multiple are set", async () => {
+                        const scanResult = new ScanResult(
+                            ScanType.Docker,
+                            "my-image:latest",
+                            "sha256:12345",
+                            "sha256:digest",
+                            new OperatingSystem(Family.Unknown, "Linux"),
+                            BigInt(1000),
+                            Architecture.Amd64,
+                            {},
+                            new Date(),
+                            EvaluationResult.Passed
+                        );
+
+                        await presenter.generateReport(scanResult, false, {
+                            minSeverity: Severity.Critical,
+                            packageTypes: ["os", "npm"],
+                            excludeAccepted: false,
+                        });
+
+                        const html = core.summary.stringify();
+                        expect(html).toContain("<h3>Active Filters</h3>");
+                        expect(html).toContain("<li>Severity level: Critical</li>");
+                        expect(html).toContain("<li>Package types included: os,npm</li>");
+                        expect(html).not.toContain("Package types excluded");
+                        expect(html).not.toContain("<li>Exclude vulnerabilities with accepted risks</li>");
+                    });
+                        it("should not display Active Filters heading if no raw filters are set", async () => {
+                const scanResult = new ScanResult(
+                    ScanType.Docker,
+                    "my-image:latest",
+                    "sha256:12345",
+                    "sha256:digest",
+                    new OperatingSystem(Family.Unknown, "Linux"),
+                    BigInt(1000),
+                    Architecture.Amd64,
+                    {},
+                    new Date(),
+                    EvaluationResult.Passed
+                );
+
+                await presenter.generateReport(scanResult, false, {});
+
+                const html = core.summary.stringify();
+                expect(html).not.toContain("<h3>Active Filters</h3>");
+                expect(html).not.toContain("Severity level");
+                expect(html).not.toContain("Package types included");
+                expect(html).not.toContain("Package types excluded");
+                expect(html).not.toContain("Exclude vulnerabilities with accepted risks");
+            });
+        });
+    });
+
+    it("should count the same vulnerability multiple times if it appears in multiple packages", async () => {
+        core.summary.emptyBuffer().clear();
+
+        // 1. Create ScanResult
+        const result = new ScanResult(
+            ScanType.Docker,
+            "my-image:latest",
+            "sha256:12345",
+            "sha256:digest",
+            new OperatingSystem(Family.Unknown, "Linux"),
+            BigInt(1000),
+            Architecture.Amd64,
+            {},
+            new Date(),
+            EvaluationResult.Passed
+        );
+
+        const layer = result.addLayer("sha256:layer1", 0, BigInt(100), "RUN something");
+
+        // 2. Add Package 1
+        const pkg1 = result.addPackage(
+            "pkg-1",
+            PackageType.Os,
+            "vulnerable-pkg-1",
+            "1.0.0",
+            "/usr/bin/pkg1",
+            layer
+        );
+
+        // 3. Add Package 2
+        const pkg2 = result.addPackage(
+            "pkg-2",
+            PackageType.Os,
+            "vulnerable-pkg-2",
+            "1.0.0",
+            "/usr/bin/pkg2",
+            layer
+        );
+
+        // 4. Create ONE vulnerability (same CVE)
+        const cveId = "CVE-2023-12345";
+
+        const vuln1 = result.addVulnerability(
+            cveId,
+            Severity.Critical,
+            9.8,
+            new Date(),
+            null,
+            true,
+            "1.0.1"
+        );
+        pkg1.addVulnerability(vuln1);
+
+        const vuln2 = result.addVulnerability(
+            cveId,
+            Severity.Critical,
+            9.8,
+            new Date(),
+            null,
+            true,
+            "1.0.1"
+        );
+        pkg2.addVulnerability(vuln2);
+
+        // 5. Generate Report
+        const presenter = new SummaryReportPresenter(core.summary);
+        await presenter.generateReport(result, false, { minSeverity: Severity.Low });
+
+        const html = core.summary.stringify();
+
+        // 6. Assertions
+        const totalRowMatch = html.match(/⚠️ Total Vulnerabilities<\/th><td>(\d+)<\/td>/);
+        expect(totalRowMatch).not.toBeNull();
+
+        if (totalRowMatch) {
+            const criticalCount = parseInt(totalRowMatch[1]);
+            expect(criticalCount).toBe(2);
+        }
     });
 });

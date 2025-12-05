@@ -1906,6 +1906,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SummaryReportPresenter = void 0;
+const filtering_1 = __nccwpck_require__(6834);
 const sorting_1 = __nccwpck_require__(2925);
 const scanresult_1 = __nccwpck_require__(9056);
 const EVALUATION_RESULT_AS_EMOJI = {
@@ -1919,16 +1920,47 @@ class SummaryReportPresenter {
     generateReport(data, _groupByPackage, filters) {
         return __awaiter(this, void 0, void 0, function* () {
             this.summary.addHeading(`Scan Results for ${data.metadata.pullString}`);
+            this.addFilterInfoToSummary(filters);
             this.addVulnTableToSummary(data, filters);
-            this.addVulnsByLayerTableToSummary(data, (filters === null || filters === void 0 ? void 0 : filters.minSeverity) || scanresult_1.Severity.Unknown);
-            this.addReportToSummary(data);
+            this.addVulnsByLayerTableToSummary(data, filters);
+            this.addPolicyReportToSummary(data);
         });
+    }
+    addFilterInfoToSummary(filters) {
+        if (!filters)
+            return;
+        let filterMessages = [];
+        if (filters.minSeverity) {
+            filterMessages.push(`Severity level: ${filters.minSeverity.toString()}`);
+        }
+        if (filters.packageTypes && filters.packageTypes.length > 0) {
+            filterMessages.push(`Package types included: ${filters.packageTypes.join(',')}`);
+        }
+        if (filters.notPackageTypes && filters.notPackageTypes.length > 0) {
+            filterMessages.push(`Package types excluded: ${filters.notPackageTypes.join(',')}`);
+        }
+        if (filters.excludeAccepted !== undefined && filters.excludeAccepted != false) {
+            filterMessages.push(`Exclude vulnerabilities with accepted risks`);
+        }
+        if (filterMessages.length > 0) {
+            this.summary.addHeading("Active Filters", 3);
+            this.summary.addList(filterMessages);
+        }
     }
     addVulnTableToSummary(data, filters) {
         var _a;
+        const packages = data.getPackages();
+        const filteredPackages = (0, filtering_1.filterPackages)(packages, filters);
+        const allVulnerabilities = [];
+        filteredPackages.forEach(p => {
+            p.getVulnerabilities().forEach(v => {
+                allVulnerabilities.push(v);
+            });
+        });
         const minSeverity = (_a = filters === null || filters === void 0 ? void 0 : filters.minSeverity) !== null && _a !== void 0 ? _a : scanresult_1.Severity.Unknown;
-        const vulns = data.getVulnerabilities()
-            .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity));
+        const vulns = allVulnerabilities
+            .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity))
+            .filter(v => !(filters === null || filters === void 0 ? void 0 : filters.excludeAccepted) || v.getAcceptedRisks().length === 0);
         let colsToDisplay = SummaryReportPresenter.severities.filter(s => s.sev.isMoreSevereThanOrEqualTo(minSeverity));
         const headerRow = [{ data: "", header: true }].concat(colsToDisplay.map(c => ({ data: c.label, header: true })));
         const countBySeverity = (sev) => vulns.filter(v => v.severity === sev).length;
@@ -1938,21 +1970,26 @@ class SummaryReportPresenter {
         this.summary.addHeading("Vulnerabilities summary", 2);
         this.summary.addTable([headerRow, totalRow, fixableRow]);
     }
-    addVulnsByLayerTableToSummary(data, minSeverity) {
+    addVulnsByLayerTableToSummary(data, filters) {
+        var _a;
+        const minSeverity = (_a = filters === null || filters === void 0 ? void 0 : filters.minSeverity) !== null && _a !== void 0 ? _a : scanresult_1.Severity.Unknown;
         this.summary.addHeading(`Package vulnerabilities per layer`, 2);
         const orderedLayers = data.getLayers().sort((a, b) => a.index - b.index);
         orderedLayers.forEach(layer => {
-            const vulnerablePackages = layer
-                .getPackages()
+            const layerPackages = layer.getPackages();
+            const filteredLayerPackages = (0, filtering_1.filterPackages)(layerPackages, filters);
+            const vulnerablePackages = filteredLayerPackages
                 .filter(p => p
                 .getVulnerabilities()
                 .filter(v => v.severity.isMoreSevereThanOrEqualTo(minSeverity))
+                .filter(v => !(filters === null || filters === void 0 ? void 0 : filters.excludeAccepted) || v.getAcceptedRisks().length === 0)
                 .length > 0);
             const vulnerablePackagesSortedBySeverity = (0, sorting_1.sortPackagesByVulnSeverity)(vulnerablePackages);
             let colsToDisplay = SummaryReportPresenter.severities.filter(s => s.sev.isMoreSevereThanOrEqualTo(minSeverity));
             const packageRows = vulnerablePackagesSortedBySeverity.map(pkg => {
                 var _a;
-                const vulns = pkg.getVulnerabilities();
+                const vulns = pkg.getVulnerabilities()
+                    .filter(v => !(filters === null || filters === void 0 ? void 0 : filters.excludeAccepted) || v.getAcceptedRisks().length === 0);
                 const countBySeverity = (sev) => vulns.filter(v => v.severity === sev).length;
                 return [
                     { data: pkg.name },
@@ -1977,7 +2014,7 @@ class SummaryReportPresenter {
             }
         });
     }
-    addReportToSummary(data) {
+    addPolicyReportToSummary(data) {
         let policies = data.getPolicies();
         if (policies.length == 0) {
             return;
@@ -2121,6 +2158,18 @@ class JsonScanResultV1ToScanResultAdapter {
             if (!layer)
                 continue;
             const pkg = scanResult.addPackage(key, scanresult_1.PackageType.fromString(pkgData.type), pkgData.name, pkgData.version, pkgData.path, layer);
+            // Add package-level accepted risks
+            if (pkgData.riskAcceptRefs) {
+                for (const riskRef of pkgData.riskAcceptRefs) {
+                    const riskData = (_b = reportResult.riskAccepts) === null || _b === void 0 ? void 0 : _b[riskRef];
+                    if (riskData) {
+                        const risk = scanResult.findAcceptedRiskById(riskData.id);
+                        if (risk) {
+                            pkg.addAcceptedRisk(risk);
+                        }
+                    }
+                }
+            }
             if (pkgData.vulnerabilitiesRefs) {
                 for (const vulnRef of pkgData.vulnerabilitiesRefs) {
                     const jsonVuln = reportResult.vulnerabilities[vulnRef];
@@ -2128,18 +2177,6 @@ class JsonScanResultV1ToScanResultAdapter {
                         const vulnerability = scanResult.findVulnerabilityByCve(jsonVuln.name);
                         if (vulnerability) {
                             pkg.addVulnerability(vulnerability);
-                            // Replicate indirect risk association from Rust code
-                            if (jsonVuln === null || jsonVuln === void 0 ? void 0 : jsonVuln.riskAcceptRefs) {
-                                for (const riskRef of jsonVuln.riskAcceptRefs) {
-                                    const riskData = (_b = reportResult.riskAccepts) === null || _b === void 0 ? void 0 : _b[riskRef];
-                                    if (riskData) {
-                                        const risk = scanResult.findAcceptedRiskById(riskData.id);
-                                        if (risk) {
-                                            pkg.addAcceptedRisk(risk);
-                                        }
-                                    }
-                                }
-                            }
                         }
                     }
                 }
@@ -30064,7 +30101,7 @@ module.exports = parseParams
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"6.3.1","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint . --ignore-pattern \'build/*\'","build":"tsc","prepare":"npm run build && ncc build build/index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^6.0.1"},"devDependencies":{"@types/jest":"^29.5.12","@types/tmp":"^0.2.6","@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^29.7.0","tmp":"^0.2.1","ts-jest":"^29.2.3","typescript":"^5.5.4"}}');
+module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"6.3.2","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint . --ignore-pattern \'build/*\'","build":"tsc","prepare":"npm run build && ncc build build/index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^6.0.1"},"devDependencies":{"@types/jest":"^29.5.12","@types/tmp":"^0.2.6","@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^29.7.0","tmp":"^0.2.1","ts-jest":"^29.2.3","typescript":"^5.5.4"}}');
 
 /***/ })
 
