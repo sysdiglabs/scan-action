@@ -10,18 +10,20 @@ export interface FilterOptions {
 export type PackageFilterOption = (pkgs: Package[]) => Package[];
 
 export function withPackageTypes(packageTypes: string[]): PackageFilterOption {
+  const lowerCasePackageTypes = packageTypes.map(type => type.toLowerCase());
   return (pkgs: Package[]) =>
     pkgs.filter((pkg) =>
-      packageTypes.includes(pkg.packageType.toString().toLowerCase())
+      lowerCasePackageTypes.includes(pkg.packageType.toString().toLowerCase())
     );
 }
 
 export function withoutPackageTypes(
   packageTypes: string[]
 ): PackageFilterOption {
+  const lowerCasePackageTypes = packageTypes.map(type => type.toLowerCase());
   return (pkgs: Package[]) =>
     pkgs.filter(
-      (pkg) => !packageTypes.includes(pkg.packageType.toString().toLowerCase())
+      (pkg) => !lowerCasePackageTypes.includes(pkg.packageType.toString().toLowerCase())
     );
 }
 

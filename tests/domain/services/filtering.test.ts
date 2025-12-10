@@ -48,6 +48,18 @@ describe("filterPackages", () => {
         expect(result[0].name).toBe("pkg2");
     });
 
+    it("filters by packageTypes with mixed case input", () => {
+        const pkgs = [
+            newPkg("pkg1", PackageType.Os, [highVuln]),
+            newPkg("pkg2", PackageType.Java, [highVuln]),
+        ];
+
+        const filters: FilterOptions = { packageTypes: ["Java"] };
+        const result = filterPackages(pkgs, filters);
+        expect(result.length).toBe(1);
+        expect(result[0].name).toBe("pkg2");
+    });
+
     it("filters by notPackageTypes", () => {
         const pkgs = [
             newPkg("pkg1", PackageType.Os, [highVuln]),
@@ -55,6 +67,18 @@ describe("filterPackages", () => {
         ];
 
         const filters: FilterOptions = { notPackageTypes: ["os"] };
+        const result = filterPackages(pkgs, filters);
+        expect(result.length).toBe(1);
+        expect(result[0].name).toBe("pkg2");
+    });
+
+    it("filters by notPackageTypes with mixed case input", () => {
+        const pkgs = [
+            newPkg("pkg1", PackageType.Os, [highVuln]),
+            newPkg("pkg2", PackageType.Java, [highVuln]),
+        ];
+
+        const filters: FilterOptions = { notPackageTypes: ["Os"] };
         const result = filterPackages(pkgs, filters);
         expect(result.length).toBe(1);
         expect(result[0].name).toBe("pkg2");
