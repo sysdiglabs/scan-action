@@ -7,7 +7,7 @@ import { cliScannerName, cliScannerResult, cliScannerURL, scannerURLForVersion }
 import { ScanConfig } from '../../application/ports/ScanConfig';
 import { JsonScanResultV1 } from './JsonScanResultV1';
 import { ReportParsingError } from '../../application/errors/ReportParsingError';
-import { ScanResult } from '../../domain/scanresult';
+import { Architecture, EvaluationResult, Family, OperatingSystem, ScanResult, ScanType } from '../../domain/scanresult';
 import { JsonScanResultV1ToScanResultAdapter } from './JsonScanResultV1ToScanResultAdapter';
 const performance = require('perf_hooks').performance;
 
@@ -68,6 +68,12 @@ export class SysdigCliScanner implements IScanner {
     let retCode = await exec.exec(command, flags, scanOptions);
     core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
 
+    // IaC mode: No JSON output file - derive result from exit code
+    if (config.mode === ScanMode.iac) {
+      return this.createIacResult(retCode);
+    }
+
+    // VM mode: Parse JSON output
     if (retCode == 0 || retCode == 1) {
       await exec.exec(`cat ./${cliScannerResult}`, undefined, catOptions);
     }
@@ -78,6 +84,25 @@ export class SysdigCliScanner implements IScanner {
     } catch (e) {
       throw new ReportParsingError(execOutput);
     }
+  }
+
+  private createIacResult(exitCode: number): ScanResult {
+    const evaluationResult = exitCode === 0
+      ? EvaluationResult.Passed
+      : EvaluationResult.Failed;
+
+    return new ScanResult(
+      ScanType.Docker,
+      'iac-scan',
+      'iac-scan',
+      null,
+      new OperatingSystem(Family.Unknown, 'N/A'),
+      BigInt(0),
+      Architecture.Unknown,
+      {},
+      new Date(),
+      evaluationResult
+    );
   }
 
 

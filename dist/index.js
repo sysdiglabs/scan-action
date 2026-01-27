@@ -2277,6 +2277,7 @@ const process_1 = __importDefault(__nccwpck_require__(7282));
 const ScannerDTOs_1 = __nccwpck_require__(1699);
 const SysdigCliScannerConstants_1 = __nccwpck_require__(1500);
 const ReportParsingError_1 = __nccwpck_require__(93);
+const scanresult_1 = __nccwpck_require__(9056);
 const JsonScanResultV1ToScanResultAdapter_1 = __nccwpck_require__(9381);
 const performance = (__nccwpck_require__(4074).performance);
 class SysdigCliScanner {
@@ -2321,6 +2322,11 @@ class SysdigCliScanner {
             core.info("Executing: " + command + " " + loggableFlags.join(' '));
             let retCode = yield exec.exec(command, flags, scanOptions);
             core.info("Image analysis took " + Math.round(performance.now() - start) + " milliseconds.");
+            // IaC mode: No JSON output file - derive result from exit code
+            if (config.mode === ScannerDTOs_1.ScanMode.iac) {
+                return this.createIacResult(retCode);
+            }
+            // VM mode: Parse JSON output
             if (retCode == 0 || retCode == 1) {
                 yield exec.exec(`cat ./${SysdigCliScannerConstants_1.cliScannerResult}`, undefined, catOptions);
             }
@@ -2332,6 +2338,12 @@ class SysdigCliScanner {
                 throw new ReportParsingError_1.ReportParsingError(execOutput);
             }
         });
+    }
+    createIacResult(exitCode) {
+        const evaluationResult = exitCode === 0
+            ? scanresult_1.EvaluationResult.Passed
+            : scanresult_1.EvaluationResult.Failed;
+        return new scanresult_1.ScanResult(scanresult_1.ScanType.Docker, 'iac-scan', 'iac-scan', null, new scanresult_1.OperatingSystem(scanresult_1.Family.Unknown, 'N/A'), BigInt(0), scanresult_1.Architecture.Unknown, {}, new Date(), evaluationResult);
     }
     composeFlags(config) {
         let envvars = {};

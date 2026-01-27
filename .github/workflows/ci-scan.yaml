@@ -171,6 +171,7 @@ jobs:
           iac-scan-path: ./tests/fixtures/iac/
           # Note: This test assumes these policies exist in the target Sysdig Secure account.
           use-policies: '"All Posture Findings", "MITRE DEFEND"'
+          stop-on-processing-error: true
 
       - name: Check that the scan has succeeded
         run: |
