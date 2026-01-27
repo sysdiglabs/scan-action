@@ -43,7 +43,7 @@ export class SysdigCliScannerDownloader {
     const destination = `./${cliScannerName}`;
 
     core.info(`Pulling cli-scanner from: ${url}`);
-    await exec.exec(`wget ${url} -O ${destination}`, undefined, { silent: true });
+    await exec.exec(`curl -sL ${url} -o ${destination}`, undefined, { silent: true });
 
     let expectedSum = await this.expectedSumFor(url)
     if (!expectedSum) {
@@ -65,7 +65,7 @@ export class SysdigCliScannerDownloader {
     const checksumUrl = `${url}.sha256`;
     core.info(`Downloading checksum from: ${checksumUrl}`);
     let checksumOutput = '';
-    await exec.exec(`wget ${checksumUrl} -O -`, undefined, {
+    await exec.exec(`curl -sL ${checksumUrl}`, undefined, {
       silent: true,
       listeners: {
         stdout: (data: Buffer) => {
