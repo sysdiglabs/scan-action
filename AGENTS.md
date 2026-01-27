@@ -214,3 +214,15 @@ Hooks run in order:
 ### Secrets Required
 
 - `KUBELAB_SECURE_API_TOKEN`: Sysdig Secure API token for CI scans
+
+## Technical Debt
+
+### undici override (package.json)
+
+There's an `overrides` section forcing `undici@^7.0.0` to fix CVE GHSA-g9mf-h72j-4rw9. This is a workaround because `@actions/http-client` (dependency of `@actions/github`) pins a vulnerable version of `undici`.
+
+**Action required:** Remove the override once `@actions/http-client` releases a version with `undici >= 6.23.0`. Check periodically with:
+```bash
+npm ls undici
+npm audit
+```
