@@ -1,6 +1,6 @@
 {
   "name": "secure-inline-scan-action",
-  "version": "6.3.3",
+  "version": "6.3.4",
   "description": "This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.",
   "main": "index.js",
   "scripts": {
