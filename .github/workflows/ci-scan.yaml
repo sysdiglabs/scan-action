@@ -10,7 +10,7 @@ jobs:
     steps:
       # This step checks out a copy of your repository.
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Scan dummy-vuln-app from registry
         id: scan
@@ -27,7 +27,7 @@ jobs:
 
       - name: Upload SARIF file
         if: success() || failure() # Upload results regardless previous step fails
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
         with:
           sarif_file: ${{ github.workspace }}/sarif.json
 
@@ -46,7 +46,7 @@ jobs:
     steps:
       # This step checks out a copy of your repository.
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Scan dummy-vuln-app from registry
         id: scan
@@ -64,7 +64,7 @@ jobs:
 
       - name: Upload SARIF file
         if: success() || failure() # Upload results regardless previous step fails
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
         with:
           sarif_file: ${{ github.workspace }}/sarif.json
 
@@ -83,7 +83,7 @@ jobs:
     steps:
       # This step checks out a copy of your repository.
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Scan dummy-vuln-app from registry
         id: scan
@@ -102,7 +102,7 @@ jobs:
 
       - name: Upload SARIF file
         if: success() || failure() # Upload results regardless previous step fails
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
         with:
           sarif_file: ${{ github.workspace }}/sarif.json
 
@@ -121,7 +121,7 @@ jobs:
     steps:
       # This step checks out a copy of your repository.
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Donate MainDB from scan
         id: donnor-scan
@@ -149,7 +149,7 @@ jobs:
 
       - name: Upload SARIF file
         if: success() || failure() # Upload results regardless previous step fails
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
         with:
           sarif_file: ${{ github.workspace }}/sarif.json
 
@@ -159,7 +159,7 @@ jobs:
     steps:
       # This step checks out a copy of your repository.
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Scan repository with multiple IaC policies
         id: scan
@@ -187,7 +187,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Scan with correct checksum
         id: scan
@@ -213,7 +213,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Scan with incorrect checksum
         id: scan
