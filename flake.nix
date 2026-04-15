@@ -23,7 +23,7 @@
           mkShell {
             buildInputs = [
               typescript
-              nodejs_20
+              nodejs_24
               pre-commit
             ]
             ++ (with nodePackages; [
