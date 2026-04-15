@@ -1,6 +1,6 @@
 import os from 'os';
 
-const cliScannerVersion = "1.22.6"
+const cliScannerVersion = "1.26.0"
 const cliScannerOS = getRunOS()
 const cliScannerArch = getRunArch()
 const cliScannerURLBase = "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner";

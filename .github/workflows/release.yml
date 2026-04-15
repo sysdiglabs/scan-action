@@ -14,7 +14,7 @@ jobs:
       changes: ${{ steps.check_changes.outputs.changes }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 2
 
@@ -41,7 +41,7 @@ jobs:
       cancel-in-progress: false
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
           fetch-tags: true
@@ -51,7 +51,7 @@ jobs:
         run: echo "version=v$(jq -r '.version' package.json)" >> "$GITHUB_OUTPUT"
 
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@main
+        uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
 
       - name: Install git-chglog
         run: nix profile install nixpkgs#git-chglog
@@ -63,7 +63,7 @@ jobs:
         run: git-chglog -c .github/git-chglog/config.yml -o RELEASE_CHANGELOG.md "${{ steps.version.outputs.version }}"
 
       - name: Create release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
         with:
           name: ${{ steps.version.outputs.version }}
           tag_name: ${{ steps.version.outputs.version }}
