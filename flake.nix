@@ -22,8 +22,10 @@
           with pkgs;
           mkShell {
             buildInputs = [
+              just
               typescript
               nodejs_20
+              pinact
               pre-commit
             ]
             ++ (with nodePackages; [
