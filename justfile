@@ -42,9 +42,25 @@ install:
     npm install
 
 # Update dependencies
-update:
+update: update-cli-scanner
     nix flake update
     nix develop --command npm update
     nix develop --command npm audit fix
     nix develop --command pinact run -u
     nix develop --command pre-commit autoupdate
+
+# Update sysdig-cli-scanner to latest available version
+update-cli-scanner:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    file="src/infrastructure/sysdig/SysdigCliScannerConstants.ts"
+    current=$(grep -oP 'cliScannerVersion = "\K[^"]+' "$file")
+    latest=$(curl -sL https://download.sysdig.com/scanning/sysdig-cli-scanner/latest_version.txt)
+    if [ "$latest" != "$current" ]; then
+        for f in "$file" README.md action.yml; do
+            sed -i "s/$current/$latest/g" "$f"
+        done
+        echo "Updated sysdig-cli-scanner: $current -> $latest"
+    else
+        echo "sysdig-cli-scanner already at latest: $current"
+    fi
