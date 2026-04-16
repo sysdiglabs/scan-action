@@ -2329,6 +2329,7 @@ class SysdigCliScanner {
             // VM mode: Parse JSON output
             if (retCode == 0 || retCode == 1) {
                 yield exec.exec(`cat ./${SysdigCliScannerConstants_1.cliScannerResult}`, undefined, catOptions);
+                core.setOutput("scanReport", `./${SysdigCliScannerConstants_1.cliScannerResult}`);
             }
             try {
                 const jsonScanResult = JSON.parse(execOutput);

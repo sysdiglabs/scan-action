@@ -76,6 +76,7 @@ export class SysdigCliScanner implements IScanner {
     // VM mode: Parse JSON output
     if (retCode == 0 || retCode == 1) {
       await exec.exec(`cat ./${cliScannerResult}`, undefined, catOptions);
+      core.setOutput("scanReport", `./${cliScannerResult}`);
     }
 
     try {
