@@ -24,7 +24,7 @@
             buildInputs = [
               just
               typescript
-              nodejs_20
+              nodejs_24
               pinact
               pre-commit
             ]
