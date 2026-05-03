@@ -180,9 +180,11 @@ export class JsonScanResultV1ToScanResultAdapter {
               bundle
             );
             for (const failureData of ruleData.failures ?? []) {
-              const pkg = scanResult.findPackageByID(failureData.packageRef)!;
-              let jsonVuln = reportResult.vulnerabilities[failureData.vulnerabilityRef] as JsonVulnerability;
-              const vuln = scanResult.findVulnerabilityByCve(jsonVuln.name)!;
+              const pkg = scanResult.findPackageByID(failureData.packageRef);
+              const jsonVuln = reportResult.vulnerabilities[failureData.vulnerabilityRef] as JsonVulnerability | undefined;
+              const vuln = jsonVuln ? scanResult.findVulnerabilityByCve(jsonVuln.name) : undefined;
+
+              if (!pkg || !vuln) continue;
 
               rule.addFailure(
                 failureData.description || "",

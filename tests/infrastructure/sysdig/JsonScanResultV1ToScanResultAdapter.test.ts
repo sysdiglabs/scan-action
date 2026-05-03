@@ -207,4 +207,102 @@ describe('JsonScanResultV1ToScanResultAdapter', () => {
     expect(pkg!.getAcceptedRisks()).toHaveLength(1);
     expect(pkg!.getAcceptedRisks()[0].id).toBe(riskId);
   });
+
+  it('should skip pkgVulnFailure entries whose packageRef cannot be resolved', () => {
+    // Reproduces issue #108: a policy rule references a package whose layer
+    // is missing/unmatched, so addPackages skips it. The rule still references
+    // it via packageRef, which previously left failure.pkg as undefined and
+    // crashed SummaryReportPresenter.getRulePkgMessage with
+    // "Cannot read properties of undefined (reading 'name')".
+    const cveId = "CVE-2024-9999";
+    const knownLayer = "sha256:known";
+
+    const minimalReport: any = {
+      result: {
+        metadata: {
+          pullString: "image:tag",
+          imageId: "sha256:image",
+          digest: "sha256:digest",
+          os: "linux",
+          baseOs: "debian",
+          size: 100,
+          architecture: "amd64",
+          createdAt: new Date().toISOString()
+        },
+        layers: {
+          [knownLayer]: { digest: knownLayer, index: 0, command: "RUN x" }
+        },
+        riskAccepts: {},
+        vulnerabilities: {
+          [cveId]: {
+            name: cveId,
+            severity: "High",
+            cvssScore: { score: 7.5 },
+            disclosureDate: new Date().toISOString(),
+            exploitable: false
+          }
+        },
+        packages: {
+          // This package's layerRef points to a layer that is NOT in `layers`,
+          // so addPackages will `continue` and never register it.
+          "orphan-pkg-uuid": {
+            name: "orphan",
+            type: "os",
+            version: "1.0.0",
+            path: "/bin/orphan",
+            layerRef: "sha256:missing-layer",
+            vulnerabilitiesRefs: [cveId]
+          }
+        },
+        policies: {
+          globalEvaluation: "passed",
+          evaluations: [
+            {
+              identifier: "policy-1",
+              name: "Test Policy",
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              evaluationResult: "failed",
+              bundles: [
+                {
+                  identifier: "bundle-1",
+                  name: "Test Bundle",
+                  evaluationResult: "failed",
+                  rules: [
+                    {
+                      ruleId: "rule-1",
+                      description: "Block High vulnerabilities",
+                      evaluationResult: "failed",
+                      failureType: "pkgVulnFailure",
+                      failures: [
+                        {
+                          // packageRef points at the orphan package that was
+                          // skipped during addPackages.
+                          packageRef: "orphan-pkg-uuid",
+                          vulnerabilityRef: cveId,
+                          description: "x"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    };
+
+    const adapter = new JsonScanResultV1ToScanResultAdapter();
+
+    // Must not throw, and must drop the dangling failure rather than store
+    // an undefined pkg.
+    const scanResult = adapter.toScanResult(minimalReport as JsonScanResultV1);
+
+    const policy = scanResult.getPolicies().find(p => p.name === "Test Policy");
+    expect(policy).toBeDefined();
+    const bundle = policy!.getBundles()[0];
+    const rule = bundle.getRules()[0];
+    expect((rule as any).getFailures()).toHaveLength(0);
+  });
 });
