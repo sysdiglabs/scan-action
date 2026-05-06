@@ -15,7 +15,7 @@ export class Package {
     public readonly name: string,
     public readonly version: Version,
     public readonly path: string,
-    public readonly foundInLayer: Layer
+    public readonly foundInLayer: Layer | null
   ) { }
 
   addVulnerability(vulnerability: Vulnerability) {

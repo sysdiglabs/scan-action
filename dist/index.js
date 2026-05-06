@@ -904,7 +904,8 @@ class ScanResult {
     }
     addPackage(id, packageType, name, version, path, foundInLayer) {
         const pkg = new Package_1.Package(id, packageType, name, new Version_1.Version(version), path, foundInLayer);
-        foundInLayer.addPackage(pkg);
+        if (foundInLayer)
+            foundInLayer.addPackage(pkg);
         this.packages.add(pkg);
         return pkg;
     }
@@ -1236,7 +1237,8 @@ class Vulnerability {
     getFoundInLayers() {
         const layers = new Set();
         for (const pkg of this.foundInPackages) {
-            layers.add(pkg.foundInLayer);
+            if (pkg.foundInLayer)
+                layers.add(pkg.foundInLayer);
         }
         return Array.from(layers);
     }
@@ -2150,20 +2152,21 @@ class JsonScanResultV1ToScanResultAdapter {
         }
     }
     addPackages(reportResult, scanResult) {
-        var _a, _b;
+        var _a, _b, _c, _d;
         for (const key in reportResult.packages) {
             const pkgData = reportResult.packages[key];
-            const JsonLayer = reportResult.layers[pkgData.layerRef];
-            if (!JsonLayer)
-                continue;
-            const layer = scanResult.findLayerByDigest((_a = JsonLayer.digest) !== null && _a !== void 0 ? _a : '');
-            if (!layer)
-                continue;
-            const pkg = scanResult.addPackage(key, scanresult_1.PackageType.fromString(pkgData.type), pkgData.name, pkgData.version, pkgData.path, layer);
+            let layer = null;
+            if (pkgData.layerRef) {
+                const jsonLayer = reportResult.layers[pkgData.layerRef];
+                if (jsonLayer) {
+                    layer = (_b = scanResult.findLayerByDigest((_a = jsonLayer.digest) !== null && _a !== void 0 ? _a : '')) !== null && _b !== void 0 ? _b : null;
+                }
+            }
+            const pkg = scanResult.addPackage(key, scanresult_1.PackageType.fromString(pkgData.type), pkgData.name, pkgData.version, (_c = pkgData.path) !== null && _c !== void 0 ? _c : '', layer);
             // Add package-level accepted risks
             if (pkgData.riskAcceptRefs) {
                 for (const riskRef of pkgData.riskAcceptRefs) {
-                    const riskData = (_b = reportResult.riskAccepts) === null || _b === void 0 ? void 0 : _b[riskRef];
+                    const riskData = (_d = reportResult.riskAccepts) === null || _d === void 0 ? void 0 : _d[riskRef];
                     if (riskData) {
                         const risk = scanResult.findAcceptedRiskById(riskData.id);
                         if (risk) {
@@ -2203,8 +2206,10 @@ class JsonScanResultV1ToScanResultAdapter {
                         const rule = new scanresult_1.PolicyBundleRulePkgVuln(String(ruleData.ruleId), ruleData.description, scanresult_1.EvaluationResult.fromString(ruleData.evaluationResult), bundle);
                         for (const failureData of (_c = ruleData.failures) !== null && _c !== void 0 ? _c : []) {
                             const pkg = scanResult.findPackageByID(failureData.packageRef);
-                            let jsonVuln = reportResult.vulnerabilities[failureData.vulnerabilityRef];
-                            const vuln = scanResult.findVulnerabilityByCve(jsonVuln.name);
+                            const jsonVuln = reportResult.vulnerabilities[failureData.vulnerabilityRef];
+                            const vuln = jsonVuln ? scanResult.findVulnerabilityByCve(jsonVuln.name) : undefined;
+                            if (!pkg || !vuln)
+                                continue;
                             rule.addFailure(failureData.description || "", pkg, vuln);
                         }
                         bundle.addRule(rule);
@@ -2273,6 +2278,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SysdigCliScanner = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
+const fs = __importStar(__nccwpck_require__(7147));
 const process_1 = __importDefault(__nccwpck_require__(7282));
 const ScannerDTOs_1 = __nccwpck_require__(1699);
 const SysdigCliScannerConstants_1 = __nccwpck_require__(1500);
@@ -2290,7 +2296,6 @@ class SysdigCliScanner {
             const scanFlags = this.composeFlags(config);
             let { envvars, flags } = scanFlags;
             let execOutput = '';
-            let errOutput = '';
             const scanOptions = {
                 env: Object.assign(Object.assign({}, Object.fromEntries(Object.entries(process_1.default.env).map(([key, value]) => [key, value !== null && value !== void 0 ? value : ""]))), envvars),
                 silent: true,
@@ -2301,18 +2306,6 @@ class SysdigCliScanner {
                     },
                     stderr: (data) => {
                         process_1.default.stderr.write(data);
-                    }
-                }
-            };
-            const catOptions = {
-                silent: true,
-                ignoreReturnCode: true,
-                listeners: {
-                    stdout: (data) => {
-                        execOutput += data.toString();
-                    },
-                    stderr: (data) => {
-                        errOutput += data.toString();
                     }
                 }
             };
@@ -2328,10 +2321,10 @@ class SysdigCliScanner {
             }
             // VM mode: Parse JSON output
             if (retCode == 0 || retCode == 1) {
-                yield exec.exec(`cat ./${SysdigCliScannerConstants_1.cliScannerResult}`, undefined, catOptions);
                 core.setOutput("scanReport", `./${SysdigCliScannerConstants_1.cliScannerResult}`);
             }
             try {
+                execOutput = fs.readFileSync(`./${SysdigCliScannerConstants_1.cliScannerResult}`, 'utf-8');
                 const jsonScanResult = JSON.parse(execOutput);
                 return new JsonScanResultV1ToScanResultAdapter_1.JsonScanResultV1ToScanResultAdapter().toScanResult(jsonScanResult);
             }
@@ -43025,7 +43018,7 @@ module.exports = require("util");
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"6.3.5","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint . --ignore-pattern \'build/*\'","build":"tsc","prepare":"npm run build && ncc build build/index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^6.0.1"},"devDependencies":{"@types/jest":"^29.5.12","@types/tmp":"^0.2.6","@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^29.7.0","tmp":"^0.2.1","ts-jest":"^29.2.3","typescript":"^5.5.4"},"overrides":{"undici":"^7.0.0"}}');
+module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"6.3.6","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint . --ignore-pattern \'build/*\'","build":"tsc","prepare":"npm run build && ncc build build/index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^6.0.1"},"devDependencies":{"@types/jest":"^29.5.12","@types/tmp":"^0.2.6","@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^29.7.0","tmp":"^0.2.1","ts-jest":"^29.2.3","typescript":"^5.5.4"},"overrides":{"undici":"^7.0.0"}}');
 
 /***/ })
 

@@ -81,10 +81,10 @@ export class ScanResult {
     name: string,
     version: string,
     path: string,
-    foundInLayer: Layer
+    foundInLayer: Layer | null
   ): Package {
     const pkg = new Package(id, packageType, name, new Version(version), path, foundInLayer);
-    foundInLayer.addPackage(pkg);
+    if (foundInLayer) foundInLayer.addPackage(pkg);
     this.packages.add(pkg);
     return pkg;
   }

@@ -99,18 +99,20 @@ export class JsonScanResultV1ToScanResultAdapter {
   private addPackages(reportResult: ReportResult, scanResult: ScanResult): void {
     for (const key in reportResult.packages) {
       const pkgData = reportResult.packages[key];
-      const JsonLayer = reportResult.layers[pkgData.layerRef];
-      if (!JsonLayer) continue;
-
-      const layer = scanResult.findLayerByDigest(JsonLayer.digest ?? '');
-      if (!layer) continue;
+      let layer = null;
+      if (pkgData.layerRef) {
+        const jsonLayer = reportResult.layers[pkgData.layerRef];
+        if (jsonLayer) {
+          layer = scanResult.findLayerByDigest(jsonLayer.digest ?? '') ?? null;
+        }
+      }
 
       const pkg = scanResult.addPackage(
         key,
         PackageType.fromString(pkgData.type),
         pkgData.name,
         pkgData.version,
-        pkgData.path,
+        pkgData.path ?? '',
         layer
       );
 
@@ -180,9 +182,10 @@ export class JsonScanResultV1ToScanResultAdapter {
               bundle
             );
             for (const failureData of ruleData.failures ?? []) {
-              const pkg = scanResult.findPackageByID(failureData.packageRef)!;
-              let jsonVuln = reportResult.vulnerabilities[failureData.vulnerabilityRef] as JsonVulnerability;
-              const vuln = scanResult.findVulnerabilityByCve(jsonVuln.name)!;
+              const pkg = scanResult.findPackageByID(failureData.packageRef);
+              const jsonVuln = reportResult.vulnerabilities[failureData.vulnerabilityRef] as JsonVulnerability;
+              const vuln = jsonVuln ? scanResult.findVulnerabilityByCve(jsonVuln.name) : undefined;
+              if (!pkg || !vuln) continue;
 
               rule.addFailure(
                 failureData.description || "",
