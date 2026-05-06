@@ -4,6 +4,76 @@ on:
   pull_request:
 
 jobs:
+  scan-multi-image:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          # Base OS / Distro
+          - alpine:3
+          - ubuntu:24.04
+          - debian:bookworm-slim
+          - amazonlinux:2023
+          - registry.access.redhat.com/ubi9/ubi-minimal:latest
+          - oraclelinux:9-slim
+          - rockylinux:9-minimal
+          - opensuse/leap:15.6
+          - archlinux:base
+          # Runtimes / Languages
+          - node:22-slim
+          - node:22-alpine
+          - python:3.13-slim
+          - golang:1.24
+          - rust:1-slim
+          - eclipse-temurin:21-jre
+          - ruby:3.3-slim
+          - php:8.3-fpm
+          - mcr.microsoft.com/dotnet/runtime:9.0
+          # Databases / Data
+          - postgres:17
+          - mysql:8.4
+          - redis:7-alpine
+          - mongo:8.0
+          - mariadb:11
+          # Infra / Middleware
+          - nginx:1-alpine
+          - traefik:v3.3
+          - envoyproxy/envoy:v1.32-latest
+          - haproxy:3.1-alpine
+          - hashicorp/vault:1.18
+          # Container ecosystem
+          - busybox:latest
+          - gcr.io/distroless/static-debian12:latest
+          - gcr.io/distroless/java21-debian12:latest
+          - chainguard/wolfi-base:latest
+          - bitnami/kubectl:latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Scan ${{ matrix.image }}
+        id: scan
+        uses: ./
+        with:
+          image-tag: ${{ matrix.image }}
+          sysdig-secure-token: ${{ secrets.KUBELAB_SECURE_API_TOKEN }}
+          stop-on-failed-policy-eval: false
+          stop-on-processing-error: true
+
+      - name: Verify scanReport output
+        run: |
+          REPORT="${{ steps.scan.outputs.scanReport }}"
+          if [ -z "$REPORT" ]; then
+            echo "scanReport output is empty."
+            exit 1
+          fi
+          if [ ! -f "$REPORT" ]; then
+            echo "scanReport file does not exist: $REPORT"
+            exit 1
+          fi
+          echo "scanReport output OK: $REPORT"
+
   scan-from-registry:
     runs-on: ubuntu-latest
 
