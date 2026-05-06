@@ -2273,6 +2273,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SysdigCliScanner = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
+const fs = __importStar(__nccwpck_require__(7147));
 const process_1 = __importDefault(__nccwpck_require__(7282));
 const ScannerDTOs_1 = __nccwpck_require__(1699);
 const SysdigCliScannerConstants_1 = __nccwpck_require__(1500);
@@ -2290,7 +2291,6 @@ class SysdigCliScanner {
             const scanFlags = this.composeFlags(config);
             let { envvars, flags } = scanFlags;
             let execOutput = '';
-            let errOutput = '';
             const scanOptions = {
                 env: Object.assign(Object.assign({}, Object.fromEntries(Object.entries(process_1.default.env).map(([key, value]) => [key, value !== null && value !== void 0 ? value : ""]))), envvars),
                 silent: true,
@@ -2301,18 +2301,6 @@ class SysdigCliScanner {
                     },
                     stderr: (data) => {
                         process_1.default.stderr.write(data);
-                    }
-                }
-            };
-            const catOptions = {
-                silent: true,
-                ignoreReturnCode: true,
-                listeners: {
-                    stdout: (data) => {
-                        execOutput += data.toString();
-                    },
-                    stderr: (data) => {
-                        errOutput += data.toString();
                     }
                 }
             };
@@ -2328,10 +2316,10 @@ class SysdigCliScanner {
             }
             // VM mode: Parse JSON output
             if (retCode == 0 || retCode == 1) {
-                yield exec.exec(`cat ./${SysdigCliScannerConstants_1.cliScannerResult}`, undefined, catOptions);
                 core.setOutput("scanReport", `./${SysdigCliScannerConstants_1.cliScannerResult}`);
             }
             try {
+                execOutput = fs.readFileSync(`./${SysdigCliScannerConstants_1.cliScannerResult}`, 'utf-8');
                 const jsonScanResult = JSON.parse(execOutput);
                 return new JsonScanResultV1ToScanResultAdapter_1.JsonScanResultV1ToScanResultAdapter().toScanResult(jsonScanResult);
             }

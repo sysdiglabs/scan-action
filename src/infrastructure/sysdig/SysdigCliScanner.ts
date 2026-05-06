@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
+import * as fs from 'fs';
 import process from 'process';
 import { IScanner } from '../../application/ports/IScanner';
 import { ComposeFlags, ScanMode } from '../../application/ports/ScannerDTOs';
@@ -26,7 +27,6 @@ export class SysdigCliScanner implements IScanner {
     const scanFlags = this.composeFlags(config);
     let { envvars, flags } = scanFlags;
     let execOutput = '';
-    let errOutput = '';
 
 
     const scanOptions: exec.ExecOptions = {
@@ -48,19 +48,6 @@ export class SysdigCliScanner implements IScanner {
       }
     };
 
-    const catOptions: exec.ExecOptions = {
-      silent: true,
-      ignoreReturnCode: true,
-      listeners: {
-        stdout: (data) => {
-          execOutput += data.toString();
-        },
-        stderr: (data) => {
-          errOutput += data.toString();
-        }
-      }
-    }
-
     let start = performance.now();
     const command = scannerPath;
     const loggableFlags = flags.map(flag => flag.includes(' ') ? `"${flag}"` : flag);
@@ -75,11 +62,11 @@ export class SysdigCliScanner implements IScanner {
 
     // VM mode: Parse JSON output
     if (retCode == 0 || retCode == 1) {
-      await exec.exec(`cat ./${cliScannerResult}`, undefined, catOptions);
       core.setOutput("scanReport", `./${cliScannerResult}`);
     }
 
     try {
+      execOutput = fs.readFileSync(`./${cliScannerResult}`, 'utf-8');
       const jsonScanResult = JSON.parse(execOutput) as JsonScanResultV1;
       return new JsonScanResultV1ToScanResultAdapter().toScanResult(jsonScanResult);
     } catch (e) {
