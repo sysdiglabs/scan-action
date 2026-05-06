@@ -2203,8 +2203,10 @@ class JsonScanResultV1ToScanResultAdapter {
                         const rule = new scanresult_1.PolicyBundleRulePkgVuln(String(ruleData.ruleId), ruleData.description, scanresult_1.EvaluationResult.fromString(ruleData.evaluationResult), bundle);
                         for (const failureData of (_c = ruleData.failures) !== null && _c !== void 0 ? _c : []) {
                             const pkg = scanResult.findPackageByID(failureData.packageRef);
-                            let jsonVuln = reportResult.vulnerabilities[failureData.vulnerabilityRef];
-                            const vuln = scanResult.findVulnerabilityByCve(jsonVuln.name);
+                            const jsonVuln = reportResult.vulnerabilities[failureData.vulnerabilityRef];
+                            const vuln = jsonVuln ? scanResult.findVulnerabilityByCve(jsonVuln.name) : undefined;
+                            if (!pkg || !vuln)
+                                continue;
                             rule.addFailure(failureData.description || "", pkg, vuln);
                         }
                         bundle.addRule(rule);
