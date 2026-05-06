@@ -904,7 +904,8 @@ class ScanResult {
     }
     addPackage(id, packageType, name, version, path, foundInLayer) {
         const pkg = new Package_1.Package(id, packageType, name, new Version_1.Version(version), path, foundInLayer);
-        foundInLayer.addPackage(pkg);
+        if (foundInLayer)
+            foundInLayer.addPackage(pkg);
         this.packages.add(pkg);
         return pkg;
     }
@@ -1236,7 +1237,8 @@ class Vulnerability {
     getFoundInLayers() {
         const layers = new Set();
         for (const pkg of this.foundInPackages) {
-            layers.add(pkg.foundInLayer);
+            if (pkg.foundInLayer)
+                layers.add(pkg.foundInLayer);
         }
         return Array.from(layers);
     }
@@ -2150,20 +2152,21 @@ class JsonScanResultV1ToScanResultAdapter {
         }
     }
     addPackages(reportResult, scanResult) {
-        var _a, _b;
+        var _a, _b, _c, _d;
         for (const key in reportResult.packages) {
             const pkgData = reportResult.packages[key];
-            const JsonLayer = reportResult.layers[pkgData.layerRef];
-            if (!JsonLayer)
-                continue;
-            const layer = scanResult.findLayerByDigest((_a = JsonLayer.digest) !== null && _a !== void 0 ? _a : '');
-            if (!layer)
-                continue;
-            const pkg = scanResult.addPackage(key, scanresult_1.PackageType.fromString(pkgData.type), pkgData.name, pkgData.version, pkgData.path, layer);
+            let layer = null;
+            if (pkgData.layerRef) {
+                const jsonLayer = reportResult.layers[pkgData.layerRef];
+                if (jsonLayer) {
+                    layer = (_b = scanResult.findLayerByDigest((_a = jsonLayer.digest) !== null && _a !== void 0 ? _a : '')) !== null && _b !== void 0 ? _b : null;
+                }
+            }
+            const pkg = scanResult.addPackage(key, scanresult_1.PackageType.fromString(pkgData.type), pkgData.name, pkgData.version, (_c = pkgData.path) !== null && _c !== void 0 ? _c : '', layer);
             // Add package-level accepted risks
             if (pkgData.riskAcceptRefs) {
                 for (const riskRef of pkgData.riskAcceptRefs) {
-                    const riskData = (_b = reportResult.riskAccepts) === null || _b === void 0 ? void 0 : _b[riskRef];
+                    const riskData = (_d = reportResult.riskAccepts) === null || _d === void 0 ? void 0 : _d[riskRef];
                     if (riskData) {
                         const risk = scanResult.findAcceptedRiskById(riskData.id);
                         if (risk) {

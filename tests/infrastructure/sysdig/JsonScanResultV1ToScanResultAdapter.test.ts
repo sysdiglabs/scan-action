@@ -323,4 +323,127 @@ describe('JsonScanResultV1ToScanResultAdapter', () => {
     expect(failures).toHaveLength(1);
     expect(failures[0].pkg.name).toBe("libcurl");
   });
+
+  it('should hydrate packages without layerRef (scanner >= 1.25.0 meta-packages)', () => {
+    const layerDigest = "sha256:layer1";
+    const osPkgUuid = "os-distro-ref";
+    const normalPkgUuid = "pkg-normal";
+    const vulnOnOs = "vuln-os";
+    const vulnOnPkg = "vuln-pkg";
+
+    const report: any = {
+      result: {
+        metadata: {
+          pullString: "image:tag",
+          imageId: "sha256:image",
+          digest: "sha256:digest",
+          os: "linux",
+          baseOs: "debian",
+          size: 100,
+          architecture: "amd64",
+          createdAt: new Date().toISOString()
+        },
+        policies: {
+          globalEvaluation: "failed",
+          evaluations: [{
+            name: "Test policy",
+            identifier: "test",
+            description: "Test",
+            evaluation: "failed",
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            bundles: [{
+              name: "Bundle",
+              identifier: "bundle",
+              type: "default",
+              rules: [{
+                ruleId: 1,
+                ruleType: "vulnSeverityAndThreats",
+                failureType: "pkgVulnFailure",
+                description: "Critical with fix",
+                evaluationResult: "failed",
+                predicates: [],
+                failures: [
+                  {
+                    description: "",
+                    packageRef: osPkgUuid,
+                    vulnerabilityRef: vulnOnOs
+                  },
+                  {
+                    description: "",
+                    packageRef: normalPkgUuid,
+                    vulnerabilityRef: vulnOnPkg
+                  }
+                ]
+              }]
+            }]
+          }]
+        },
+        layers: {
+          [layerDigest]: { digest: layerDigest, index: 0, command: "RUN apt-get install" }
+        },
+        riskAccepts: {},
+        vulnerabilities: {
+          [vulnOnOs]: {
+            name: "CVE-2026-1111",
+            severity: "Critical",
+            cvssScore: { score: 9.0, version: "3.1", vector: "" },
+            disclosureDate: new Date().toISOString(),
+            exploitable: true,
+            mainProvider: "nvd",
+            packageRef: osPkgUuid,
+            providersMetadata: {}
+          },
+          [vulnOnPkg]: {
+            name: "CVE-2026-2222",
+            severity: "High",
+            cvssScore: { score: 8.0, version: "3.1", vector: "" },
+            disclosureDate: new Date().toISOString(),
+            exploitable: false,
+            fixVersion: "2.0.0",
+            mainProvider: "nvd",
+            packageRef: normalPkgUuid,
+            providersMetadata: {}
+          }
+        },
+        packages: {
+          [osPkgUuid]: {
+            category: "operating-system",
+            name: "debian",
+            type: "os",
+            version: "13.1",
+            isRemoved: false,
+            vulnerabilitiesRefs: [vulnOnOs]
+          },
+          [normalPkgUuid]: {
+            name: "libcurl",
+            type: "os",
+            version: "7.74.0",
+            path: "/usr/lib/libcurl",
+            layerRef: layerDigest,
+            isRemoved: false,
+            isRunning: true,
+            vulnerabilitiesRefs: [vulnOnPkg]
+          }
+        }
+      }
+    };
+
+    const adapter = new JsonScanResultV1ToScanResultAdapter();
+    const result = adapter.toScanResult(report as JsonScanResultV1);
+
+    expect(result.getPackages()).toHaveLength(2);
+
+    const osPkg = result.getPackages().find(p => p.name === "debian");
+    expect(osPkg).toBeDefined();
+    expect(osPkg!.foundInLayer).toBeNull();
+    expect(osPkg!.getVulnerabilities()).toHaveLength(1);
+    expect(osPkg!.getVulnerabilities()[0].cve).toBe("CVE-2026-1111");
+
+    const rule = result.getPolicies()[0].getBundles()[0].getRules()[0];
+    const failures = (rule as any).getFailures();
+    expect(failures).toHaveLength(2);
+    expect(failures.some((f: any) => f.pkg.name === "debian")).toBe(true);
+    expect(failures.some((f: any) => f.pkg.name === "libcurl")).toBe(true);
+  });
 });
