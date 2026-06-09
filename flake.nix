@@ -27,11 +27,9 @@
               nodejs_24
               pinact
               pre-commit
-            ]
-            ++ (with nodePackages; [
               typescript-language-server
               eslint
-            ]);
+            ];
 
             shellHook = ''
               pre-commit install

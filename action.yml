@@ -5,8 +5,8 @@ inputs:
     description: URL to sysdig-cli-scanner binary download
     required: false
   cli-scanner-version:
-    description: Custom sysdig-cli-scanner version to download. Oldest supported version is 1.26.0.
-    default: "1.26.0"
+    description: Custom sysdig-cli-scanner version to download. Oldest supported version is 1.27.0.
+    default: "1.27.0"
     required: false
   cli-scanner-sha256sum:
     description: 'SHA256 sum of the Sysdig CLI scanner binary to verify the download.'
