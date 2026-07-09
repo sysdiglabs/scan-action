@@ -2415,7 +2415,7 @@ exports.scannerURLForVersion = scannerURLForVersion;
 exports.getRunArch = getRunArch;
 exports.getRunOS = getRunOS;
 const os_1 = __importDefault(__nccwpck_require__(2037));
-const cliScannerVersion = "1.27.0";
+const cliScannerVersion = "1.27.2"; // newest-version-marker — DO NOT REMOVE; auto-updated by `just update-cli-scanner`
 const cliScannerOS = getRunOS();
 const cliScannerArch = getRunArch();
 const cliScannerURLBase = "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner";
@@ -10166,6 +10166,7 @@ const STATES = {
   INITIAL: 'initial',
   HANDSHAKING: 'handshaking',
   AUTHENTICATING: 'authenticating',
+  AUTHENTICATED: 'authenticated',
   CONNECTING: 'connecting',
   CONNECTED: 'connected',
   ERROR: 'error',
@@ -10257,6 +10258,11 @@ class Socks5Client extends EventEmitter {
     }
   }
 
+  markAuthenticated () {
+    this.state = STATES.AUTHENTICATED
+    this.emit('authenticated')
+  }
+
   /**
    * Start the SOCKS5 handshake
    */
@@ -10307,7 +10313,7 @@ class Socks5Client extends EventEmitter {
     debug('server selected auth method', method)
 
     if (method === AUTH_METHODS.NO_AUTH) {
-      this.emit('authenticated')
+      this.markAuthenticated()
     } else if (method === AUTH_METHODS.USERNAME_PASSWORD) {
       this.state = STATES.AUTHENTICATING
       this.sendAuthRequest()
@@ -10372,7 +10378,7 @@ class Socks5Client extends EventEmitter {
 
     this.buffer = this.buffer.subarray(2)
     debug('authentication successful')
-    this.emit('authenticated')
+    this.markAuthenticated()
   }
 
   /**
@@ -10381,8 +10387,12 @@ class Socks5Client extends EventEmitter {
    * @param {number} port - Target port
    */
   connect (address, port) {
-    if (this.state === STATES.CONNECTED) {
-      throw new InvalidArgumentError('Already connected')
+    if (this.state === STATES.CONNECTING || this.state === STATES.CONNECTED) {
+      throw new InvalidArgumentError('Connection already in progress')
+    }
+
+    if (this.state !== STATES.AUTHENTICATED) {
+      throw new InvalidArgumentError('Client must be authenticated before CONNECT')
     }
 
     debug('connecting to', address, port)
@@ -10580,12 +10590,26 @@ function parseAddress (address) {
  */
 function parseIPv6 (address) {
   const buffer = Buffer.alloc(16)
+  let normalizedAddress = address
+
+  // Expand an embedded IPv4 tail into the last two IPv6 groups.
+  if (address.includes('.')) {
+    const lastColonIndex = address.lastIndexOf(':')
+    const ipv4Part = address.slice(lastColonIndex + 1)
+
+    if (net.isIPv4(ipv4Part)) {
+      const octets = ipv4Part.split('.').map(Number)
+      const high = ((octets[0] << 8) | octets[1]).toString(16)
+      const low = ((octets[2] << 8) | octets[3]).toString(16)
+      normalizedAddress = `${address.slice(0, lastColonIndex)}:${high}:${low}`
+    }
+  }
 
   // Handle compressed notation (::)
-  const doubleColonIndex = address.indexOf('::')
+  const doubleColonIndex = normalizedAddress.indexOf('::')
   if (doubleColonIndex !== -1) {
-    const before = address.slice(0, doubleColonIndex)
-    const after = address.slice(doubleColonIndex + 2)
+    const before = normalizedAddress.slice(0, doubleColonIndex)
+    const after = normalizedAddress.slice(doubleColonIndex + 2)
     const beforeParts = before === '' ? [] : before.split(':')
     const afterParts = after === '' ? [] : after.split(':')
 
@@ -10600,7 +10624,7 @@ function parseIPv6 (address) {
       bufferIndex += 2
     }
   } else {
-    const parts = address.split(':')
+    const parts = normalizedAddress.split(':')
     for (let i = 0; i < parts.length; i++) {
       buffer.writeUInt16BE(parseInt(parts[i], 16), i * 2)
     }
@@ -12026,7 +12050,7 @@ class Agent extends DispatcherBase {
       throw new InvalidArgumentError('maxOrigins must be a number greater than 0')
     }
 
-    super()
+    super(options)
 
     if (connect && typeof connect !== 'function') {
       connect = { ...connect }
@@ -12211,7 +12235,7 @@ class BalancedPool extends PoolBase {
       throw new InvalidArgumentError('factory must be a function.')
     }
 
-    super()
+    super(opts)
 
     this[kOptions] = { ...util.deepClone(opts) }
     this[kOptions].interceptors = opts.interceptors
@@ -12441,6 +12465,9 @@ const constants = __nccwpck_require__(953)
 const EMPTY_BUF = Buffer.alloc(0)
 const FastBuffer = Buffer[Symbol.species]
 const removeAllListeners = util.removeAllListeners
+const kIdleSocketValidation = Symbol('kIdleSocketValidation')
+const kIdleSocketValidationTimeout = Symbol('kIdleSocketValidationTimeout')
+const kSocketUsed = Symbol('kSocketUsed')
 
 let extractBody
 
@@ -12824,6 +12851,11 @@ class Parser {
       return -1
     }
 
+    if (client[kRunning] === 0) {
+      util.destroy(socket, new SocketError('bad response', util.getSocketInfo(socket)))
+      return -1
+    }
+
     const request = client[kQueue][client[kRunningIdx]]
     if (!request) {
       return -1
@@ -12949,6 +12981,11 @@ class Parser {
     const { client, socket, headers, statusText } = this
 
     if (socket.destroyed) {
+      return -1
+    }
+
+    if (client[kRunning] === 0) {
+      util.destroy(socket, new SocketError('bad response', util.getSocketInfo(socket)))
       return -1
     }
 
@@ -13130,6 +13167,7 @@ class Parser {
     request.onComplete(headers)
 
     client[kQueue][client[kRunningIdx]++] = null
+    socket[kSocketUsed] = client[kPending] === 0
 
     if (socket[kWriting]) {
       assert(client[kRunning] === 0)
@@ -13206,6 +13244,9 @@ function connectH1 (client, socket) {
   socket[kWriting] = false
   socket[kReset] = false
   socket[kBlocking] = false
+  socket[kIdleSocketValidation] = 0
+  socket[kIdleSocketValidationTimeout] = null
+  socket[kSocketUsed] = false
   socket[kParser] = new Parser(client, socket, llhttpInstance)
 
   util.addListener(socket, 'error', onHttpSocketError)
@@ -13248,7 +13289,7 @@ function connectH1 (client, socket) {
      * @returns {boolean}
      */
     busy (request) {
-      if (socket[kWriting] || socket[kReset] || socket[kBlocking]) {
+      if (socket[kWriting] || socket[kReset] || socket[kBlocking] || socket[kIdleSocketValidation] === 1) {
         return true
       }
 
@@ -13328,6 +13369,8 @@ function onHttpSocketEnd () {
 function onHttpSocketClose () {
   const parser = this[kParser]
 
+  clearIdleSocketValidation(this)
+
   if (parser) {
     if (!this[kError] && parser.statusCode && !parser.shouldKeepAlive) {
       this[kError] = parser.finish() || this[kError]
@@ -13374,6 +13417,28 @@ function onSocketClose () {
   this[kClosed] = true
 }
 
+function clearIdleSocketValidation (socket) {
+  if (socket[kIdleSocketValidationTimeout]) {
+    clearTimeout(socket[kIdleSocketValidationTimeout])
+    socket[kIdleSocketValidationTimeout] = null
+  }
+
+  socket[kIdleSocketValidation] = 0
+}
+
+function scheduleIdleSocketValidation (client, socket) {
+  socket[kIdleSocketValidation] = 1
+  socket[kIdleSocketValidationTimeout] = setTimeout(() => {
+    socket[kIdleSocketValidationTimeout] = null
+    socket[kIdleSocketValidation] = 2
+
+    if (client[kSocket] === socket && !socket.destroyed) {
+      client[kResume]()
+    }
+  }, 0)
+  socket[kIdleSocketValidationTimeout].unref?.()
+}
+
 /**
  * @param {import('./client.js')} client
  */
@@ -13389,6 +13454,32 @@ function resumeH1 (client) {
     } else if (socket[kNoRef] && socket.ref) {
       socket.ref()
       socket[kNoRef] = false
+    }
+
+    if (client[kRunning] === 0 && client[kPending] > 0 && socket[kSocketUsed]) {
+      if (socket[kIdleSocketValidation] === 0) {
+        scheduleIdleSocketValidation(client, socket)
+        socket[kParser].readMore()
+        if (socket.destroyed) {
+          return
+        }
+        return
+      }
+
+      if (socket[kIdleSocketValidation] === 1) {
+        socket[kParser].readMore()
+        if (socket.destroyed) {
+          return
+        }
+        return
+      }
+    }
+
+    if (client[kRunning] === 0) {
+      socket[kParser].readMore()
+      if (socket.destroyed) {
+        return
+      }
     }
 
     if (client[kSize] === 0) {
@@ -13489,6 +13580,7 @@ function writeH1 (client, request) {
   }
 
   const socket = client[kSocket]
+  clearIdleSocketValidation(socket)
 
   /**
    * @param {Error} [err]
@@ -15163,7 +15255,8 @@ class Client extends DispatcherBase {
     useH2c,
     initialWindowSize,
     connectionWindowSize,
-    pingInterval
+    pingInterval,
+    webSocket
   } = {}) {
     if (keepAlive !== undefined) {
       throw new InvalidArgumentError('unsupported keepAlive, use pipelining=0 instead')
@@ -15271,7 +15364,7 @@ class Client extends DispatcherBase {
       throw new InvalidArgumentError('pingInterval must be a positive integer, greater or equal to 0')
     }
 
-    super()
+    super({ webSocket })
 
     if (typeof connect !== 'function') {
       connect = buildConnector({
@@ -15731,6 +15824,7 @@ const { kDestroy, kClose, kClosed, kDestroyed, kDispatch } = __nccwpck_require__
 
 const kOnDestroyed = Symbol('onDestroyed')
 const kOnClosed = Symbol('onClosed')
+const kWebSocketOptions = Symbol('webSocketOptions')
 
 class DispatcherBase extends Dispatcher {
   /** @type {boolean} */
@@ -15744,6 +15838,24 @@ class DispatcherBase extends Dispatcher {
 
   /** @type {Array<Function>|null} */
   [kOnClosed] = null
+
+  /**
+   * @param {import('../../types/dispatcher').DispatcherOptions} [opts]
+   */
+  constructor (opts) {
+    super()
+    this[kWebSocketOptions] = opts?.webSocket ?? {}
+  }
+
+  /**
+   * @returns {import('../../types/dispatcher').WebSocketOptions}
+   */
+  get webSocketOptions () {
+    return {
+      maxFragments: this[kWebSocketOptions].maxFragments ?? 131072,
+      maxPayloadSize: this[kWebSocketOptions].maxPayloadSize ?? 128 * 1024 * 1024 // 128 MB default
+    }
+  }
 
   /** @returns {boolean} */
   get destroyed () {
@@ -16590,7 +16702,7 @@ class Pool extends PoolBase {
       })
     }
 
-    super()
+    super(options)
 
     this[kConnections] = connections || null
     this[kUrl] = util.parseOrigin(origin)
@@ -16795,7 +16907,8 @@ class ProxyAgent extends DispatcherBase {
           factory: agentFactory,
           username: opts.username || username,
           password: opts.password || password,
-          proxyTls: opts.proxyTls
+          proxyTls: opts.proxyTls,
+          requestTls: opts.requestTls
         })
       }
 
@@ -17167,13 +17280,12 @@ module.exports = RoundRobinPool
 "use strict";
 
 
-const net = __nccwpck_require__(7503)
 const { URL } = __nccwpck_require__(1041)
 
 let tls // include tls conditionally since it is not always available
 const DispatcherBase = __nccwpck_require__(1544)
 const { InvalidArgumentError } = __nccwpck_require__(8045)
-const { Socks5Client } = __nccwpck_require__(8725)
+const { Socks5Client, STATES } = __nccwpck_require__(8725)
 const { kDispatch, kClose, kDestroy } = __nccwpck_require__(2785)
 const Pool = __nccwpck_require__(177)
 const buildConnector = __nccwpck_require__(2067)
@@ -17184,8 +17296,10 @@ const debug = debuglog('undici:socks5-proxy')
 const kProxyUrl = Symbol('proxy url')
 const kProxyHeaders = Symbol('proxy headers')
 const kProxyAuth = Symbol('proxy auth')
-const kPool = Symbol('pool')
+const kProxyProtocol = Symbol('proxy protocol')
+const kPools = Symbol('pools')
 const kConnector = Symbol('connector')
+const kRequestTls = Symbol('request tls settings')
 
 // Static flag to ensure warning is only emitted once per process
 let experimentalWarningEmitted = false
@@ -17219,6 +17333,8 @@ class Socks5ProxyAgent extends DispatcherBase {
 
     this[kProxyUrl] = url
     this[kProxyHeaders] = options.headers || {}
+    this[kProxyProtocol] = options.proxyTls ? 'https:' : 'http:'
+    this[kRequestTls] = options.requestTls
 
     // Extract auth from URL or options
     this[kProxyAuth] = {
@@ -17232,8 +17348,8 @@ class Socks5ProxyAgent extends DispatcherBase {
       servername: options.proxyTls?.servername || url.hostname
     })
 
-    // Pool for the actual HTTP connections (with SOCKS5 tunnel connect function)
-    this[kPool] = null
+    // Pools for the actual HTTP connections (with SOCKS5 tunnel connect function), keyed by origin
+    this[kPools] = new Map()
   }
 
   /**
@@ -17247,23 +17363,18 @@ class Socks5ProxyAgent extends DispatcherBase {
 
     // Connect to the SOCKS5 proxy
     const socket = await new Promise((resolve, reject) => {
-      const onConnect = () => {
-        socket.removeListener('error', onError)
-        resolve(socket)
-      }
-
-      const onError = (err) => {
-        socket.removeListener('connect', onConnect)
-        reject(err)
-      }
-
-      const socket = net.connect({
+      this[kConnector]({
+        hostname: proxyHost,
         host: proxyHost,
-        port: proxyPort
+        port: proxyPort,
+        protocol: this[kProxyProtocol]
+      }, (err, socket) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(socket)
+        }
       })
-
-      socket.once('connect', onConnect)
-      socket.once('error', onError)
     })
 
     // Create SOCKS5 client
@@ -17297,7 +17408,7 @@ class Socks5ProxyAgent extends DispatcherBase {
       }
 
       // Check if already authenticated (for NO_AUTH method)
-      if (socks5Client.state === 'authenticated') {
+      if (socks5Client.state === STATES.AUTHENTICATED) {
         clearTimeout(timeout)
         resolve()
       } else {
@@ -17338,15 +17449,17 @@ class Socks5ProxyAgent extends DispatcherBase {
   /**
    * Dispatch a request through the SOCKS5 proxy
    */
-  async [kDispatch] (opts, handler) {
+  [kDispatch] (opts, handler) {
     const { origin } = opts
 
     debug('dispatching request to', origin, 'via SOCKS5')
 
     try {
-      // Create Pool with custom connect function if we don't have one yet
-      if (!this[kPool] || this[kPool].destroyed || this[kPool].closed) {
-        this[kPool] = new Pool(origin, {
+      const originKey = String(origin)
+      let pool = this[kPools].get(originKey)
+      // Create a Pool per origin so requests are not routed to the wrong host
+      if (!pool || pool.destroyed || pool.closed) {
+        pool = new Pool(origin, {
           pipelining: opts.pipelining,
           connections: opts.connections,
           connect: async (connectOpts, callback) => {
@@ -17368,9 +17481,9 @@ class Socks5ProxyAgent extends DispatcherBase {
                 }
                 debug('upgrading to TLS')
                 finalSocket = tls.connect({
+                  ...this[kRequestTls],
                   socket,
-                  servername: targetHost,
-                  ...connectOpts.tls || {}
+                  servername: this[kRequestTls]?.servername || targetHost
                 })
 
                 await new Promise((resolve, reject) => {
@@ -17386,14 +17499,19 @@ class Socks5ProxyAgent extends DispatcherBase {
             }
           }
         })
+        this[kPools].set(originKey, pool)
       }
 
-      // Dispatch the request through the pool
-      return this[kPool][kDispatch](opts, handler)
+      // Dispatch the request through the per-origin pool
+      return pool[kDispatch](opts, handler)
     } catch (err) {
       debug('dispatch error:', err)
-      if (typeof handler.onError === 'function') {
+      if (typeof handler.onResponseError === 'function') {
+        handler.onResponseError(null, err)
+        return false
+      } else if (typeof handler.onError === 'function') {
         handler.onError(err)
+        return false
       } else {
         throw err
       }
@@ -17401,15 +17519,21 @@ class Socks5ProxyAgent extends DispatcherBase {
   }
 
   async [kClose] () {
-    if (this[kPool]) {
-      await this[kPool].close()
+    const closePromises = []
+    for (const pool of this[kPools].values()) {
+      closePromises.push(pool.close())
     }
+    this[kPools].clear()
+    await Promise.all(closePromises)
   }
 
   async [kDestroy] (err) {
-    if (this[kPool]) {
-      await this[kPool].destroy(err)
+    const destroyPromises = []
+    for (const pool of this[kPools].values()) {
+      destroyPromises.push(pool.destroy(err))
     }
+    this[kPools].clear()
+    await Promise.all(destroyPromises)
   }
 }
 
@@ -24866,6 +24990,10 @@ function parseCacheControlHeader (header) {
                 headers[headers.length - 1] = lastHeader
               }
 
+              for (let j = 0; j < headers.length; j++) {
+                headers[j] = headers[j].trim()
+              }
+
               if (key in output) {
                 output[key] = output[key].concat(headers)
               } else {
@@ -24874,10 +25002,12 @@ function parseCacheControlHeader (header) {
             }
           } else {
             // Something like `no-cache="some-header"`
+            const fieldName = value.trim()
+
             if (key in output) {
-              output[key] = output[key].concat(value)
+              output[key] = output[key].concat(fieldName)
             } else {
-              output[key] = [value]
+              output[key] = [fieldName]
             }
           }
 
@@ -27672,7 +27802,6 @@ const { collectASequenceOfCodePointsFast } = __nccwpck_require__(3082)
 const { maxNameValuePairSize, maxAttributeValueSize } = __nccwpck_require__(7762)
 const { isCTLExcludingHtab } = __nccwpck_require__(4806)
 const assert = __nccwpck_require__(8061)
-const { unescape: qsUnescape } = __nccwpck_require__(9630)
 
 /**
  * @description Parses the field-value attributes of a set-cookie header string.
@@ -27750,7 +27879,7 @@ function parseSetCookie (header) {
   // store arbitrary data in a cookie-value SHOULD encode that data, for
   // example, using Base64 [RFC4648].
   return {
-    name, value: qsUnescape(value), ...parseUnparsedAttributes(unparsedAttributes)
+    name, value, ...parseUnparsedAttributes(unparsedAttributes)
   }
 }
 
@@ -27948,32 +28077,25 @@ function parseUnparsedAttributes (unparsedAttributes, cookieAttributeList = {}) 
     // If the attribute-name case-insensitively matches the string
     // "SameSite", the user agent MUST process the cookie-av as follows:
 
-    // 1. Let enforcement be "Default".
-    let enforcement = 'Default'
-
     const attributeValueLowercase = attributeValue.toLowerCase()
-    // 2. If cookie-av's attribute-value is a case-insensitive match for
-    //    "None", set enforcement to "None".
-    if (attributeValueLowercase.includes('none')) {
-      enforcement = 'None'
-    }
 
-    // 3. If cookie-av's attribute-value is a case-insensitive match for
-    //    "Strict", set enforcement to "Strict".
-    if (attributeValueLowercase.includes('strict')) {
-      enforcement = 'Strict'
+    // 1. If cookie-av's attribute-value is a case-insensitive match for
+    //    "None", append an attribute to the cookie-attribute-list with an
+    //    attribute-name of "SameSite" and an attribute-value of "None".
+    if (attributeValueLowercase === 'none') {
+      cookieAttributeList.sameSite = 'None'
+    } else if (attributeValueLowercase === 'strict') {
+      // 2. If cookie-av's attribute-value is a case-insensitive match for
+      //    "Strict", append an attribute to the cookie-attribute-list with
+      //    an attribute-name of "SameSite" and an attribute-value of
+      //    "Strict".
+      cookieAttributeList.sameSite = 'Strict'
+    } else if (attributeValueLowercase === 'lax') {
+      // 3. If cookie-av's attribute-value is a case-insensitive match for
+      //    "Lax", append an attribute to the cookie-attribute-list with an
+      //    attribute-name of "SameSite" and an attribute-value of "Lax".
+      cookieAttributeList.sameSite = 'Lax'
     }
-
-    // 4. If cookie-av's attribute-value is a case-insensitive match for
-    //    "Lax", set enforcement to "Lax".
-    if (attributeValueLowercase.includes('lax')) {
-      enforcement = 'Lax'
-    }
-
-    // 5. Append an attribute to the cookie-attribute-list with an
-    //    attribute-name of "SameSite" and an attribute-value of
-    //    enforcement.
-    cookieAttributeList.sameSite = enforcement
   } else {
     cookieAttributeList.unparsed ??= []
 
@@ -40385,40 +40507,35 @@ const tail = Buffer.from([0x00, 0x00, 0xff, 0xff])
 const kBuffer = Symbol('kBuffer')
 const kLength = Symbol('kLength')
 
-// Default maximum decompressed message size: 4 MB
-const kDefaultMaxDecompressedSize = 4 * 1024 * 1024
-
 class PerMessageDeflate {
   /** @type {import('node:zlib').InflateRaw} */
   #inflate
 
   #options = {}
 
-  /** @type {boolean} */
-  #aborted = false
-
-  /** @type {Function|null} */
-  #currentCallback = null
+  #maxPayloadSize = 0
 
   /**
    * @param {Map<string, string>} extensions
    */
-  constructor (extensions) {
+  constructor (extensions, options) {
     this.#options.serverNoContextTakeover = extensions.has('server_no_context_takeover')
     this.#options.serverMaxWindowBits = extensions.get('server_max_window_bits')
+
+    this.#maxPayloadSize = options.maxPayloadSize
   }
 
+  /**
+   * Decompress a compressed payload.
+   * @param {Buffer} chunk Compressed data
+   * @param {boolean} fin Final fragment flag
+   * @param {Function} callback Callback function
+   */
   decompress (chunk, fin, callback) {
     // An endpoint uses the following algorithm to decompress a message.
     // 1.  Append 4 octets of 0x00 0x00 0xff 0xff to the tail end of the
     //     payload of the message.
     // 2.  Decompress the resulting data using DEFLATE.
-
-    if (this.#aborted) {
-      callback(new MessageSizeExceededError())
-      return
-    }
-
     if (!this.#inflate) {
       let windowBits = Z_DEFAULT_WINDOWBITS
 
@@ -40441,23 +40558,12 @@ class PerMessageDeflate {
       this.#inflate[kLength] = 0
 
       this.#inflate.on('data', (data) => {
-        if (this.#aborted) {
-          return
-        }
-
         this.#inflate[kLength] += data.length
 
-        if (this.#inflate[kLength] > kDefaultMaxDecompressedSize) {
-          this.#aborted = true
+        if (this.#maxPayloadSize > 0 && this.#inflate[kLength] > this.#maxPayloadSize) {
+          callback(new MessageSizeExceededError())
           this.#inflate.removeAllListeners()
-          this.#inflate.destroy()
           this.#inflate = null
-
-          if (this.#currentCallback) {
-            const cb = this.#currentCallback
-            this.#currentCallback = null
-            cb(new MessageSizeExceededError())
-          }
           return
         }
 
@@ -40470,14 +40576,13 @@ class PerMessageDeflate {
       })
     }
 
-    this.#currentCallback = callback
     this.#inflate.write(chunk)
     if (fin) {
       this.#inflate.write(tail)
     }
 
     this.#inflate.flush(() => {
-      if (this.#aborted || !this.#inflate) {
+      if (!this.#inflate) {
         return
       }
 
@@ -40485,7 +40590,6 @@ class PerMessageDeflate {
 
       this.#inflate[kBuffer].length = 0
       this.#inflate[kLength] = 0
-      this.#currentCallback = null
 
       callback(null, full)
     })
@@ -40542,18 +40646,27 @@ class ByteParser extends Writable {
   /** @type {import('./websocket').Handler} */
   #handler
 
+  /** @type {number} */
+  #maxFragments
+
+  /** @type {number} */
+  #maxPayloadSize
+
   /**
    * @param {import('./websocket').Handler} handler
    * @param {Map<string, string>|null} extensions
+   * @param {{ maxFragments?: number, maxPayloadSize?: number }} [options]
    */
-  constructor (handler, extensions) {
+  constructor (handler, extensions, options = {}) {
     super()
 
     this.#handler = handler
     this.#extensions = extensions == null ? new Map() : extensions
+    this.#maxFragments = options.maxFragments ?? 0
+    this.#maxPayloadSize = options.maxPayloadSize ?? 0
 
     if (this.#extensions.has('permessage-deflate')) {
-      this.#extensions.set('permessage-deflate', new PerMessageDeflate(extensions))
+      this.#extensions.set('permessage-deflate', new PerMessageDeflate(extensions, options))
     }
   }
 
@@ -40567,6 +40680,19 @@ class ByteParser extends Writable {
     this.#loop = true
 
     this.run(callback)
+  }
+
+  #validatePayloadLength () {
+    if (
+      this.#maxPayloadSize > 0 &&
+      !isControlFrame(this.#info.opcode) &&
+      this.#info.payloadLength + this.#fragmentsBytes > this.#maxPayloadSize
+    ) {
+      failWebsocketConnection(this.#handler, 1009, 'Payload size exceeds maximum allowed size')
+      return false
+    }
+
+    return true
   }
 
   /**
@@ -40657,6 +40783,10 @@ class ByteParser extends Writable {
         if (payloadLength <= 125) {
           this.#info.payloadLength = payloadLength
           this.#state = parserStates.READ_DATA
+
+          if (!this.#validatePayloadLength()) {
+            return
+          }
         } else if (payloadLength === 126) {
           this.#state = parserStates.PAYLOADLENGTH_16
         } else if (payloadLength === 127) {
@@ -40681,6 +40811,10 @@ class ByteParser extends Writable {
 
         this.#info.payloadLength = buffer.readUInt16BE(0)
         this.#state = parserStates.READ_DATA
+
+        if (!this.#validatePayloadLength()) {
+          return
+        }
       } else if (this.#state === parserStates.PAYLOADLENGTH_64) {
         if (this.#byteOffset < 8) {
           return callback()
@@ -40703,6 +40837,10 @@ class ByteParser extends Writable {
 
         this.#info.payloadLength = lower
         this.#state = parserStates.READ_DATA
+
+        if (!this.#validatePayloadLength()) {
+          return
+        }
       } else if (this.#state === parserStates.READ_DATA) {
         if (this.#byteOffset < this.#info.payloadLength) {
           return callback()
@@ -40715,7 +40853,9 @@ class ByteParser extends Writable {
           this.#state = parserStates.INFO
         } else {
           if (!this.#info.compressed) {
-            this.writeFragments(body)
+            if (!this.writeFragments(body)) {
+              return
+            }
 
             // If the frame is not fragmented, a message has been received.
             // If the frame is fragmented, it will terminate with a fin bit set
@@ -40727,29 +40867,41 @@ class ByteParser extends Writable {
 
             this.#state = parserStates.INFO
           } else {
-            this.#extensions.get('permessage-deflate').decompress(body, this.#info.fin, (error, data) => {
-              if (error) {
-                // Use 1009 (Message Too Big) for decompression size limit errors
-                const code = error instanceof MessageSizeExceededError ? 1009 : 1007
-                failWebsocketConnection(this.#handler, code, error.message)
-                return
-              }
+            this.#extensions.get('permessage-deflate').decompress(
+              body,
+              this.#info.fin,
+              (error, data) => {
+                if (error) {
+                  const code = error instanceof MessageSizeExceededError ? 1009 : 1007
+                  failWebsocketConnection(this.#handler, code, error.message)
+                  return
+                }
 
-              this.writeFragments(data)
+                if (!this.writeFragments(data)) {
+                  return
+                }
 
-              if (!this.#info.fin) {
-                this.#state = parserStates.INFO
+                // Check cumulative fragment size
+                if (this.#maxPayloadSize > 0 && this.#fragmentsBytes > this.#maxPayloadSize) {
+                  failWebsocketConnection(this.#handler, 1009, new MessageSizeExceededError().message)
+                  return
+                }
+
+                if (!this.#info.fin) {
+                  this.#state = parserStates.INFO
+                  this.#loop = true
+                  this.run(callback)
+                  return
+                }
+
+                websocketMessageReceived(this.#handler, this.#info.binaryType, this.consumeFragments())
+
                 this.#loop = true
+                this.#state = parserStates.INFO
                 this.run(callback)
-                return
-              }
-
-              websocketMessageReceived(this.#handler, this.#info.binaryType, this.consumeFragments())
-
-              this.#loop = true
-              this.#state = parserStates.INFO
-              this.run(callback)
-            })
+              },
+              this.#fragmentsBytes
+            )
 
             this.#loop = false
             break
@@ -40808,8 +40960,17 @@ class ByteParser extends Writable {
   }
 
   writeFragments (fragment) {
+    if (
+      this.#maxFragments > 0 &&
+      this.#fragments.length === this.#maxFragments
+    ) {
+      failWebsocketConnection(this.#handler, 1008, 'Too many message fragments')
+      return false
+    }
+
     this.#fragmentsBytes += fragment.length
     this.#fragments.push(fragment)
+    return true
   }
 
   consumeFragments () {
@@ -41448,7 +41609,14 @@ class WebSocketStream {
   #onConnectionEstablished (response, parsedExtensions) {
     this.#handler.socket = response.socket
 
-    const parser = new ByteParser(this.#handler, parsedExtensions)
+    // Get options from dispatcher options
+    const maxFragments = this.#handler.controller.dispatcher?.webSocketOptions?.maxFragments
+    const maxPayloadSize = this.#handler.controller.dispatcher?.webSocketOptions?.maxPayloadSize
+
+    const parser = new ByteParser(this.#handler, parsedExtensions, {
+      maxFragments,
+      maxPayloadSize
+    })
     parser.on('drain', () => this.#handler.onParserDrain())
     parser.on('error', (err) => this.#handler.onParserError(err))
 
@@ -42512,7 +42680,14 @@ class WebSocket extends EventTarget {
     // once this happens, the connection is open
     this.#handler.socket = response.socket
 
-    const parser = new ByteParser(this.#handler, parsedExtensions)
+    const webSocketOptions = this.#handler.controller.dispatcher?.webSocketOptions
+    const maxFragments = webSocketOptions?.maxFragments
+    const maxPayloadSize = webSocketOptions?.maxPayloadSize
+
+    const parser = new ByteParser(this.#handler, parsedExtensions, {
+      maxFragments,
+      maxPayloadSize
+    })
     parser.on('drain', () => this.#handler.onParserDrain())
     parser.on('error', (err) => this.#handler.onParserError(err))
 

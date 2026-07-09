@@ -176,7 +176,7 @@ Tests mirror the src/ structure in `tests/`.
 The action tests itself on every PR with these scenarios:
 1. **scan-from-registry**: Basic scan with severity filter (expects failure - vuln image)
 2. **filtered-scan-from-registry**: Group-by-package mode
-3. **scan-with-old-scanner-version**: Backward compatibility (v1.18.0)
+3. **scan-with-old-scanner-version**: Backward compatibility (oldest supported version, kept current via `just update-oldest-cli-scanner`)
 4. **standalone-scan-from-registry**: Offline mode with cached DB (donor scan pattern)
 5. **scan-with-multiple-policies**: IaC mode with multiple policies
 6. **scan-with-correct-checksum**: Checksum validation success
@@ -192,6 +192,27 @@ Pattern: `continue-on-error: true` → validate outcome in follow-up step
 4. Generates changelog with `git-chglog`
 5. Creates GitHub release with changelog body
 6. **Force-updates major tag** (e.g., `v6`) for `uses: sysdiglabs/scan-action@v6`
+
+### Scanner Version Support
+
+The `sysdig-cli-scanner` is supported for **1 year after release**. Two `just` recipes keep this current:
+
+```bash
+# Print the oldest version still within the support window (probes binary Last-Modified)
+just oldest-cli-scanner
+
+# Substitute the oldest supported version in action.yml, README.md and the
+# scan-with-old-scanner-version CI job
+just update-oldest-cli-scanner
+
+# Bump the default version to the latest available
+just update-cli-scanner
+```
+
+- Default version lives in `src/infrastructure/sysdig/SysdigCliScannerConstants.ts` (mirrored in `action.yml`, `README.md`).
+- The oldest supported version is a moving target; re-run `just update-oldest-cli-scanner` periodically so `action.yml`, `README.md` and the CI backward-compat job track the 1-year window.
+- **Version markers:** the recipes find/replace via `newest-version-marker` / `oldest-version-marker` sentinels (HTML-comment spans in Markdown, trailing `#`/`//` comments in YAML/TS). **Do not remove these markers** or the recipes stop updating that spot. They do *not* touch checksum-pinned versions (`scan-with-correct-checksum`, `scan-with-incorrect-checksum`, `SysdigCliScannerDownloader.test.ts`), which carry a paired SHA256 and are bumped manually.
+- `update-cli-scanner` does **not** rebuild `dist/`; run `just prepare` afterwards.
 
 ### Pre-commit Hooks (`.pre-commit-config.yaml`)
 

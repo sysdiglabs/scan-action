@@ -5,7 +5,7 @@ import * as path from 'path';
 
 describe('SysdigCliScannerDownloader - Integration Test', () => {
   const scannerVersion = '1.24.1';
-  // This is the hardcoded, known-good SHA256 checksum for version 1.22.6 of the scanner.
+  // This is the hardcoded, known-good SHA256 checksum for version 1.24.1 of the scanner.
   // Using a hardcoded value makes the test more stable and deterministic.
   const correctSha256sum: Record<string, string> = {
     "linux/amd64": 'aaca2b5d029cef6e0647da304fa25b969b2711d0e23e884ae2848f15044f6bed',
