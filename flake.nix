@@ -23,18 +23,18 @@
           mkShell {
             buildInputs = [
               just
+              coreutils
+              gnused
               typescript
               nodejs_24
               pinact
-              pre-commit
-            ]
-            ++ (with nodePackages; [
+              prek
               typescript-language-server
               eslint
-            ]);
+            ];
 
             shellHook = ''
-              pre-commit install
+              prek install --overwrite
             '';
           };
 

@@ -50,7 +50,7 @@ jobs:
           - bitnami/kubectl:latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Scan ${{ matrix.image }}
         id: scan
@@ -80,7 +80,7 @@ jobs:
     steps:
       # This step checks out a copy of your repository.
       - name: Check out repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Scan dummy-vuln-app from registry
         id: scan
@@ -111,7 +111,7 @@ jobs:
 
       - name: Upload SARIF file
         if: success() || failure() # Upload results regardless previous step fails
-        uses: github/codeql-action/upload-sarif@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
+        uses: github/codeql-action/upload-sarif@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4.37.0
         with:
           sarif_file: ${{ github.workspace }}/sarif.json
 
@@ -130,7 +130,7 @@ jobs:
     steps:
       # This step checks out a copy of your repository.
       - name: Check out repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Scan dummy-vuln-app from registry
         id: scan
@@ -148,7 +148,7 @@ jobs:
 
       - name: Upload SARIF file
         if: success() || failure() # Upload results regardless previous step fails
-        uses: github/codeql-action/upload-sarif@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
+        uses: github/codeql-action/upload-sarif@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4.37.0
         with:
           sarif_file: ${{ github.workspace }}/sarif.json
 
@@ -167,15 +167,14 @@ jobs:
     steps:
       # This step checks out a copy of your repository.
       - name: Check out repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Scan dummy-vuln-app from registry
         id: scan
         uses: ./
         continue-on-error: true
         with:
-          # Old scanner version
-          cli-scanner-version: 1.18.0
+          cli-scanner-version: 1.22.5 # oldest-version-marker — DO NOT REMOVE; auto-updated by `just update-oldest-cli-scanner`
           # Tag of the image to analyse
           image-tag: sysdiglabs/dummy-vuln-app:latest
           # API token for Sysdig Scanning auth
@@ -186,7 +185,7 @@ jobs:
 
       - name: Upload SARIF file
         if: success() || failure() # Upload results regardless previous step fails
-        uses: github/codeql-action/upload-sarif@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
+        uses: github/codeql-action/upload-sarif@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4.37.0
         with:
           sarif_file: ${{ github.workspace }}/sarif.json
 
@@ -205,7 +204,7 @@ jobs:
     steps:
       # This step checks out a copy of your repository.
       - name: Check out repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Donate MainDB from scan
         id: donnor-scan
@@ -233,7 +232,7 @@ jobs:
 
       - name: Upload SARIF file
         if: success() || failure() # Upload results regardless previous step fails
-        uses: github/codeql-action/upload-sarif@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
+        uses: github/codeql-action/upload-sarif@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4.37.0
         with:
           sarif_file: ${{ github.workspace }}/sarif.json
 
@@ -243,7 +242,7 @@ jobs:
     steps:
       # This step checks out a copy of your repository.
       - name: Check out repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Scan repository with multiple IaC policies
         id: scan
@@ -271,7 +270,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Scan with correct checksum
         id: scan
@@ -297,7 +296,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Scan with incorrect checksum
         id: scan
