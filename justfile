@@ -113,22 +113,28 @@ oldest-cli-scanner window_days="365":
     echo >&2 "Oldest supported: $oldest_ver (released $(date -u -d "@$oldest_epoch" '+%Y-%m-%d'))"
     echo "$oldest_ver"
 
-# (internal) Replace the version tagged with <marker>-version-marker across all docs.
-# Markers are placed as HTML-comment spans in Markdown and as trailing `#`/`//`
-# comments in YAML/TS. See the *-version-marker tags in action.yml, README.md,
-# ci-scan.yaml and SysdigCliScannerConstants.ts. DO NOT delete those markers.
+# (internal) Replace the version tagged with <marker>-version-marker wherever it
+# appears. Markers are HTML-comment spans in Markdown and trailing `#`/`//`
+# comments in YAML/TS. Target files are discovered, not hardcoded, so a new
+# marker anywhere is picked up automatically. DO NOT delete those markers.
 [private]
 [group('scanner')]
 _set-version marker version:
     #!/usr/bin/env bash
     set -euo pipefail
-    files=(
-        "src/infrastructure/sysdig/SysdigCliScannerConstants.ts"
-        "action.yml"
-        "README.md"
-        ".github/workflows/ci-scan.yaml"
-    )
+    # Discover files carrying this marker. Skip generated output (dist/build),
+    # deps, and the tooling/docs that only name the marker in prose.
+    mapfile -t files < <(grep -rl \
+        --exclude-dir=.git --exclude-dir=node_modules \
+        --exclude-dir=build --exclude-dir=dist \
+        --exclude=justfile --exclude=AGENTS.md \
+        "{{marker}}-version-marker" . | sort)
+    if [ "${#files[@]}" -eq 0 ]; then
+        echo "No files found carrying {{marker}}-version-marker" >&2
+        exit 1
+    fi
     for f in "${files[@]}"; do
+        echo "Updating $f" >&2
         # Markdown: <!-- {{marker}}-version-marker ... -->X<!-- /{{marker}}-version-marker -->
         sed -i -E "s#(<!-- {{marker}}-version-marker[^>]*-->)[0-9][0-9.]*(<!-- /{{marker}}-version-marker -->)#\1{{version}}\2#g" "$f"
         # YAML/TS: line carrying a `#`/`//` {{marker}}-version-marker comment
