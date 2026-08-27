@@ -136,7 +136,8 @@ _set-version marker version:
     for f in "${files[@]}"; do
         echo "Updating $f" >&2
         # Markdown: <!-- {{marker}}-version-marker ... -->X<!-- /{{marker}}-version-marker -->
-        sed -i -E "s#(<!-- {{marker}}-version-marker[^>]*-->)[0-9][0-9.]*(<!-- /{{marker}}-version-marker -->)#\1{{version}}\2#g" "$f"
+        # X may be wrapped in a single pair of backticks (e.g. `1.2.3`); preserve them if present.
+        sed -i -E "s#(<!-- {{marker}}-version-marker[^>]*-->)(\`?)[0-9][0-9.]*(\`?)(<!-- /{{marker}}-version-marker -->)#\1\2{{version}}\3\4#g" "$f"
         # YAML/TS: line carrying a `#`/`//` {{marker}}-version-marker comment
         sed -i -E "/(#|\/\/)[[:space:]]*{{marker}}-version-marker/ s/[0-9]+\.[0-9]+\.[0-9]+/{{version}}/" "$f"
     done
