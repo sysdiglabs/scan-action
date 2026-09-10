@@ -104,6 +104,24 @@ jobs:
         with:
           sarif_file: ${{ github.workspace }}/sarif.json
 
+  scan-iac:
+    runs-on: ubuntu-latest
+
+    steps:
+      # This step checks out a copy of your repository.
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Scan repository with IaC policies
+        id: scan
+        uses: ./
+        with:
+          # API token for Sysdig Scanning auth
+          sysdig-secure-token: ${{ inputs.cluster == 'kubelab' && secrets.KUBELAB_SECURE_API_TOKEN || secrets.KUBE_SECURE_API_TOKEN }}
+          mode: iac
+          iac-scan-path: ./tests/fixtures/iac/
+          stop-on-processing-error: true
+
   scan-image-without-vulns:
     runs-on: ubuntu-latest
 
