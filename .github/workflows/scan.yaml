@@ -2,6 +2,15 @@ name: Scan Image
 
 on:
   workflow_dispatch:
+    inputs:
+      cluster:
+        description: "Cluster whose Secure API token secret to use"
+        required: true
+        default: kube
+        type: choice
+        options:
+          - kube
+          - kubelab
 
 jobs:
   scan-from-registry:
@@ -19,7 +28,7 @@ jobs:
           # Tag of the image to analyse
           image-tag: sysdiglabs/dummy-vuln-app:latest
           # API token for Sysdig Scanning auth
-          sysdig-secure-token: ${{ secrets.KUBELAB_SECURE_API_TOKEN }}
+          sysdig-secure-token: ${{ inputs.cluster == 'kubelab' && secrets.KUBELAB_SECURE_API_TOKEN || secrets.KUBE_SECURE_API_TOKEN }}
           stop-on-failed-policy-eval: true
           stop-on-processing-error: true
           severity-at-least: medium
@@ -45,7 +54,7 @@ jobs:
           # Tag of the image to analyse
           image-tag: sysdiglabs/dummy-vuln-app:latest
           # API token for Sysdig Scanning auth
-          sysdig-secure-token: ${{ secrets.KUBELAB_SECURE_API_TOKEN }}
+          sysdig-secure-token: ${{ inputs.cluster == 'kubelab' && secrets.KUBELAB_SECURE_API_TOKEN || secrets.KUBE_SECURE_API_TOKEN }}
           stop-on-failed-policy-eval: true
           stop-on-processing-error: true
           severity-at-least: medium
@@ -72,7 +81,7 @@ jobs:
           # Tag of the image to analyse
           image-tag: sysdiglabs/dummy-vuln-app:latest
           # API token for Sysdig Scanning auth
-          sysdig-secure-token: ${{ secrets.KUBELAB_SECURE_API_TOKEN }}
+          sysdig-secure-token: ${{ inputs.cluster == 'kubelab' && secrets.KUBELAB_SECURE_API_TOKEN || secrets.KUBE_SECURE_API_TOKEN }}
           stop-on-failed-policy-eval: false
           stop-on-processing-error: true
           skip-summary: true
@@ -84,7 +93,7 @@ jobs:
           # Tag of the image to analyse
           image-tag: sysdiglabs/dummy-vuln-app:latest
           # API token for Sysdig Scanning auth
-          #sysdig-secure-token: ${{ secrets.KUBELAB_SECURE_API_TOKEN }}
+          #sysdig-secure-token: ${{ inputs.cluster == 'kubelab' && secrets.KUBELAB_SECURE_API_TOKEN || secrets.KUBE_SECURE_API_TOKEN }}
           stop-on-failed-policy-eval: true
           stop-on-processing-error: true
           standalone: true
@@ -110,7 +119,7 @@ jobs:
           # Tag of the image to analyse
           image-tag: hello-world:latest # This one should never have vulns
           # API token for Sysdig Scanning auth
-          sysdig-secure-token: ${{ secrets.KUBELAB_SECURE_API_TOKEN }}
+          sysdig-secure-token: ${{ inputs.cluster == 'kubelab' && secrets.KUBELAB_SECURE_API_TOKEN || secrets.KUBE_SECURE_API_TOKEN }}
           stop-on-failed-policy-eval: true
           stop-on-processing-error: true
           severity-at-least: medium
