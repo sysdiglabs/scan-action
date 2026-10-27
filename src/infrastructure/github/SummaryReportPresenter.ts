@@ -22,6 +22,7 @@ export class SummaryReportPresenter implements IReportPresenter {
 
   async generateReport(data: ScanResult, _groupByPackage: boolean, filters?: FilterOptions) {
     this.summary.addHeading(`Scan Results for ${data.metadata.pullString}`);
+    this.addResultUrlToSummary(data);
     this.addFilterInfoToSummary(filters);
 
     this.addVulnTableToSummary(data, filters);
@@ -29,6 +30,13 @@ export class SummaryReportPresenter implements IReportPresenter {
     this.addPolicyReportToSummary(data);
   }
 
+
+  private addResultUrlToSummary(data: ScanResult) {
+    const resultUrl = data.getResultUrl();
+    if (!resultUrl) return;
+
+    this.summary.addRaw(`<p>Full results in Sysdig Secure: <a href="${resultUrl}">${resultUrl}</a></p>`, true);
+  }
 
   private addFilterInfoToSummary(filters?: FilterOptions) {
     if (!filters) return;

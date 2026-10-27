@@ -29,6 +29,12 @@ export class RunScanUseCase {
       const report = await this.scanner.executeScan(config);
 
       if (config.mode === ScanMode.vm && report) {
+        // Set before generating reports, so the output is available even if
+        // a presenter fails or the policy evaluation fails the step later.
+        const resultUrl = report.getResultUrl();
+        if (resultUrl) {
+          core.setOutput("scanResultUrl", resultUrl);
+        }
 
         const filters: FilterOptions = {
           minSeverity: (config.severityAtLeast && config.severityAtLeast.toLowerCase() !== "any")

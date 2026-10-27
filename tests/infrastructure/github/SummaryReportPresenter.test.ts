@@ -740,4 +740,27 @@ describe("SummaryReportPresenter", () => {
             expect(criticalCount).toBe(2);
         }
     });
+
+    describe("Result URL", () => {
+        it("should include a link to the full results when the result URL is present", async () => {
+            const fileContent = fs.readFileSync("tests/fixtures/vm/report-test-v1.json", "utf-8");
+            const scanResult = new JsonScanResultV1ToScanResultAdapter().toScanResult(JSON.parse(fileContent));
+            const resultUrl = "https://secure.sysdig.com/#/vulnerabilities/results/187b947ecf6977f82a88b9e8b2c331a0/overview";
+
+            core.summary.emptyBuffer().clear();
+            await new SummaryReportPresenter(core.summary).generateReport(scanResult, false);
+
+            expect(core.summary.stringify()).toContain(`<a href="${resultUrl}">${resultUrl}</a>`);
+        });
+
+        it("should not include a link when the result URL is missing", async () => {
+            const fileContent = fs.readFileSync("tests/fixtures/vm/postgres_13.json", "utf-8");
+            const scanResult = new JsonScanResultV1ToScanResultAdapter().toScanResult(JSON.parse(fileContent));
+
+            core.summary.emptyBuffer().clear();
+            await new SummaryReportPresenter(core.summary).generateReport(scanResult, false);
+
+            expect(core.summary.stringify()).not.toContain("Full results in Sysdig Secure");
+        });
+    });
 });
