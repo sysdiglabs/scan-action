@@ -109,6 +109,21 @@ jobs:
           fi
           echo "scanReport output OK: $REPORT"
 
+      - name: Verify scanResultUrl output is set and valid
+        if: success() || failure()
+        env:
+          SCAN_RESULT_URL: ${{ steps.scan.outputs.scanResultUrl }}
+        run: |
+          if [ -z "$SCAN_RESULT_URL" ]; then
+            echo "scanResultUrl output is empty."
+            exit 1
+          fi
+          if [[ "$SCAN_RESULT_URL" != https://* ]]; then
+            echo "scanResultUrl output does not start with https://: $SCAN_RESULT_URL"
+            exit 1
+          fi
+          echo "scanResultUrl output OK: $SCAN_RESULT_URL"
+
       - name: Upload SARIF file
         if: success() || failure() # Upload results regardless previous step fails
         uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9

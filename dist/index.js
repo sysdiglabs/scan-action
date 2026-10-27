@@ -228,6 +228,12 @@ class RunScanUseCase {
                 this.printOptions(config);
                 const report = yield this.scanner.executeScan(config);
                 if (config.mode === ScannerDTOs_1.ScanMode.vm && report) {
+                    // Set before generating reports, so the output is available even if
+                    // a presenter fails or the policy evaluation fails the step later.
+                    const resultUrl = report.getResultUrl();
+                    if (resultUrl) {
+                        core.setOutput("scanResultUrl", resultUrl);
+                    }
                     const filters = {
                         minSeverity: (config.severityAtLeast && config.severityAtLeast.toLowerCase() !== "any")
                             ? scanresult_1.Severity.fromString(config.severityAtLeast)
@@ -880,7 +886,7 @@ class Metadata {
 }
 exports.Metadata = Metadata;
 class ScanResult {
-    constructor(scanType, pullString, imageId, digest, baseOs, sizeInBytes, architecture, labels, createdAt, evaluationResult) {
+    constructor(scanType, pullString, imageId, digest, baseOs, sizeInBytes, architecture, labels, createdAt, evaluationResult, resultUrl = null) {
         this.scanType = scanType;
         this.layers = [];
         this.packages = new Set();
@@ -890,6 +896,7 @@ class ScanResult {
         this.acceptedRisks = new Map();
         this.metadata = new Metadata(pullString, imageId, digest, baseOs, sizeInBytes, architecture, labels, createdAt);
         this.evaluationResult = evaluationResult;
+        this.resultUrl = resultUrl || null;
     }
     addLayer(digest, index, size, command) {
         const layer = new Layer_1.Layer(digest, index, size, command);
@@ -974,6 +981,9 @@ class ScanResult {
     }
     getEvaluationResult() {
         return this.evaluationResult;
+    }
+    getResultUrl() {
+        return this.resultUrl;
     }
 }
 exports.ScanResult = ScanResult;
@@ -1611,6 +1621,7 @@ class SarifReportPresenter {
         fs_1.default.writeFileSync("./sarif.json", JSON.stringify(sarifOutput, null, 2));
     }
     vulnerabilities2SARIF(data, groupByPackage, filters) {
+        var _a;
         let rules = [];
         let results = [];
         if (groupByPackage) {
@@ -1649,7 +1660,7 @@ class SarifReportPresenter {
                     os: data.metadata.baseOs,
                     size: data.metadata.sizeInBytes.toString(),
                     layersCount: data.getLayers().length,
-                    resultUrl: "",
+                    resultUrl: (_a = data.getResultUrl()) !== null && _a !== void 0 ? _a : "",
                     resultId: "",
                 }
             }];
@@ -1924,11 +1935,18 @@ class SummaryReportPresenter {
     generateReport(data, _groupByPackage, filters) {
         return __awaiter(this, void 0, void 0, function* () {
             this.summary.addHeading(`Scan Results for ${data.metadata.pullString}`);
+            this.addResultUrlToSummary(data);
             this.addFilterInfoToSummary(filters);
             this.addVulnTableToSummary(data, filters);
             this.addVulnsByLayerTableToSummary(data, filters);
             this.addPolicyReportToSummary(data);
         });
+    }
+    addResultUrlToSummary(data) {
+        const resultUrl = data.getResultUrl();
+        if (!resultUrl)
+            return;
+        this.summary.addRaw(`<p>Full results in Sysdig Secure: <a href="${resultUrl}">${resultUrl}</a></p>`, true);
     }
     addFilterInfoToSummary(filters) {
         if (!filters)
@@ -2117,10 +2135,10 @@ class JsonScanResultV1ToScanResultAdapter {
         return scanResult;
     }
     createScanResult(report) {
-        var _a;
+        var _a, _b;
         const metadata = report.result.metadata;
         return new scanresult_1.ScanResult(scanresult_1.ScanType.Docker, // Assuming Docker scan type as in the Rust code
-        metadata.pullString, metadata.imageId, metadata.digest, new scanresult_1.OperatingSystem(scanresult_1.Family.fromString(metadata.os), metadata.baseOs), BigInt(metadata.size), scanresult_1.Architecture.fromString(metadata.architecture), (_a = metadata.labels) !== null && _a !== void 0 ? _a : {}, new Date(metadata.createdAt), scanresult_1.EvaluationResult.fromString(report.result.policies.globalEvaluation));
+        metadata.pullString, metadata.imageId, metadata.digest, new scanresult_1.OperatingSystem(scanresult_1.Family.fromString(metadata.os), metadata.baseOs), BigInt(metadata.size), scanresult_1.Architecture.fromString(metadata.architecture), (_a = metadata.labels) !== null && _a !== void 0 ? _a : {}, new Date(metadata.createdAt), scanresult_1.EvaluationResult.fromString(report.result.policies.globalEvaluation), ((_b = report.info) === null || _b === void 0 ? void 0 : _b.resultUrl) || null);
     }
     addLayers(reportResult, scanResult) {
         var _a, _b;

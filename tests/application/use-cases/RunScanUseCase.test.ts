@@ -145,4 +145,62 @@ describe('RunScanUseCase', () => {
 
     expect(reportPresenter.generateReport).not.toHaveBeenCalled();
   });
+
+  describe('scanResultUrl output', () => {
+    const expectedUrl = 'https://secure.sysdig.com/#/vulnerabilities/results/187b947ecf6977f82a88b9e8b2c331a0/overview';
+
+    it('should set scanResultUrl output when the scan passes', async () => {
+      const passedReport = { ...exampleReport, result: { ...exampleReport.result, policies: { ...exampleReport.result.policies, globalEvaluation: 'passed' } } };
+      scanner.executeScan.mockResolvedValue(adapter.toScanResult(passedReport));
+
+      await executeUseCase();
+
+      expect(mockCore.setOutput).toHaveBeenCalledWith('scanResultUrl', expectedUrl);
+      expect(mockCore.setFailed).not.toHaveBeenCalled();
+    });
+
+    it('should set scanResultUrl output before failing on policy evaluation', async () => {
+      const failedReport = { ...exampleReport, result: { ...exampleReport.result, policies: { ...exampleReport.result.policies, globalEvaluation: 'failed' } } };
+      scanner.executeScan.mockResolvedValue(adapter.toScanResult(failedReport));
+
+      await executeUseCase();
+
+      expect(mockCore.setOutput).toHaveBeenCalledWith('scanResultUrl', expectedUrl);
+      expect(mockCore.setFailed).toHaveBeenCalledWith('Stopping because Policy Evaluation was FAILED.');
+      expect(mockCore.setOutput.mock.invocationCallOrder[0])
+        .toBeLessThan(mockCore.setFailed.mock.invocationCallOrder[0]);
+    });
+
+    it('should set scanResultUrl output even if a report presenter fails', async () => {
+      scanConfig.stopOnProcessingError = false;
+      inputProvider.getInputs.mockReturnValue(scanConfig);
+      scanner.executeScan.mockResolvedValue(exampleScanResult);
+      reportPresenter.generateReport.mockImplementation(() => { throw new Error('presenter error'); });
+
+      await executeUseCase();
+
+      expect(mockCore.setOutput).toHaveBeenCalledWith('scanResultUrl', expectedUrl);
+      expect(mockCore.error).toHaveBeenCalled();
+      expect(mockCore.setFailed).not.toHaveBeenCalled();
+    });
+
+    it('should not set scanResultUrl output when the URL is empty', async () => {
+      const reportWithoutUrl = { ...exampleReport, info: { ...exampleReport.info!, resultUrl: '' } };
+      scanner.executeScan.mockResolvedValue(adapter.toScanResult(reportWithoutUrl));
+
+      await executeUseCase();
+
+      expect(mockCore.setOutput).not.toHaveBeenCalledWith('scanResultUrl', expect.anything());
+    });
+
+    it('should not set scanResultUrl output in IaC mode', async () => {
+      scanConfig.mode = ScanMode.iac;
+      inputProvider.getInputs.mockReturnValue(scanConfig);
+      scanner.executeScan.mockResolvedValue(exampleScanResult);
+
+      await executeUseCase();
+
+      expect(mockCore.setOutput).not.toHaveBeenCalledWith('scanResultUrl', expect.anything());
+    });
+  });
 });

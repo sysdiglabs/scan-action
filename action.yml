@@ -102,6 +102,9 @@ outputs:
   sarifReport:
     description: |
       Path to a SARIF report, that can be uploaded using the codeql-action/upload-sarif action. See the README for more information.
+  scanResultUrl:
+    description: |
+      URL of the scan result in Sysdig Secure. Set even when the policy evaluation fails. Not set in IaC mode, or when the scanner does not report a result URL (e.g. standalone mode or skip-upload).
 
 branding:
   icon: 'shield'

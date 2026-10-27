@@ -35,6 +35,7 @@ export class ScanResult {
   private readonly policyBundles: Map<string, PolicyBundle> = new Map();
   private readonly acceptedRisks: Map<string, AcceptedRisk> = new Map();
   private readonly evaluationResult: EvaluationResult;
+  private readonly resultUrl: string | null;
 
   constructor(
     public readonly scanType: ScanType,
@@ -46,7 +47,8 @@ export class ScanResult {
     architecture: Architecture,
     labels: Record<string, string>,
     createdAt: Date,
-    evaluationResult: EvaluationResult
+    evaluationResult: EvaluationResult,
+    resultUrl: string | null = null
   ) {
     this.metadata = new Metadata(
       pullString,
@@ -59,6 +61,7 @@ export class ScanResult {
       createdAt
     );
     this.evaluationResult = evaluationResult;
+    this.resultUrl = resultUrl || null;
   }
 
   addLayer(digest: string, index: number, size: bigint | null, command: string): Layer {
@@ -200,5 +203,9 @@ export class ScanResult {
 
   getEvaluationResult(): EvaluationResult {
     return this.evaluationResult;
+  }
+
+  getResultUrl(): string | null {
+    return this.resultUrl;
   }
 }

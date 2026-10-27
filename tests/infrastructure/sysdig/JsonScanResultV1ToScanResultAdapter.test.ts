@@ -446,4 +446,48 @@ describe('JsonScanResultV1ToScanResultAdapter', () => {
     expect(failures.some((f: any) => f.pkg.name === "debian")).toBe(true);
     expect(failures.some((f: any) => f.pkg.name === "libcurl")).toBe(true);
   });
+
+  describe('resultUrl', () => {
+    const loadFixture = (name: string): JsonScanResultV1 => {
+      const filePath = path.join(__dirname, '../../fixtures/vm', name);
+      return JSON.parse(fs.readFileSync(filePath, 'utf-8')) as JsonScanResultV1;
+    };
+
+    it('should map info.resultUrl from report-test-v1.json', () => {
+      const result = new JsonScanResultV1ToScanResultAdapter().toScanResult(loadFixture('report-test-v1.json'));
+
+      expect(result.getResultUrl()).toBe('https://secure.sysdig.com/#/vulnerabilities/results/187b947ecf6977f82a88b9e8b2c331a0/overview');
+    });
+
+    it('should map info.resultUrl from the accepted risk fixture', () => {
+      const result = new JsonScanResultV1ToScanResultAdapter().toScanResult(loadFixture('dummy-vuln-app_latest_accepted_risk_in_image.json'));
+
+      expect(result.getResultUrl()).toBe('https://us2.app.sysdig.com/secure/#/vulnerabilities/results/18724ab53a1afb03ba696801d65fd660/overview');
+    });
+
+    it('should return null when info.resultUrl is missing', () => {
+      // postgres_13.json has no resultUrl in its info section
+      const result = new JsonScanResultV1ToScanResultAdapter().toScanResult(loadFixture('postgres_13.json'));
+
+      expect(result.getResultUrl()).toBeNull();
+    });
+
+    it('should return null when info.resultUrl is empty', () => {
+      const json = loadFixture('report-test-v1.json');
+      json.info!.resultUrl = '';
+
+      const result = new JsonScanResultV1ToScanResultAdapter().toScanResult(json);
+
+      expect(result.getResultUrl()).toBeNull();
+    });
+
+    it('should return null when the info section is missing', () => {
+      const json = loadFixture('report-test-v1.json');
+      delete json.info;
+
+      const result = new JsonScanResultV1ToScanResultAdapter().toScanResult(json);
+
+      expect(result.getResultUrl()).toBeNull();
+    });
+  });
 });
