@@ -38,6 +38,18 @@ describe('SarifReportPresenter', () => {
     // A high-level check to ensure it's a SARIF-like structure
     expect(parsedSarif).toHaveProperty('runs');
     expect(Array.isArray(parsedSarif.runs)).toBe(true);
+    expect(parsedSarif.runs[0].properties.resultUrl).toBe('https://secure.sysdig.com/#/vulnerabilities/results/187b947ecf6977f82a88b9e8b2c331a0/overview');
+  });
+
+  it('should set an empty resultUrl in the SARIF run properties when the scan result has no URL', () => {
+    const fixturePath = path.join(__dirname, '../../fixtures/vm/postgres_13.json');
+    const rawReport: JsonScanResultV1 = JSON.parse(fs.readFileSync(fixturePath, 'utf-8'));
+    const scanResult = new JsonScanResultV1ToScanResultAdapter().toScanResult(rawReport);
+
+    new SarifReportPresenter().generateReport(scanResult, false);
+
+    const parsedSarif = JSON.parse(fs.readFileSync(sarifOutputPath, 'utf-8'));
+    expect(parsedSarif.runs[0].properties.resultUrl).toBe('');
   });
 
   it('should not produce duplicate ruleIds when group-by-package is enabled and packages have the same name', () => {

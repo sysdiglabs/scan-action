@@ -1,5 +1,5 @@
 export interface JsonScanResultV1 {
-  info: JsonInfo
+  info?: JsonInfo
   scanner: JsonScanner
   result: JsonResult
 }
@@ -7,8 +7,8 @@ export interface JsonScanResultV1 {
 export interface JsonInfo {
   scanTime: string
   scanDuration: string
-  resultUrl: string
-  resultId: string
+  resultUrl?: string
+  resultId?: string
 }
 
 export interface JsonScanner {

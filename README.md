@@ -59,6 +59,14 @@ The action always verifies the SHA256 checksum of the `sysdig-cli-scanner` binar
 
 > ℹ️ You can combine these filters to focus the report on just what you care about!
 
+## Outputs
+
+| Output          | Description                                                                                                                                                                                                                    |
+|-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `scanReport`    | Path to a JSON file containing the report results, failed evaluation gates, and found vulnerabilities.                                                                                                                       |
+| `sarifReport`   | Path to a SARIF report, that can be uploaded using the `codeql-action/upload-sarif` action. See [SARIF Report](#sarif-report).                                                                                                 |
+| `scanResultUrl` | URL of the scan result in Sysdig Secure. Set even when the policy evaluation fails. Not set in IaC mode, or when the scanner does not report a result URL (e.g. standalone mode or `skip-upload`). See [Use the scan result URL in later steps](#use-the-scan-result-url-in-later-steps). |
+
 ---
 
 ## SARIF Report
@@ -154,6 +162,32 @@ The `if: success() || failure()` option makes sure the SARIF report is uploaded 
         sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
         stop-on-failed-policy-eval: true
         stop-on-processing-error: true
+```
+
+### Use the scan result URL in later steps
+
+The `scanResultUrl` output holds the link to the scan result in Sysdig Secure. It is set before the action fails on a failed policy evaluation, so later steps can use it with `if: failure()` or `if: always()`. For example, to send the link to Slack when the scan fails:
+
+```yaml
+    ...
+
+    - name: Scan image
+      id: scan
+      uses: sysdiglabs/scan-action@v6
+      with:
+        image-tag: "sysdiglabs/dummy-vuln-app:latest"
+        sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN }}
+        stop-on-failed-policy-eval: true
+
+    - name: Notify Slack
+      if: failure() && steps.scan.outputs.scanResultUrl != ''
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SCAN_RESULT_URL: ${{ steps.scan.outputs.scanResultUrl }}
+      run: |
+        curl -sSf -X POST -H 'Content-Type: application/json' \
+          --data "{\"text\": \"Image scan failed: ${SCAN_RESULT_URL}\"}" \
+          "$SLACK_WEBHOOK_URL"
 ```
 
 ### Advanced Examples

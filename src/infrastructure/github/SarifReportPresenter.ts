@@ -101,7 +101,7 @@ export class SarifReportPresenter implements IReportPresenter {
         os: data.metadata.baseOs,
         size: data.metadata.sizeInBytes.toString(),
         layersCount: data.getLayers().length,
-        resultUrl: "",
+        resultUrl: data.getResultUrl() ?? "",
         resultId: "",
       }
     }];

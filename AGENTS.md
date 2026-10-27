@@ -82,6 +82,14 @@ Use `isMoreSevereThan()` for comparisons (compares numeric values inversely).
 | Filters | `severityAtLeast`, `packageTypes`, `excludeAccepted` | `minimumSeverity` (passed to scanner) |
 | CLI flag | `--output=json-file=result.json` | `--iac` |
 
+### Action Outputs
+Declared in `action.yml` under `outputs:` (all VM mode only):
+| Output | Set by | Notes |
+|--------|--------|-------|
+| `scanReport` | `SysdigCliScanner` | Set when the scanner exits with 0 or 1 |
+| `sarifReport` | `SarifReportPresenter` | Set when the SARIF report is generated |
+| `scanResultUrl` | `RunScanUseCase` | From `info.resultUrl` (`ScanResult.getResultUrl()`). Set before presenters run and before `setFinalStatus()`, so it is available even if the policy evaluation fails or a presenter throws. Not set when the URL is missing/empty (standalone, `skip-upload`, older scanners) |
+
 ### SARIF Report Generation
 Two modes controlled by `groupByPackage` option:
 - **Group by vulnerability** (default): Each SARIF rule = one CVE, multiple results per affected package
@@ -91,6 +99,8 @@ Two modes controlled by `groupByPackage` option:
 - Critical, High → "error"
 - Medium → "warning"
 - Low, Negligible → "note"
+
+The SARIF run `properties.resultUrl` carries `ScanResult.getResultUrl()` (empty string when absent).
 
 ### Filtering (VM mode only)
 Filters are composable higher-order functions in `src/domain/services/filtering.ts`:
@@ -115,7 +125,7 @@ Sysdig CLI JSON → JsonScanResultV1ToScanResultAdapter (6-phase hydration) → 
 ```
 
 **Adapter hydration phases:**
-1. Create ScanResult with metadata
+1. Create ScanResult with metadata (and `info.resultUrl`, normalized to `null` when missing/empty)
 2. Add Layers
 3. Add AcceptedRisks
 4. Add Vulnerabilities (link to risks)
