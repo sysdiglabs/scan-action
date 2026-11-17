@@ -39,9 +39,10 @@ describe('SarifReportPresenter', () => {
     expect(parsedSarif).toHaveProperty('runs');
     expect(Array.isArray(parsedSarif.runs)).toBe(true);
     expect(parsedSarif.runs[0].properties.resultUrl).toBe('https://secure.sysdig.com/#/vulnerabilities/results/187b947ecf6977f82a88b9e8b2c331a0/overview');
+    expect(parsedSarif.runs[0].properties.resultId).toBe('187b947ecf6977f82a88b9e8b2c331a0');
   });
 
-  it('should set an empty resultUrl in the SARIF run properties when the scan result has no URL', () => {
+  it('should set empty resultUrl and resultId in the SARIF run properties when the scan result has none', () => {
     const fixturePath = path.join(__dirname, '../../fixtures/vm/postgres_13.json');
     const rawReport: JsonScanResultV1 = JSON.parse(fs.readFileSync(fixturePath, 'utf-8'));
     const scanResult = new JsonScanResultV1ToScanResultAdapter().toScanResult(rawReport);
@@ -50,6 +51,7 @@ describe('SarifReportPresenter', () => {
 
     const parsedSarif = JSON.parse(fs.readFileSync(sarifOutputPath, 'utf-8'));
     expect(parsedSarif.runs[0].properties.resultUrl).toBe('');
+    expect(parsedSarif.runs[0].properties.resultId).toBe('');
   });
 
   it('should not produce duplicate ruleIds when group-by-package is enabled and packages have the same name', () => {
