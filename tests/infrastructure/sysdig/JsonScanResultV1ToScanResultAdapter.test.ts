@@ -490,4 +490,47 @@ describe('JsonScanResultV1ToScanResultAdapter', () => {
       expect(result.getResultUrl()).toBeNull();
     });
   });
+
+  describe('resultId', () => {
+    const loadFixture = (name: string): JsonScanResultV1 => {
+      const filePath = path.join(__dirname, '../../fixtures/vm', name);
+      return JSON.parse(fs.readFileSync(filePath, 'utf-8')) as JsonScanResultV1;
+    };
+
+    it('should map info.resultId from report-test-v1.json', () => {
+      const result = new JsonScanResultV1ToScanResultAdapter().toScanResult(loadFixture('report-test-v1.json'));
+
+      expect(result.getResultId()).toBe('187b947ecf6977f82a88b9e8b2c331a0');
+    });
+
+    it('should map info.resultId from the accepted risk fixture', () => {
+      const result = new JsonScanResultV1ToScanResultAdapter().toScanResult(loadFixture('dummy-vuln-app_latest_accepted_risk_in_image.json'));
+
+      expect(result.getResultId()).toBe('18724ab53a1afb03ba696801d65fd660');
+    });
+
+    it('should return null when info.resultId is missing', () => {
+      const result = new JsonScanResultV1ToScanResultAdapter().toScanResult(loadFixture('postgres_13.json'));
+
+      expect(result.getResultId()).toBeNull();
+    });
+
+    it('should return null when info.resultId is empty', () => {
+      const json = loadFixture('report-test-v1.json');
+      json.info!.resultId = '';
+
+      const result = new JsonScanResultV1ToScanResultAdapter().toScanResult(json);
+
+      expect(result.getResultId()).toBeNull();
+    });
+
+    it('should return null when the info section is missing', () => {
+      const json = loadFixture('report-test-v1.json');
+      delete json.info;
+
+      const result = new JsonScanResultV1ToScanResultAdapter().toScanResult(json);
+
+      expect(result.getResultId()).toBeNull();
+    });
+  });
 });

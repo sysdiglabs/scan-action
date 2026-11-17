@@ -886,7 +886,7 @@ class Metadata {
 }
 exports.Metadata = Metadata;
 class ScanResult {
-    constructor(scanType, pullString, imageId, digest, baseOs, sizeInBytes, architecture, labels, createdAt, evaluationResult, resultUrl = null) {
+    constructor(scanType, pullString, imageId, digest, baseOs, sizeInBytes, architecture, labels, createdAt, evaluationResult, resultUrl = null, resultId = null) {
         this.scanType = scanType;
         this.layers = [];
         this.packages = new Set();
@@ -897,6 +897,7 @@ class ScanResult {
         this.metadata = new Metadata(pullString, imageId, digest, baseOs, sizeInBytes, architecture, labels, createdAt);
         this.evaluationResult = evaluationResult;
         this.resultUrl = resultUrl || null;
+        this.resultId = resultId || null;
     }
     addLayer(digest, index, size, command) {
         const layer = new Layer_1.Layer(digest, index, size, command);
@@ -984,6 +985,9 @@ class ScanResult {
     }
     getResultUrl() {
         return this.resultUrl;
+    }
+    getResultId() {
+        return this.resultId;
     }
 }
 exports.ScanResult = ScanResult;
@@ -1621,7 +1625,7 @@ class SarifReportPresenter {
         fs_1.default.writeFileSync("./sarif.json", JSON.stringify(sarifOutput, null, 2));
     }
     vulnerabilities2SARIF(data, groupByPackage, filters) {
-        var _a;
+        var _a, _b;
         let rules = [];
         let results = [];
         if (groupByPackage) {
@@ -1661,7 +1665,7 @@ class SarifReportPresenter {
                     size: data.metadata.sizeInBytes.toString(),
                     layersCount: data.getLayers().length,
                     resultUrl: (_a = data.getResultUrl()) !== null && _a !== void 0 ? _a : "",
-                    resultId: "",
+                    resultId: (_b = data.getResultId()) !== null && _b !== void 0 ? _b : "",
                 }
             }];
         const sarifOutput = {
@@ -2135,10 +2139,10 @@ class JsonScanResultV1ToScanResultAdapter {
         return scanResult;
     }
     createScanResult(report) {
-        var _a, _b;
+        var _a, _b, _c;
         const metadata = report.result.metadata;
         return new scanresult_1.ScanResult(scanresult_1.ScanType.Docker, // Assuming Docker scan type as in the Rust code
-        metadata.pullString, metadata.imageId, metadata.digest, new scanresult_1.OperatingSystem(scanresult_1.Family.fromString(metadata.os), metadata.baseOs), BigInt(metadata.size), scanresult_1.Architecture.fromString(metadata.architecture), (_a = metadata.labels) !== null && _a !== void 0 ? _a : {}, new Date(metadata.createdAt), scanresult_1.EvaluationResult.fromString(report.result.policies.globalEvaluation), ((_b = report.info) === null || _b === void 0 ? void 0 : _b.resultUrl) || null);
+        metadata.pullString, metadata.imageId, metadata.digest, new scanresult_1.OperatingSystem(scanresult_1.Family.fromString(metadata.os), metadata.baseOs), BigInt(metadata.size), scanresult_1.Architecture.fromString(metadata.architecture), (_a = metadata.labels) !== null && _a !== void 0 ? _a : {}, new Date(metadata.createdAt), scanresult_1.EvaluationResult.fromString(report.result.policies.globalEvaluation), ((_b = report.info) === null || _b === void 0 ? void 0 : _b.resultUrl) || null, ((_c = report.info) === null || _c === void 0 ? void 0 : _c.resultId) || null);
     }
     addLayers(reportResult, scanResult) {
         var _a, _b;
@@ -44922,7 +44926,7 @@ module.exports = require("util");
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"6.4.0","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint . --ignore-pattern \'build/*\'","build":"tsc","prepare":"npm run build && ncc build build/index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^6.0.1"},"devDependencies":{"@types/jest":"^29.5.12","@types/tmp":"^0.2.6","@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^29.7.0","tmp":"^0.2.1","ts-jest":"^29.2.3","typescript":"^5.5.4"},"overrides":{"undici":"^7.0.0"}}');
+module.exports = JSON.parse('{"name":"secure-inline-scan-action","version":"6.4.1","description":"This actions performs image analysis on locally built container image and posts the result of the analysis to Sysdig Secure.","main":"index.js","scripts":{"lint":"eslint . --ignore-pattern \'build/*\'","build":"tsc","prepare":"npm run build && ncc build build/index.js -o dist --source-map --license licenses.txt","test":"jest","all":"npm run lint && npm run prepare && npm run test"},"repository":{"type":"git","url":"git+https://github.com/sysdiglabs/secure-inline-scan-action.git"},"keywords":["sysdig","secure","container","image","scanning","docker"],"author":"airadier","license":"Apache-2.0","bugs":{"url":"https://github.com/sysdiglabs/secure-inline-scan-action/issues"},"homepage":"https://github.com/sysdiglabs/secure-inline-scan-action#readme","dependencies":{"@actions/core":"^1.10.1","@actions/exec":"^1.1.0","@actions/github":"^6.0.1"},"devDependencies":{"@types/jest":"^29.5.12","@types/tmp":"^0.2.6","@vercel/ncc":"^0.36.1","eslint":"^7.32.0","jest":"^29.7.0","tmp":"^0.2.1","ts-jest":"^29.2.3","typescript":"^5.5.4"},"overrides":{"undici":"^7.0.0"}}');
 
 /***/ })
 

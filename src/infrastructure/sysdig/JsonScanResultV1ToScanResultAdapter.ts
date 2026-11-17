@@ -42,7 +42,8 @@ export class JsonScanResultV1ToScanResultAdapter {
       metadata.labels ?? {},
       new Date(metadata.createdAt),
       EvaluationResult.fromString(report.result.policies.globalEvaluation),
-      report.info?.resultUrl || null
+      report.info?.resultUrl || null,
+      report.info?.resultId || null
     );
   }
 
